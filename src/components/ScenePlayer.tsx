@@ -70,6 +70,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   const [wish, setWish] = useState(false)
   const [heartOpen, setHeartOpen] = useState(false)
   const [revealPlaying, setRevealPlaying] = useState(false)
+  const [heartCovered, setHeartCovered] = useState(false)   // black halves have closed: bow scene is removed so it can't show through when they split
   const [soundOn, setSoundOn] = useState(true)
   const [hapticsOn, setHapticsOn] = useState(hapticsAllowed)
   const [, setMemoryIndex] = useState(0)
@@ -102,7 +103,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   useEffect(() => { if (scene !== 'heart' && scene !== 'video') audio.startMusic() }, [scene])
 
   const onHit = useCallback(() => {
-    setHeartOpen(true); setRevealPlaying(true)   // BirthdayReveal plays, then calls onRevealDone -> next scene
+    setHeartOpen(true); setHeartCovered(false); setRevealPlaying(true)   // BirthdayReveal plays, then calls onRevealDone -> next scene
     audio.startMusic()                      // synchronised with the split-screen birthday reveal
     buzz([35, 45, 80])
   }, [buzz])
@@ -114,7 +115,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
     const url = experience.published ? `${window.location.origin}/s/${experience.id}` : window.location.href
     try { if (navigator.share) await navigator.share({ title: experience.title, text: `A little surprise for ${experience.recipient}`, url }); else await navigator.clipboard.writeText(url) } catch { /* user cancelled */ }
   }
-  const replay = () => { replays.current += 1; window.clearTimeout(hitTimer.current); setIndex(0); setPopped([]); setWish(false); setHeartOpen(false); setRevealPlaying(false); setBouquetOpen(false); setBouquetPhase(0); setMemoryIndex(0) }
+  const replay = () => { replays.current += 1; window.clearTimeout(hitTimer.current); setIndex(0); setPopped([]); setWish(false); setHeartOpen(false); setRevealPlaying(false); setHeartCovered(false); setBouquetOpen(false); setBouquetPhase(0); setMemoryIndex(0) }
   const themeClass = `theme-${experience.theme.toLowerCase().replaceAll(' ', '-')}`
   const confetti = useMemo(() => Array.from({ length: 36 }, (_, i) => i), [])
   const greeting = experience.greeting || `Dear ${experience.recipient || 'you'},`
@@ -141,11 +142,11 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
     <AnimatePresence mode="wait">
       <motion.section key={scene} className={`scene scene-${scene}`} initial={{ opacity: 0, y: 18, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12, scale: .99 }} transition={{ duration: .28, ease: 'easeOut' }} aria-live="polite">
         {scene === 'heart' && <div className="scene-content cupid-scene">
-          {(!heartOpen || revealPlaying) && <><p className="eyebrow">A LITTLE SOMETHING FOR YOU</p><h1>Draw back. <em>Let love fly.</em></h1>
+          {(!heartOpen || (revealPlaying && !heartCovered)) && <><p className="eyebrow">A LITTLE SOMETHING FOR YOU</p><h1>Draw back. <em>Let love fly.</em></h1>
           <BowScene onHit={onHit} buzz={buzz} onGesture={unlockAudio} /></>}
           {heartOpen && !revealPlaying && <><p className="eyebrow">MADE JUST FOR YOU</p><h1>{revealTitle}</h1><h2>{experience.recipient || 'Beautiful human'} <span>♡</span></h2></>}
         </div>}
-        {scene === 'heart' && revealPlaying && <BirthdayReveal title={revealTitle} name={experience.recipient || 'Beautiful human'} display={font.display} script={font.script} accent={palette.balloons[0]} onDone={onRevealDone} />}
+        {scene === 'heart' && revealPlaying && <BirthdayReveal title={revealTitle} name={experience.recipient || 'Beautiful human'} display={font.display} script={font.script} accent={palette.balloons[0]} onCovered={() => setHeartCovered(true)} onDone={onRevealDone} />}
 
         {scene === 'intro' && <BirthdayIntro text={experience.greeting || (experience.occasion === 'Birthday' ? `Happy Birthday, ${experience.recipient || 'you'}!` : `A little surprise for ${experience.recipient || 'you'}`)} subtitle={experience.title} colors={palette.balloons} onNext={next} />}
 
