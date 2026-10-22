@@ -1,7 +1,6 @@
-// Vercel Edge function: draws a personal 1200x630 preview picture for a published surprise.
+// Vercel Node function (not Edge: the Edge bundler rejects the @vercel/og import): draws a personal 1200x630 preview picture for a published surprise.
 // Used as og:image by api/share.js, so links shared on WhatsApp / Instagram / Telegram show the person's name.
 import { ImageResponse } from '@vercel/og'
-export const config = { runtime: 'edge' }
 
 const THEMES = {
  "Rose Romance": [
@@ -73,8 +72,8 @@ const el = (style, children) => ({ type: 'div', props: { style: { display: 'flex
 const txt = (style, s) => el(style, s)
 const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s)
 
-export default async function handler(req) {
-  const id = new URL(req.url).searchParams.get('id') || ''
+export default async function handler(req, res) {
+  const id = String((req.query && req.query.id) || new URL(req.url, 'http://x').searchParams.get('id') || '')
   let to = '', from = '', theme = 'Meow Magic'
   const url = process.env.VITE_SUPABASE_URL, key = process.env.VITE_SUPABASE_ANON_KEY
   if (url && key && /^[A-Za-z0-9_-]{6,64}$/.test(id)) {
@@ -99,5 +98,15 @@ export default async function handler(req) {
     txt({ fontSize: 36, marginTop: 22, color: '#ffd9ea' }, from ? `from ${from}` : 'open your surprise'),
     txt({ position: 'absolute', bottom: 30, fontSize: 30, color: '#ff8fc2' }, 'Lovora Meow by Sisirey'),
   ])
-  return new ImageResponse(image, { width: 1200, height: 630, headers: { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800' } })
+  try {
+    const out = new ImageResponse(image, { width: 1200, height: 630 })
+    const png = Buffer.from(await out.arrayBuffer())
+    res.setHeader('Content-Type', 'image/png')
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
+    res.status(200).send(png)
+  } catch (e) {
+    console.error('og image failed', e)
+    res.setHeader('Cache-Control', 'public, s-maxage=60')
+    res.redirect(302, '/og-image.png') // never leave the share preview empty
+  }
 }

@@ -10,7 +10,7 @@
     "typecheck": "tsc -b --pretty"
   },
   "dependencies": {
-    "@vercel/og": ">=0.6.2",
+    "@vercel/og": "^0.6.2",
     "@supabase/supabase-js": "^2.57.4",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.468.0",
