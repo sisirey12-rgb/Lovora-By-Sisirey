@@ -1,366 +1,134 @@
-# LOVORA MEOW
-### Interactive Surprise & Celebration Studio — by Sisirey
+# LOVORA MEOW — Interactive Surprise Studio
 
-LOVORA MEOW is a mobile-first web experience for creating personalized digital surprises and celebration stories. It combines playful, cat-inspired branding with animated scenes, personal messages, photos, video, and a creator dashboard—designed for birthdays, special occasions, and meaningful moments.
+A mobile-first, interactive digital-surprise creator built with React, Vite, TypeScript, Tailwind CSS, Framer Motion, and optional Supabase cloud publishing.
 
-> **Project status:** Feature-rich MVP. Review configuration and run a production build before relying on a deployment. Cloud publishing requires a configured Supabase project.
+## What works in the free local MVP
 
----
+- Premium responsive landing page, original cat-inspired brand mark, dark/light theme toggle.
+- Eight-step creator: occasion, personalization, ten visual themes, image/video memories, user-provided audio, scene selection/reordering, interactive preview, publishing setup.
+- Interactive story player with a floating heart, magical intro, animated cake and wish, five poppable balloons with personalized messages, personal letter, photo/video gallery, and finale with confetti.
+- Optional browser vibration with an on/off setting. It gracefully does nothing when unsupported.
+- Local draft save, dashboard, edit, duplicate, delete, and preview.
+- Supabase publishing adapter and starter RLS migration.
+- Reduced-motion support, keyboard-focus styles, touch-friendly controls, safe-area padding, accessible scene labels, file-size checks.
 
-## Contents
-- [Overview](#overview)
-- [Highlights](#highlights)
-- [Experience creation flow](#experience-creation-flow)
-- [Interactive story scenes](#interactive-story-scenes)
-- [Technology stack](#technology-stack)
-- [Project structure](#project-structure)
-- [Requirements](#requirements)
-- [Run locally](#run-locally)
-- [Build and type-check](#build-and-type-check)
-- [Deploy to Vercel](#deploy-to-vercel)
-- [Optional Supabase setup](#optional-supabase-setup)
-- [Environment variables](#environment-variables)
-- [Storage and sharing behaviour](#storage-and-sharing-behaviour)
-- [Accessibility and responsive design](#accessibility-and-responsive-design)
-- [Security and privacy](#security-and-privacy)
-- [Troubleshooting](#troubleshooting)
-- [Roadmap ideas](#roadmap-ideas)
-- [Credits](#credits)
+## Important MVP limits
 
----
+**Local drafts are stored only in the current browser on the current device.** They are not accessible to recipients and are not a public share link. LocalStorage has practical browser quotas; this MVP limits uploaded image/video/audio files to 8 MB each, but large base64 media can still exceed browser storage limits. If a save fails, remove large media or use cloud storage in a later iteration.
 
-## Overview
-
-LOVORA MEOW turns a personal greeting into a small interactive story. A creator can personalize an experience, select a visual theme, add memories, preview scenes, and manage saved creations from a dashboard.
-
-The app is designed around two possible storage paths:
-
-1. **Local mode** — drafts stay in the current browser on the current device. They are useful for trying the creator but are not automatically available on another device.
-2. **Supabase mode** — account-aware cloud saving and published experiences can be enabled after the Supabase project, database migration, authentication, and environment variables are configured.
-
-A successful preview does not necessarily mean an experience has been published as a shareable public link. Test the published URL before sharing it.
-
-## Highlights
-
-- Mobile-first layout with touch-friendly controls and responsive scenes.
-- Cat-inspired visual identity and celebration-focused interface.
-- Light and dark appearance options.
-- Guided editor for personal details, messages, and themes.
-- Photo and video memory support, subject to browser and upload limits.
-- Interactive story playback with animated transitions.
-- Celebration scenes that may include a cake, balloons, bouquet, letter, gallery, and finale.
-- Optional vibration feedback where browser and device support it.
-- Local draft management, such as previewing and editing saved creations, depending on the current implementation.
-- Dashboard for saved experiences.
-- Optional Supabase integration for authentication, cloud data, and publishing.
-- Public experience routes intended for published content.
-- Accessibility-minded details such as visible focus styling and reduced-motion support where implemented.
-- Vercel configuration for app routes and sharing, depending on the current repository setup.
-
-## Experience creation flow
-
-The creator is organized as a guided workflow. Steps can vary by version and may include:
-
-1. **Occasion and details** — choose the occasion and enter personal details.
-2. **Personalization** — customize names and message content.
-3. **Visual theme** — choose from available styles.
-4. **Memories** — add supported images or videos.
-5. **Scene setup** — choose or arrange story scenes.
-6. **Preview** — play through the experience before saving or publishing.
-7. **Save or publish** — keep a local draft or publish through a configured Supabase account.
-
-## Interactive story scenes
-
-LOVORA MEOW is designed to make a greeting feel like an experience rather than a static card. Depending on the configured story, scenes may include:
-
-- **Welcome scene** — introduces the surprise and recipient.
-- **Birthday cake** — a celebratory cake moment.
-- **Balloons and effects** — animated decorative elements.
-- **Bouquet** — a visual gift moment.
-- **Personal letter** — a space for a longer message.
-- **Memory gallery** — photos and supported video memories.
-- **Finale** — a closing celebration scene.
-
-Audio, sound effects, background music, and vibration depend on browser permissions, user interaction, device support, and the assets included in the project. Browsers commonly block autoplay audio until the visitor interacts with the page.
-
-## Technology stack
-
-- **React** — component-based user interface.
-- **TypeScript** — typed application code.
-- **Vite** — development server and production bundler.
-- **Tailwind CSS** — utility-first styling.
-- **Supabase (optional)** — authentication and cloud data for publishing.
-- **Vercel** — deployment and serverless route hosting.
-- **GitHub** — source control and collaboration.
-
-Check `package.json` and the source code for the exact versions and enabled dependencies.
-
-## Project structure
-
-The repository may contain a structure similar to this:
-
-```text
-Lovora-By-Sisirey/
-├── api/
-│   └── share.js                 # Share-route handler
-├── public/
-│   ├── media/
-│   │   ├── birthday-videos/     # Story video assets
-│   │   ├── effects/             # Sound effects
-│   │   └── music/               # Background music
-│   ├── photos/                  # Example/gallery imagery
-│   ├── og-image.png             # Social sharing preview
-│   ├── favicon.svg
-│   └── ...
-├── src/
-│   ├── components/
-│   │   ├── scenes/              # Individual story scenes
-│   │   └── ui/                  # Reusable interface controls
-│   ├── pages/
-│   │   ├── Landing.tsx
-│   │   └── Dashboard.tsx
-│   ├── services/
-│   │   ├── storage/             # Local/cloud storage adapters
-│   │   └── supabase/            # Supabase client integration
-│   ├── lib/                     # Audio, effects, and helpers
-│   ├── config.ts                # Site configuration
-│   ├── data.ts                  # Themes and experience data
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── ...
-├── supabase/
-│   └── migrations/
-│       └── 0001_experiences.sql # Database schema and policies
-├── .env.example
-├── .gitignore
-├── index.html
-├── package.json
-├── vercel.json
-└── vite.config.ts
-```
-
-Some filenames may differ as the project evolves. Check the repository for the current structure before changing configuration.
+Real public publishing requires Supabase credentials, the migration, and authentication. The initial frontend includes the publish adapter but does not yet include a sign-in UI. Therefore, without adding an auth flow, publishing will correctly return a sign-in-required message instead of pretending a public link exists. Public routes only load rows marked as published from the `published_experiences` view.
 
 ## Requirements
 
-- Node.js 20 or newer recommended.
-- npm, included with Node.js.
-- Git, if cloning or contributing.
-- A modern browser.
-- Optional: a Supabase project for cloud saving and publishing.
-- Optional: a Vercel account for deployment.
+- Node.js 20+ recommended
+- npm
+- Git
+- Optional Supabase project for cloud publishing
 
 ## Run locally
 
-Clone the repository and enter its root directory:
-
-```bash
-git clone https://github.com/sisirey12-rgb/Lovora-By-Sisirey.git
-cd Lovora-By-Sisirey
-```
-
-Install dependencies:
-
 ```bash
 npm install
-```
-
-Start the development server:
-
-```bash
 npm run dev
 ```
 
-Vite prints a local URL in the terminal (usually `http://localhost:5173`). Open that address in your browser.
+Open the local URL shown by Vite. The app works in local demo mode without environment variables.
 
-The app may run in local/demo mode without Supabase variables. Cloud-specific features require the setup described below.
-
-## Build and type-check
-
-Run the type-check command if it exists in `package.json`:
+## Typecheck and production build
 
 ```bash
 npm run typecheck
-```
-
-Create a production build:
-
-```bash
 npm run build
-```
-
-Preview the production build locally:
-
-```bash
 npm run preview
 ```
 
-The build output is usually written to `dist/`.
+## GitHub
 
-> **Release check:** Run `npm install` and `npm run build` after pulling changes and before deploying. Starting the development server does not guarantee that the production build will pass.
+1. Create a new empty repository on GitHub.
+2. Unzip this project and open a terminal in the `lovora-meow` directory.
+3. Run:
+
+```bash
+git init
+git add .
+git commit -m "Build LOVORA MEOW MVP"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+git push -u origin main
+```
+
+Replace the remote URL with your repository's URL. Do not commit `.env` files.
 
 ## Deploy to Vercel
 
-1. Push the project to GitHub.
-2. Sign in to Vercel and choose **Add New → Project**.
-3. Import `sisirey12-rgb/Lovora-By-Sisirey`.
-4. Set the root directory to the repository root if Vercel asks.
-5. Let Vercel detect Vite, or choose the Vite framework preset.
-6. Set the build command to `npm run build`.
-7. Set the output directory to `dist`.
-8. Add required environment variables if using Supabase.
-9. Deploy, then test the landing page, creator, dashboard, and share routes.
+1. In Vercel, choose **Add New → Project** and import the GitHub repository.
+2. Framework preset: **Vite** (usually auto-detected).
+3. Build command: `npm run build`.
+4. Output directory: `dist`.
+5. Deploy. The included `vercel.json` rewrites `/s/:id`, `/create`, and `/dashboard` to the SPA entry point.
 
-If the repository includes `vercel.json`, review its rewrites against the current API handlers and frontend routes. Verify deployed behaviour after route changes.
+No environment variables are required for the local demo or first deployment.
 
 ## Optional Supabase setup
 
-Supabase is optional for local-only use. To enable accounts and cloud publishing:
-
-### 1. Create a Supabase project
-Create a project in Supabase and keep its credentials private.
-
-### 2. Apply the database migration
-If this migration exists in your repository, open the Supabase dashboard's SQL Editor and run the SQL from:
-
-```text
-supabase/migrations/0001_experiences.sql
-```
-
-Review the migration and its access policies before applying it to an existing production database.
-
-### 3. Configure authentication
-Enable the authentication provider supported by the current implementation. Configure email confirmation and redirect URLs as required. Add both your local development URL and deployed site URL to the allowed site and redirect URL lists.
-
-### 4. Add environment variables
-Use the exact variable names expected by the project code. Never commit secret values to GitHub.
-
-### 5. Test publishing
-Test sign-in, saving, opening a published experience, and access rules with a test experience before sharing publicly.
-
-## Environment variables
-
-The exact names depend on the source code. A typical Vite/Supabase setup may use:
+1. Create a Supabase project.
+2. Open **SQL Editor**, paste and run `supabase/migrations/0001_experiences.sql`.
+3. In Project Settings → API, copy the Project URL and **anon/public** key.
+4. Copy `.env.example` to `.env.local` and set:
 
 ```env
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
 ```
 
-Use `.env.example` and search the source code for `import.meta.env` to confirm the actual names. Vite exposes variables prefixed with `VITE_` to browser code, so **never put service-role keys, private API keys, or other secrets in `VITE_` variables**.
+5. Restart Vite or redeploy Vercel after adding the same variables in Project Settings → Environment Variables.
+6. Enable an authentication provider under Supabase Authentication.
+7. Add a sign-in/sign-up flow before enabling public publishing for creators. The included `storage.publish()` requires a signed-in Supabase user; the MVP intentionally does not invent a user identity or bypass ownership.
+8. Test with two browser profiles: an owner can manage owned rows; an anonymous visitor can query only the published view. Do not grant public SELECT on `experiences`.
 
-For local development, create `.env.local` in the project root and fill it with your own values. Keep it out of version control.
+Only use the public anon key in the browser. **Never expose the Supabase service-role key in `VITE_*` variables or client code.**
 
-For Vercel, add the required values under **Project Settings → Environment Variables**, then redeploy.
+## Privacy and storage
 
-## Storage and sharing behaviour
+- Local drafts and uploaded media are saved in browser LocalStorage as JSON/base64. Anyone with access to the same unlocked browser profile may be able to access them.
+- Clearing browser storage removes local drafts.
+- Cloud-published experiences are public to anyone who has the link. Do not publish sensitive content or private photos.
+- The SQL migration enables RLS and keeps unpublished rows unavailable to anonymous visitors.
+- File validation is client-side for usability, not a malware scanner. Only upload media you have permission to share.
+- Sound is not autoplayed. The music upload is stored with the draft, but the current player does not automatically start it; users must explicitly enable audio in a future audio-manager enhancement. No commercial tracks or external assets are bundled.
 
-### Local drafts
-- Stored in the current browser/device using the storage mechanism implemented by the app.
-- May be cleared by browser data cleanup, app resets, or storage limits.
-- Are not automatically synchronized across devices.
-- Are not the same as a public share link.
+## Architecture
 
-### Cloud-published experiences
-- Require a correctly configured backend and database.
-- Should be tested with the project's authentication and database policies.
-- Can be shared only if the publish flow successfully creates a valid public route.
-- May stop working if the deployment, database, or required configuration is removed.
-
-Do not assume a share link is live merely because the experience previews correctly. Test it in a private/incognito window or a second browser before sending it.
-
-## Accessibility and responsive design
-
-The project aims to provide a comfortable experience across mobile and desktop screens. Good practices include:
-
-- Touch-friendly buttons and controls.
-- Visible keyboard focus.
-- Clear labels for interactive controls.
-- Respect for reduced-motion preferences where implemented.
-- Safe-area spacing for phones with display cut-outs.
-- Avoiding reliance on sound alone to communicate important information.
-
-Support for individual features can vary by browser, operating system, and current implementation.
-
-## Security and privacy
-
-- Never commit `.env.local`, API secrets, database service-role keys, or private credentials.
-- Keep `.env.example` limited to variable names and safe example values.
-- Validate uploads and enforce sensible file-size limits.
-- Configure database row-level security and access policies before enabling cloud publishing.
-- Avoid storing sensitive personal information in surprise messages or media.
-- Ask permission before uploading or sharing someone else's photos, videos, or personal messages.
-- Test public share links and account permissions before production use.
+- `src/services/storage/local.ts` — LocalStorage adapter for private device drafts.
+- `src/services/storage/index.ts` — storage facade and Supabase publish/read adapter.
+- `src/services/supabase/client.ts` — optional client initialized only when public credentials are configured.
+- `src/components/Editor.tsx` — multi-step experience creator.
+- `src/components/ScenePlayer.tsx` — interactive story scenes.
+- `supabase/migrations/0001_experiences.sql` — RLS schema and public published view.
 
 ## Troubleshooting
 
-### `vite: not found`
+- **Blank page:** check the browser console and ensure dependencies installed successfully.
+- **Vercel `/s/...` gives 404:** confirm `vercel.json` was deployed and Vercel output is `dist`.
+- **LocalStorage quota exceeded:** remove large media files or clear old drafts; cloud media storage is not included in this MVP.
+- **Publishing says sign-in required:** expected until a Supabase auth UI is added and the user is signed in.
+- **A public experience is unavailable:** the ID must exist in Supabase and have `is_published = true`; local drafts cannot be opened by other devices.
 
-Install dependencies from the project root:
+## License and originality
 
-```bash
-npm install
-npm run dev
-```
+This project uses original interface code and CSS illustrations. It does not copy the reference site's source code or bundle copyrighted music, photographs, or third-party visual assets. Add a license file before redistributing if you need to specify reuse terms.
 
-### Build fails
 
-Check the first error printed in the terminal, confirm Node.js is supported, and run:
+## Accounts and sharing (added in the upgrade)
 
-```bash
-npm install
-npm run build
-```
+Sign in / sign up is built in and uses the Supabase project from `.env.local`. See `CHANGES.md` for the configuration checklist (env vars, migration, email provider, redirect URLs).
 
-### Supabase or publishing does not work
+## Lovora Meow by Sisirey: design notes
+- Handles in footer: edit `src/config.ts` (Instagram, Telegram, WhatsApp number).
+- Social preview image: replace `public/og-image.png` (1200x630). Set `VITE_SITE_URL` (auto on Vercel).
+- Workflow (sign-in, Supabase publish, editor steps) is unchanged from the original.
 
-- Confirm environment variable names match the source code.
-- Check the Supabase URL and public/anonymous key.
-- Confirm the migration has been applied.
-- Check authentication redirect URLs and database policies.
-- Redeploy after changing Vercel environment variables.
-- Review Vercel function logs for API errors.
-
-### Music or sound does not autoplay
-
-Browsers may block autoplay until the visitor taps or clicks the page. Provide a clear play/unmute control and test on the target mobile browser.
-
-### Photos or videos fail to save
-
-Check file size, supported formats, available browser storage, and upload limits configured by the app. Local browser storage is not intended for unlimited media.
-
-### A shared link shows an error
-
-Confirm the experience was published successfully, the share ID is valid, the deployed route/rewrite exists, and any API or database dependency is configured.
-
-## Roadmap ideas
-
-Possible future enhancements:
-
-- More celebration themes and story templates.
-- More customization for typography, colours, and scene order.
-- Better media optimization and upload progress.
-- Additional language support.
-- Optional QR codes for published experiences.
-- Improved preview cards for messaging apps.
-- More accessibility and reduced-motion controls.
-- Exportable keepsakes or downloadable greeting formats.
-
-These are ideas, not promises that the features are already implemented.
-
-## Credits
-
-**LOVORA MEOW** is an interactive surprise and celebration project by **Sisirey**.
-
-- **GitHub repository:** https://github.com/sisirey12-rgb/Lovora-By-Sisirey
-- **Live website:** Check the repository or Vercel dashboard for the current deployment URL.
-
-Made for meaningful moments, personal messages, and memorable digital surprises.
-
----
-
-<p align="center">
-  <strong>LOVORA MEOW</strong><br>
-  <em>Make the moment feel magical.</em><br>
-  Built with care by Sisirey.
-</p>
+- Cake baker: `node --experimental-strip-types scripts/test-cake-sim.mts hearts 21` runs the cake simulation headless.
+- Live wishes: run `supabase/migrations/0002_wishes.sql` in Supabase once.
+- Creator stats: run `supabase/migrations/0003_stats.sql` once in Supabase.
+- Templates live in `src/lib/templates.ts`.

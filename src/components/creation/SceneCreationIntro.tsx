@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowRight, Check, Heart, SkipForward, Sparkles, X } from 'lucide-react'
+import { ArrowRight, Check, Heart, Sparkles, X } from 'lucide-react'
 import type { Experience, SceneId } from '../../types'
 import { sceneLabels } from '../../data'
 import './SceneCreationIntro.css'
@@ -12,7 +12,7 @@ type Props = {
 }
 
 const sceneGlyph: Record<SceneId, string> = {
-  heart: '♡', intro: '✦', cake: '🎂', balloons: '🎈', letter: '💌', video: '🐈', memories: '📸', timeline: '🕰️', wishjar: '🫙', finale: '✨',
+  heart: '♡', intro: '✦', cake: '🎂', balloons: '🎈', letter: '💌', video: '🐈', memories: '📸', timeline: '🕰️', memorymatch: '🃏', wishjar: '🫙', finale: '✨',
 }
 const stageNames = ['Gathering the little details', 'Building your scenes', 'Adding the final sparkle']
 
@@ -56,7 +56,7 @@ export default function SceneCreationIntro({ experience, onComplete, onCancel }:
       </div>
       <div className="sci-status"><span className="sci-status-icon"><Check size={13}/></span><span>{finished ? 'All scenes assembled' : stage === 0 ? 'Gathering colours and memories' : stage === 1 ? 'Arranging your story in order' : 'Polishing the final reveal'}</span></div>
       <div className="sci-progress"><motion.span initial={{ width: '4%' }} animate={{ width: finished ? '100%' : `${Math.min(92, 12 + (stage + 1) * 28)}%` }} transition={{ duration: reducedMotion ? 0 : .5 }}/></div>
-      <div className="sci-actions"><button type="button" className="sci-skip" onClick={finish}>{finished ? 'Open preview' : 'Skip animation'} {finished ? <ArrowRight size={15}/> : <SkipForward size={14}/>}</button></div>
+      {finished && <div className="sci-actions"><button type="button" className="sci-skip" onClick={finish}>Open preview <ArrowRight size={15}/></button></div>}
       <p className="sci-footnote">A little visual assembly — your actual preview comes next.</p>
     </div>
   </div>

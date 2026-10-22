@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  *  - bow: vertical, belly toward the target, limb tips bend toward the archer as the string is drawn
  *  - drag: the nock follows the pointer through a saturating curve (rubber-band tension: harder to pull the further you go)
  *  - release: damped spring snaps the string forward, the arrow leaves when the nock passes rest, then the string vibrates
- *  - flight: gravity + air drag, arrow rotates with its velocity; a gentle aim-assist keeps the shot on the heart
+ *  - flight: the arrow is shot UP the screen with air drag and a strong aim-assist; the game frame is drawn rotated -90deg (bow bottom, heart top)
  *  - the reveal only fires once the arrow tip actually reaches the heart
  */
 const W = 360, H = 220
@@ -14,18 +14,16 @@ const GRIP = { x: 86, y: 110 }
 const TIP_TOP = { x: 58, y: 26 }, TIP_BOT = { x: 58, y: 194 }
 const HEART = { x: 296, y: 110, r: 36 }
 const ARROW_LEN = 118
-const MAX_PULL = 70, MIN_PULL = 16, GRAVITY = 170, DRAG = 0.12, ASSIST = 0.8
+const MAX_PULL = 70, MIN_PULL = 16, GRAVITY = 40, DRAG = 0.1, ASSIST = 0.85
 const rad2deg = 180 / Math.PI
 
 /** Launch velocity from a given nock displacement (same maths for the real shot and the aim preview). */
 function launch(nx: number, ny: number) {
-  const pull = Math.hypot(nx, ny), speed = 300 + pull * 5.2
-  const ang = Math.atan2(GRIP.y - (REST.y + ny), GRIP.x - (REST.x + nx))
+  const pull = Math.hypot(nx, ny), speed = 340 + pull * 5
   const sx = REST.x + nx, sy = REST.y + ny
-  const tFlight = Math.max(.12, (HEART.x - 18 - sx - ARROW_LEN) / (speed * .9) + ARROW_LEN / speed)
-  const vyIdeal = (HEART.y - sy - 0.5 * GRAVITY * tFlight * tFlight) / tFlight
-  const vxIdeal = Math.sqrt(Math.max(1, speed * speed - vyIdeal * vyIdeal))
-  return { sx, sy, avx: Math.cos(ang) * speed * (1 - ASSIST) + vxIdeal * ASSIST, avy: Math.sin(ang) * speed * (1 - ASSIST) + vyIdeal * ASSIST }
+  const raw = Math.atan2(GRIP.y - sy, GRIP.x - sx), aimed = Math.atan2(HEART.y - sy, HEART.x - 18 - sx)
+  const ang = raw * (1 - ASSIST) + aimed * ASSIST
+  return { sx, sy, avx: Math.cos(ang) * speed, avy: Math.sin(ang) * speed }
 }
 type Phase = 'idle' | 'drawing' | 'flying' | 'hit' | 'miss'
 export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void; buzz: (p: number | number[]) => void; onGesture?: () => void }) {
@@ -40,7 +38,7 @@ export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void
   const s = useRef({ nx: 0, ny: 0, vx: 0, vy: 0, vib: false, phase: 'idle' as Phase, pull: 0, px: 0, py: 0, avx: 0, avy: 0, last: 0, tier: 0, pointer: -1 })
   const [shots, setShots] = useState(0)
   const [phase, setPhase] = useState<Phase>('idle')
-  const [hint, setHint] = useState('Drag the arrow back — the further you pull, the harder it flies.')
+  const [hint, setHint] = useState('Pull the arrow down, then let go to shoot up at the heart.')
 
   const set = (p: Phase) => { s.current.phase = p; setPhase(p) }
   const draw = useCallback(() => {
@@ -62,7 +60,7 @@ export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void
       if (st.phase === 'drawing' && pull >= MIN_PULL) {
         const L = launch(st.nx, st.ny); const a0 = Math.atan2(L.avy, L.avx)
         let x = L.sx + Math.cos(a0) * ARROW_LEN, y = L.sy + Math.sin(a0) * ARROW_LEN, vx = L.avx, vy = L.avy, d = `M${x} ${y}`
-        for (let i = 0; i < 20; i++) { for (let k = 0; k < 3; k++) { vy += GRAVITY * .02; vx *= 1 - DRAG * .02; vy *= 1 - DRAG * .02; x += vx * .02; y += vy * .02 } d += ` L${x} ${y}` }
+        for (let i = 0; i < 20; i++) { for (let k = 0; k < 3; k++) { vx -= GRAVITY * .02; vx *= 1 - DRAG * .02; vy *= 1 - DRAG * .02; x += vx * .02; y += vy * .02 } d += ` L${x} ${y}` }
         traj.current.setAttribute('d', d)
       } else traj.current.setAttribute('d', '')
     }
@@ -91,7 +89,7 @@ export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void
         if (st.phase !== 'flying' && Math.hypot(st.nx, st.ny) < .15 && Math.hypot(st.vx, st.vy) < 4) { st.nx = 0; st.ny = 0; st.vib = false }
       }
       if (st.phase === 'flying') {
-        st.avy += GRAVITY * dt; const drag = 1 - DRAG * dt; st.avx *= drag; st.avy *= drag
+        st.avx -= GRAVITY * dt; const drag = 1 - DRAG * dt; st.avx *= drag; st.avy *= drag
         st.px += st.avx * dt; st.py += st.avy * dt
         const a = Math.atan2(st.avy, st.avx)
         const tx = st.px + Math.cos(a) * ARROW_LEN, ty = st.py + Math.sin(a) * ARROW_LEN
@@ -100,8 +98,8 @@ export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void
           // bury the tip slightly so it reads as stuck in the heart
           st.px = tx - Math.cos(a) * ARROW_LEN + Math.cos(a) * 10; st.py = ty - Math.sin(a) * ARROW_LEN + Math.sin(a) * 10
           buzz([30, 40, 60]); setHint('Right in the heart ♡')
-          window.setTimeout(() => { if (alive.current) onHit() }, 480)
-        } else if (tx > W + 40 || ty > H + 40 || ty < -40 || st.px > W + 80) {
+          window.setTimeout(() => { if (alive.current) onHit() }, 1500)
+        } else if (tx > HEART.x + 70 || tx > W + 40 || ty > H + 40 || ty < -40 || st.px > W + 80) {
           set('miss'); setHint('Just missed — draw it back and try again.')
           window.setTimeout(() => { if (alive.current) reset() }, 900)
         }
@@ -117,7 +115,7 @@ export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void
 
   const toSvg = (e: React.PointerEvent) => {
     const el = svg.current!, pt = el.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY
-    const p = pt.matrixTransform(el.getScreenCTM()!.inverse()); return { x: p.x, y: p.y }
+    const p = pt.matrixTransform(el.getScreenCTM()!.inverse()); return { x: W - p.y, y: p.x }   // screen -> rotated game frame
   }
   const onDown = (e: React.PointerEvent) => {
     const st = s.current
@@ -162,14 +160,15 @@ export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void
   }
   const hit = phase === 'hit'
   return <div className={`bow-stage ${phase}`}>
-    <svg ref={svg} viewBox={`0 0 ${W} ${H}`} className="bow-svg" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={release} onPointerCancel={release} role="img" aria-label="Interactive bow and arrow. Drag the arrow back and release it toward the heart.">
+    <svg ref={svg} viewBox={`0 0 ${H} ${W}`} className="bow-svg" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={release} onPointerCancel={release} role="img" aria-label="Interactive bow and arrow. Drag the arrow back and release it toward the heart.">
       <defs>
         <linearGradient id="bowWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#f6d3e6" /><stop offset=".5" stopColor="#c98ab5" /><stop offset="1" stopColor="#f6d3e6" /></linearGradient>
         <radialGradient id="heartFill" cx=".35" cy=".3" r=".9"><stop offset="0" stopColor="#ffd0e6" /><stop offset=".45" stopColor="#ff6fa8" /><stop offset="1" stopColor="#b8286a" /></radialGradient>
       </defs>
+      <g transform={`translate(0 ${W}) rotate(-90)`}>
       <g className={`bow-heart ${hit ? 'hit' : ''}`} transform={`translate(${HEART.x} ${HEART.y})`}>
         <circle r="74" className="bow-ring" /><circle r="90" className="bow-ring two" /><circle r="52" className="bow-heart-halo" /><circle r="62" className="bow-heart-halo two" />
-        <path d="M0 36 C-9 25 -48 5 -42 -22 C-39 -41 -10 -43 0 -22 C10 -43 39 -41 42 -22 C48 5 9 25 0 36Z" fill="url(#heartFill)" stroke="#ffc9e2" strokeOpacity=".6" strokeWidth="1.5" />
+        <path className="bow-heart-shape" d="M0 36 C-9 25 -48 5 -42 -22 C-39 -41 -10 -43 0 -22 C10 -43 39 -41 42 -22 C48 5 9 25 0 36Z" fill="url(#heartFill)" stroke="#ffc9e2" strokeOpacity=".6" strokeWidth="1.5" />
         <path d="M-26 -26 Q-18 -35 -8 -29" stroke="#fff" strokeOpacity=".7" strokeWidth="3.5" fill="none" strokeLinecap="round" />
       </g>
       <path ref={traj} className="bow-traj" fill="none" />
@@ -179,12 +178,14 @@ export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void
       <rect x={GRIP.x - 4} y={GRIP.y - 14} width="8" height="28" rx="4" fill="#8f4f7e" stroke="#f6d3e6" strokeOpacity=".5" />
       <path ref={string} fill="none" stroke="#fbe6f1" strokeWidth="1.6" strokeLinejoin="round" />
       {Array.from({ length: 12 }, (_, i) => <circle key={i} ref={el => { trail.current[i] = el }} r="2" fill="#ffd36e" opacity="0" />)}
+      {hit && <g transform={`translate(${HEART.x} ${HEART.y})`}>{Array.from({ length: 16 }, (_, i) => <g key={i} className="bow-miniheart" style={{ ['--dx' as string]: `${Math.cos(i * 2.4) * (50 + (i % 5) * 16)}px`, ['--dy' as string]: `${Math.sin(i * 2.4) * (50 + (i % 4) * 18)}px`, animationDelay: `${(i % 4) * .05}s` } as React.CSSProperties}><path d="M0 6 C-4 2 -9 -1 -6 -5 C-4 -8 0 -6 0 -4 C0 -6 4 -8 6 -5 C9 -1 4 2 0 6Z" transform="rotate(90)" fill={i % 2 ? '#ff8fc2' : '#ffd36e'} /></g>)}</g>}
       {hit && <><circle className="bow-shock" cx={HEART.x} cy={HEART.y} r="30" /><circle className="bow-shock two" cx={HEART.x} cy={HEART.y} r="30" /></>}
       <g ref={arrow} className="bow-arrow">
         <line x1="-2" y1="0" x2={ARROW_LEN - 8} y2="0" stroke="#f7e0ef" strokeWidth="2.6" strokeLinecap="round" />
         <path d={`M${ARROW_LEN - 10} -6 L${ARROW_LEN + 6} 0 L${ARROW_LEN - 10} 6Z`} fill="#ffe8f3" stroke="#d58cb8" strokeWidth="1" strokeLinejoin="round" />
         <path d="M2 0 L-8 -7 L10 -6 Z M2 0 L-8 7 L10 6 Z M16 0 L8 -6 L24 -5 Z M16 0 L8 6 L24 5 Z" fill="#f08cbc" opacity=".92" />
         <circle cx="-2" cy="0" r="1.8" fill="#8f4f7e" />
+      </g>
       </g>
     </svg>
     <div className="bow-hud" aria-hidden="true"><span>LEVEL 1</span><span>SHOTS <b>{shots}</b></span><span className="bow-stars">{[0, 1, 2].map(i => <i key={i} className={hit && i < (shots <= 1 ? 3 : shots === 2 ? 2 : 1) ? 'on' : ''}>★</i>)}</span></div>

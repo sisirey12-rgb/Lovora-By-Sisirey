@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Heart, Volume2, VolumeX, RotateCcw, Download, Share2, SkipForward, Sparkles, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Heart, Volume2, VolumeX, RotateCcw, Download, Share2, Sparkles, X } from 'lucide-react'
 import type { Experience, SceneId } from '../types'
 import { sceneLabels, bouquetStyles, themePalettes, normalizeScenes, fontById, suggestions } from '../data'
 import { sfx } from '../lib/sfx'
@@ -8,10 +8,12 @@ import TapFX from './TapFX'
 import MemoryGallery from './MemoryGallery'
 import GiftIntro from './GiftIntro'
 import Timeline from './Timeline'
+import MemoryMatch from './MemoryMatch'
 import WishJar from './WishJar'
 import Fireworks from './Fireworks'
 import { addReminder } from '../lib/reminder'
 import { getWishes } from '../services/wishes'
+import { trackOpen, pingView } from '../services/stats'
 import type { Wish } from './WishJar'
 import { saveShareCard } from '../lib/shareCard'
 import { audio } from '../lib/audioManager'
@@ -32,6 +34,31 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   const scenes = useMemo(() => { const s = normalizeScenes(experience.scenes, experience.v).filter(x => known.includes(x)); return s.length ? s : (['heart'] as SceneId[]) }, [experience.scenes, experience.v])
   const [index, setIndex] = useState(0)
   const [opened, setOpened] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {   // soundtrack bass -> --beat (0..1) on the player root; balloon glow in CSS follows it
+    if (!opened) return
+    const an = audio.getAnalyser(), bins = an ? new Uint8Array(an.frequencyBinCount) : null
+    let raf = 0, beat = 0, avg = 0
+    const loop = (t: number) => {
+      let target = .35 + Math.sin(t / 480) * .12      // gentle idle pulse when the beat can't be read
+      if (an && bins) { an.getByteFrequencyData(bins); const e = (bins[0] + bins[1] + bins[2]) / 3; if (e > 8) { avg = avg * .95 + e * .05; target = Math.min(1, Math.max(0, (e - avg * .8) / (avg * .7 + 20))) } }
+      beat = Math.max(target, beat * .88)
+      rootRef.current?.style.setProperty('--beat', beat.toFixed(3))
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop); return () => cancelAnimationFrame(raf)
+  }, [opened])
+  const viewId = useRef(''), startedAt = useRef(0), furthest = useRef(0), replays = useRef(0)
+  useEffect(() => { furthest.current = Math.max(furthest.current, index) }, [index])
+  useEffect(() => {   // creator stats: count the open, then ping watch time / furthest scene / replays
+    if (!opened || preview || !experience.published) return
+    let alive = true; startedAt.current = Date.now()
+    void trackOpen(experience.id).then(id => { if (alive && id) viewId.current = id })
+    const send = () => { if (viewId.current) void pingView(viewId.current, { seconds: Math.round((Date.now() - startedAt.current) / 1000), furthest: furthest.current, total: experience.scenes.length, replays: replays.current }) }
+    const t = window.setInterval(send, 8000), vis = () => { if (document.visibilityState === 'hidden') send() }
+    document.addEventListener('visibilitychange', vis)
+    return () => { alive = false; window.clearInterval(t); document.removeEventListener('visibilitychange', vis); send() }
+  }, [opened, preview, experience.id, experience.published, experience.scenes.length])
   const [liveWishes, setLiveWishes] = useState<Wish[]>([])
   useEffect(() => {   // wishes friends added through /wish/:id; refreshed while the surprise is open
     if (!experience.published) return
@@ -85,7 +112,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
     const url = experience.published ? `${window.location.origin}/s/${experience.id}` : window.location.href
     try { if (navigator.share) await navigator.share({ title: experience.title, text: `A little surprise for ${experience.recipient}`, url }); else await navigator.clipboard.writeText(url) } catch { /* user cancelled */ }
   }
-  const replay = () => { window.clearTimeout(hitTimer.current); setIndex(0); setPopped([]); setWish(false); setHeartOpen(false); setBouquetOpen(false); setBouquetPhase(0); setMemoryIndex(0) }
+  const replay = () => { replays.current += 1; window.clearTimeout(hitTimer.current); setIndex(0); setPopped([]); setWish(false); setHeartOpen(false); setBouquetOpen(false); setBouquetPhase(0); setMemoryIndex(0) }
   const themeClass = `theme-${experience.theme.toLowerCase().replaceAll(' ', '-')}`
   const confetti = useMemo(() => Array.from({ length: 36 }, (_, i) => i), [])
   const greeting = experience.greeting || `Dear ${experience.recipient || 'you'},`
@@ -98,14 +125,13 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   if (locked) return <div className={`player ${themeClass} countdown-lock`} role="dialog" aria-modal="true" aria-label="Surprise countdown"><div className="countdown-lock-card"><span className="scene-emoji">♡</span><p className="eyebrow">A LITTLE WORLD IS WAITING</p><h1>Something lovely is<br /><em>almost here.</em></h1><p>{experience.openingInstruction || 'Your surprise is waiting for the right moment.'}</p><div className="countdown-clock">{[{ label: 'DAYS', value: Math.floor(countdown / 86400000) }, { label: 'HOURS', value: Math.floor(countdown / 3600000) % 24 }, { label: 'MINUTES', value: Math.floor(countdown / 60000) % 60 }, { label: 'SECONDS', value: Math.floor(countdown / 1000) % 60 }].map(part => <div key={part.label}><strong>{String(part.value).padStart(2, '0')}</strong><small>{part.label}</small></div>)}</div><small className="countdown-note">Unlocks at midnight on {experience.targetDate} · local device time</small>{experience.targetDate && <button className="primary-btn" onClick={() => addReminder(experience.targetDate!, `🎂 Open your surprise${experience.sender ? ' from ' + experience.sender : ''}`, window.location.href)}>🔔 Remind me on the day</button>}<button className="secondary-btn" onClick={onClose}>Back</button></div></div>
 
   if (!opened) return <div className={`player ${themeClass}`} style={fontVars}><GiftIntro recipient={experience.recipient} secret={experience.secretMessage} colors={palette.balloons} onOpen={() => { audio.unlock(); setOpened(true) }} /></div>
-  return <div className={`player ta-host ta-${experience.textAnim || 'rise'} ${themeClass}`} style={fontVars} role="dialog" aria-modal="true" aria-label="Interactive surprise">
+  return <div ref={rootRef} className={`player ta-host ta-${experience.textAnim || 'rise'} ${themeClass}`} style={fontVars} role="dialog" aria-modal="true" aria-label="Interactive surprise">
     <TapFX active={scene === 'finale' || scene === 'memories'} colors={palette.balloons} buzz={buzz} />
     {index === scenes.length - 1 && <a className="primary-btn player-reply" target="_blank" rel="noopener noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`Thank you for my surprise${experience.sender ? ', ' + experience.sender : ''} 💌`)}`}>Send a thank-you 💌</a>}
     <div className="player-top">
       <button className="icon-btn" onClick={onClose} aria-label="Close experience"><X /></button>
       <div className="player-progress">{scenes.map((s, i) => <button key={s} onClick={() => setIndex(i)} className={i === index ? 'active' : ''} aria-label={`Go to ${sceneLabels[s]}`} />)}</div>
       <button className="icon-btn" onClick={() => void saveShareCard(experience.recipient, experience.sender, palette.balloons)} aria-label="Save share card"><Download /></button>
-      {preview && <button className="text-btn player-skip" onClick={() => setIndex(lenRef.current - 1)}>Skip <SkipForward size={14} /></button>}
       <button className="icon-btn" onClick={() => { audio.unlock(); setSoundOn(v => !v) }} aria-label={soundOn ? 'Mute sound' : 'Turn sound on'}>{soundOn ? <Volume2 /> : <VolumeX />}</button>
     </div>
     <Particles count={8} />
@@ -139,8 +165,9 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
         {scene === 'memories' && <div className="scene-content wide"><p className="eyebrow">OUR LITTLE TIME CAPSULE</p><h1>Little moments, <em>big feelings.</em></h1>{experience.memories.length ? <MemoryGallery memories={experience.memories} colors={palette.balloons} buzz={buzz} />
           : <div className="empty-memory"><span>♡</span><p>Some memories are kept in the heart.</p><small>Add photos or videos in the creator to make this part yours.</small></div>}<button className="primary-btn" onClick={next}>One last thing <ArrowRight size={17} /></button></div>}
 
+        {scene === 'memorymatch' && <div className="scene-content"><p className="eyebrow">A LITTLE GAME FOR YOU</p><h1>Match our <em>memories.</em></h1><MemoryMatch memories={experience.memories} buzz={buzz} /></div>}
         {scene === 'timeline' && <div className="scene-content wide"><p className="eyebrow">THE STORY SO FAR</p><h1>Our little <em>timeline.</em></h1>{experience.memories.length ? <Timeline memories={experience.memories} /> : <p className="muted">Add photos with dates to build your timeline.</p>}</div>}
-        {scene === 'wishjar' && <div className="scene-content"><p className="eyebrow">MADE WITH LOVE BY YOUR PEOPLE</p><h1>Your <em>wish jar.</em></h1><WishJar colors={palette.balloons} wishes={[...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes].length ? [...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes] : experience.balloonWishes.filter(Boolean).map(text => ({ name: '', text }))} /></div>}
+        {scene === 'wishjar' && <div className="scene-content"><p className="eyebrow">MADE WITH LOVE BY YOUR PEOPLE</p><h1>Your <em>wish jar.</em></h1><WishJar colors={palette.balloons} wishes={[...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes].length ? [...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes] : (experience.balloonWishes || []).filter(Boolean).map(text => ({ name: '', text }))} /></div>}
         {scene === 'finale' && <div className="scene-content finale-content"><Fireworks colors={palette.balloons} /><div className="confetti" aria-hidden="true">{confetti.map(i => <i key={i} style={{ left: `${(i * 29) % 100}%`, animationDelay: `${(i % 9) * .14}s`, transform: `rotate(${i * 17}deg)` }} />)}</div><div className="final-fireworks" aria-hidden="true"><i /><i /><i /></div><Sparkles className="final-spark" size={38} /><p className="eyebrow">A SCRAPBOOK OF MOMENTS</p>
           <div className="scrapbook" aria-label="Scrapbook of moments">
             <div className="scrap-photos">{experience.memories.filter(m => m.kind === 'image').slice(0, 4).map((m, i) => <figure key={m.id} className={`scrap-photo sp-${i}`}><span className="tape" /><img src={m.src} alt={m.caption || 'A cherished memory'} /><figcaption>{m.caption || '♡'}</figcaption></figure>)}{experience.memories.filter(m => m.kind === 'image').length === 0 && <figure className="scrap-photo sp-0 empty"><span className="tape" /><div>♡</div><figcaption>moments kept in the heart</figcaption></figure>}</div>

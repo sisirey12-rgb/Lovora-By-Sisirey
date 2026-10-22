@@ -25,8 +25,8 @@ export const themes: { name: ThemeName; colors: string; description: string }[] 
   { name: 'Aurora Sky', colors: 'linear-gradient(135deg,#5ef2c8,#4a5bd6)', description: 'Northern lights shimmer' },
   { name: 'Mocha Cream', colors: 'linear-gradient(135deg,#e8c9a8,#7a4a38)', description: 'Cosy coffee and cream' },
 ]
-export const defaultScenes: SceneId[] = ['heart','intro','cake','balloons','letter','video','memories','timeline','wishjar','finale']
-export const sceneLabels: Record<SceneId, string> = { heart: 'Floating heart', intro: 'Magical intro', cake: 'Birthday cake', balloons: 'Pop the balloons', letter: 'Personal letter', video: 'Cat video surprise', memories: 'Photo memories', timeline: 'Memory timeline', wishjar: 'Wish jar', finale: 'Grand finale' }
+export const defaultScenes: SceneId[] = ['heart','intro','cake','balloons','letter','video','memories','timeline','memorymatch','wishjar','finale']
+export const sceneLabels: Record<SceneId, string> = { heart: 'Floating heart', intro: 'Magical intro', cake: 'Birthday cake', balloons: 'Pop the balloons', letter: 'Personal letter', video: 'Cat video surprise', memories: 'Photo memories', timeline: 'Memory timeline', memorymatch: 'Memory match game', wishjar: 'Wish jar', finale: 'Grand finale' }
 
 
 export const messageTemplates = [
