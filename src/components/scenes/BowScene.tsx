@@ -9,12 +9,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  *  - the reveal only fires once the arrow tip actually reaches the heart
  */
 const W = 360, H = 220
-const REST = { x: 58, y: 110 }
-const GRIP = { x: 86, y: 110 }
-const TIP_TOP = { x: 58, y: 26 }, TIP_BOT = { x: 58, y: 194 }
-const HEART = { x: 296, y: 110, r: 36 }
-const ARROW_LEN = 118
-const MAX_PULL = 70, MIN_PULL = 16, GRAVITY = 40, DRAG = 0.1, ASSIST = 0.85
+const REST = { x: 66, y: 110 }
+const GRIP = { x: 90, y: 110 }
+const TIP_TOP = { x: 66, y: 54 }, TIP_BOT = { x: 66, y: 166 }
+const HEART = { x: 292, y: 110, r: 36 }
+const ARROW_LEN = 88
+const MAX_PULL = 48, MIN_PULL = 12, GRAVITY = 40, DRAG = 0.1, ASSIST = 0.85
 const rad2deg = 180 / Math.PI
 
 /** Launch velocity from a given nock displacement (same maths for the real shot and the aim preview). */
@@ -46,8 +46,8 @@ export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void
     const pull = Math.hypot(st.nx, st.ny)
     const tipX = TIP_TOP.x - Math.min(pull, MAX_PULL) * 0.11
     const nockX = REST.x + st.nx, nockY = REST.y + st.ny
-    limbTop.current?.setAttribute('d', `M${tipX} ${TIP_TOP.y} C${tipX + 38} ${TIP_TOP.y + 20} ${GRIP.x + 4} ${GRIP.y - 46} ${GRIP.x} ${GRIP.y - 6}`)
-    limbBot.current?.setAttribute('d', `M${tipX} ${TIP_BOT.y} C${tipX + 38} ${TIP_BOT.y - 20} ${GRIP.x + 4} ${GRIP.y + 46} ${GRIP.x} ${GRIP.y + 6}`)
+    limbTop.current?.setAttribute('d', `M${tipX} ${TIP_TOP.y} C${tipX + 38} ${TIP_TOP.y + 20} ${GRIP.x + 4} ${GRIP.y - 30} ${GRIP.x} ${GRIP.y - 6}`)
+    limbBot.current?.setAttribute('d', `M${tipX} ${TIP_BOT.y} C${tipX + 38} ${TIP_BOT.y - 20} ${GRIP.x + 4} ${GRIP.y + 30} ${GRIP.x} ${GRIP.y + 6}`)
     string.current?.setAttribute('d', `M${tipX} ${TIP_TOP.y} L${nockX} ${nockY} L${tipX} ${TIP_BOT.y}`)
     const t = Math.min(1, pull / MAX_PULL)
     string.current?.setAttribute('stroke-width', String(1.6 + t * 1.2))
@@ -166,8 +166,8 @@ export default function BowScene({ onHit, buzz, onGesture }: { onHit: () => void
         <radialGradient id="heartFill" cx=".35" cy=".3" r=".9"><stop offset="0" stopColor="#ffd0e6" /><stop offset=".45" stopColor="#ff6fa8" /><stop offset="1" stopColor="#b8286a" /></radialGradient>
       </defs>
       <g transform={`translate(0 ${W}) rotate(-90)`}>
-      <g className={`bow-heart ${hit ? 'hit' : ''}`} transform={`translate(${HEART.x} ${HEART.y})`}>
-        <circle r="74" className="bow-ring" /><circle r="90" className="bow-ring two" /><circle r="52" className="bow-heart-halo" /><circle r="62" className="bow-heart-halo two" />
+      <g className={`bow-heart ${hit ? 'hit' : ''}`} transform={`translate(${HEART.x} ${HEART.y}) rotate(90)`}>
+        <circle r="62" className="bow-ring" /><circle r="74" className="bow-ring two" /><circle r="52" className="bow-heart-halo" /><circle r="62" className="bow-heart-halo two" />
         <path className="bow-heart-shape" d="M0 36 C-9 25 -48 5 -42 -22 C-39 -41 -10 -43 0 -22 C10 -43 39 -41 42 -22 C48 5 9 25 0 36Z" fill="url(#heartFill)" stroke="#ffc9e2" strokeOpacity=".6" strokeWidth="1.5" />
         <path d="M-26 -26 Q-18 -35 -8 -29" stroke="#fff" strokeOpacity=".7" strokeWidth="3.5" fill="none" strokeLinecap="round" />
       </g>

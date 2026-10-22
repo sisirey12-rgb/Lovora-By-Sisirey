@@ -5,10 +5,11 @@ import { audio } from '../../lib/audioManager'
 import { hostedBirthdayVideo } from '../../data'
 
 type Phase = 'enter' | 'play' | 'leave'
-const BALLOONS = [
-  { x: '-4%', c: 0, d: 0 }, { x: '18%', c: 3, d: .12 }, { x: '40%', c: 1, d: .05 }, { x: '62%', c: 4, d: .18 }, { x: '84%', c: 2, d: .1 }, { x: '100%', c: 5, d: .22 },
-]
-/** Cat video in its own scene: card + balloons animate in → video plays → balloons lift the card away → next scene. */
+// Pendulum: the card hangs from a nail on two wires. It is released from the side and swings in with a decaying swing,
+// plays, then swings out with growing swings until it lets go and drops away.
+const ENTER = { rotate: [70, -44, 28, -17, 9, -4, 0], opacity: 1 }
+const LEAVE = { rotate: [0, -16, 34, -58, 84], y: ['0vh', '0vh', '0vh', '3vh', '45vh'], opacity: [1, 1, 1, 1, 0] }
+/** Cat video in its own scene: swings in on a wire → video plays → swings out → next scene. */
 export default function CatVideoScene({ palette, onDone, buzz }: { palette: string[]; onDone: () => void; buzz: (p: number | number[]) => void }) {
   const [phase, setPhase] = useState<Phase>('enter')
   const [needsTap, setNeedsTap] = useState(false)
@@ -26,26 +27,24 @@ export default function CatVideoScene({ palette, onDone, buzz }: { palette: stri
     finished.current = true
     audio.resumeAfterVideo()            // continue the soundtrack from the saved timestamp
     buzz([20, 30, 20]); setPhase('leave')
-    timers.current.push(window.setTimeout(onDone, reduced ? 100 : 2100))
+    timers.current.push(window.setTimeout(onDone, reduced ? 100 : 2500))
   }, [buzz, onDone, reduced])
   const entered = () => { if (phase === 'enter') { setPhase('play'); audio.pauseForVideo(); play() } }   // music pauses at its current timestamp
   return <div className={`cv-scene cv-${phase}`}>
-    <div className="cv-sparkles" aria-hidden="true">{Array.from({ length: 12 }, (_, i) => <i key={i} style={{ ['--i' as string]: i } as React.CSSProperties} />)}</div>
     <div className="cv-clouds" aria-hidden="true"><i /><i /><i /><i /></div>
-    <p className="eyebrow">A LITTLE SOMETHING FLOATING YOUR WAY</p>
-    <motion.div className="cv-rig" style={{ transformOrigin: '50% -70px' }} initial={{ y: '75vh', rotate: -10, opacity: 0 }}
-      animate={phase === 'leave' ? { y: [0, 30, '-140vh'], rotate: [0, 1.5, -5], opacity: 1 } : { y: 0, rotate: [-10, 6, -3.5, 1.8, 0], opacity: 1 }}
-      transition={phase === 'leave' ? { duration: reduced ? .05 : 2.8, times: [0, .13, 1], ease: ['easeOut', [.5, 0, .9, .4]] } : { y: { type: 'spring', stiffness: 38, damping: 11, mass: 1.4 }, rotate: { duration: 3, times: [0, .3, .55, .78, 1], ease: 'easeOut' }, opacity: { duration: .5 } }} onAnimationComplete={entered}>
-      <div className="cv-swing">
-      <svg className="cv-ropes" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">{BALLOONS.map((b, i) => <line key={i} x1={Math.min(96, Math.max(4, parseFloat(b.x)))} y1="0" x2="50" y2="40" />)}</svg>
-      <div className="cv-balloons" aria-hidden="true">
-        {BALLOONS.map((b, i) => <span key={i} className="cv-balloon" style={{ left: b.x, ['--c' as string]: palette[b.c % palette.length], ['--d' as string]: `${b.d}s` } as React.CSSProperties}><svg viewBox="0 0 40 56"><path d="M20 50 C14 42 1 33 3 18 C5 6 17 4 20 14 C23 4 35 6 37 18 C39 33 26 42 20 50Z" fill="var(--c)" /><path d="M9 14 Q12 8 17 11" stroke="#fff" strokeOpacity=".7" strokeWidth="2.4" fill="none" strokeLinecap="round" /><path d="M20 50 L16 55 L24 55Z" fill="var(--c)" /></svg><i className="cv-string" /></span>)}
-      </div>
-      <div className="cv-card" aria-label="Portrait cat video">
-        <video ref={video} src={hostedBirthdayVideo} playsInline preload="auto" onPlay={() => audio.pauseForVideo()} onEnded={finish} onError={finish} onPause={e => { if (!e.currentTarget.ended && phase === 'play' && !finished.current) setNeedsTap(true) }} />
-        {needsTap && phase === 'play' && <button className="cv-tap" onClick={() => { play() }}><Play size={22} fill="currentColor" /> Tap to play</button>}
-      </div>
-      </div>
-    </motion.div>
+    <p className="eyebrow">A LITTLE SOMETHING SWINGING YOUR WAY</p>
+    <div className="cv-hang" style={{ ['--c' as string]: palette[0] || '#ffd36e' } as React.CSSProperties}>
+      <span className="cv-nail" />
+      <motion.div className="cv-rig" style={{ transformOrigin: '50% -120px' }} initial={{ rotate: 70, opacity: 0 }}
+        animate={phase === 'leave' ? LEAVE : ENTER}
+        transition={phase === 'leave' ? { duration: reduced ? .05 : 2.6, times: [0, .2, .42, .72, 1], ease: 'easeInOut' } : { rotate: { duration: reduced ? .05 : 3.4, times: [0, .2, .38, .55, .72, .87, 1], ease: 'easeInOut' }, opacity: { duration: .4 } }}
+        onAnimationComplete={entered}>
+        <svg className="cv-wire" viewBox="0 0 100 120" preserveAspectRatio="none" aria-hidden="true"><line x1="50" y1="0" x2="8" y2="120" /><line x1="50" y1="0" x2="92" y2="120" /></svg>
+        <div className="cv-card" aria-label="Portrait cat video">
+          <video ref={video} src={hostedBirthdayVideo} playsInline preload="auto" onPlay={() => audio.pauseForVideo()} onEnded={finish} onError={finish} onPause={e => { if (!e.currentTarget.ended && phase === 'play' && !finished.current) setNeedsTap(true) }} />
+          {needsTap && phase === 'play' && <button className="cv-tap" onClick={() => { play() }}><Play size={22} fill="currentColor" /> Tap to play</button>}
+        </div>
+      </motion.div>
+    </div>
   </div>
 }

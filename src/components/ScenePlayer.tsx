@@ -8,7 +8,7 @@ import TapFX from './TapFX'
 import MemoryGallery from './MemoryGallery'
 import GiftIntro from './GiftIntro'
 import Timeline from './Timeline'
-import MemoryMatch from './MemoryMatch'
+import BirthdayIntro from './BirthdayIntro'
 import WishJar from './WishJar'
 import Fireworks from './Fireworks'
 import { addReminder } from '../lib/reminder'
@@ -143,7 +143,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
           {heartOpen && <div className="birthday-split-reveal" aria-live="polite"><span className="split-panel split-left" /><span className="split-panel split-right" /><div className="split-title"><small>MADE JUST FOR YOU</small><strong>{experience.occasion === 'Birthday' ? 'HAPPY BIRTHDAY' : experience.occasion.toUpperCase()}</strong><em>{experience.recipient || 'Beautiful human'}</em></div></div>}
         </div>}
 
-        {scene === 'intro' && <div className="scene-content"><span className="scene-emoji">✦</span><p className="eyebrow">A MOMENT MADE WITH LOVE</p><h1>{experience.greeting || (experience.occasion === 'Birthday' ? `Happy Birthday, ${experience.recipient || 'you'}!` : `A little surprise for ${experience.recipient || 'you'}`)}</h1><p className="scene-copy">{experience.title}</p><button className="primary-btn" onClick={next}>Open your surprise <ArrowRight size={17} /></button></div>}
+        {scene === 'intro' && <BirthdayIntro text={experience.greeting || (experience.occasion === 'Birthday' ? `Happy Birthday, ${experience.recipient || 'you'}!` : `A little surprise for ${experience.recipient || 'you'}`)} subtitle={experience.title} colors={palette.balloons} onNext={next} />}
 
         {scene === 'cake' && <div className="scene-content"><p className="eyebrow">MAKE A WISH</p>
           <CakeAssembly style={experience.cakeStyle || 'strawberry'} age={experience.age} wished={wish} onWish={onWish} buzz={buzz} />
@@ -165,8 +165,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
         {scene === 'memories' && <div className="scene-content wide"><p className="eyebrow">OUR LITTLE TIME CAPSULE</p><h1>Little moments, <em>big feelings.</em></h1>{experience.memories.length ? <MemoryGallery memories={experience.memories} colors={palette.balloons} buzz={buzz} />
           : <div className="empty-memory"><span>♡</span><p>Some memories are kept in the heart.</p><small>Add photos or videos in the creator to make this part yours.</small></div>}<button className="primary-btn" onClick={next}>One last thing <ArrowRight size={17} /></button></div>}
 
-        {scene === 'memorymatch' && <div className="scene-content"><p className="eyebrow">A LITTLE GAME FOR YOU</p><h1>Match our <em>memories.</em></h1><MemoryMatch memories={experience.memories} buzz={buzz} /></div>}
-        {scene === 'timeline' && <div className="scene-content wide"><p className="eyebrow">THE STORY SO FAR</p><h1>Our little <em>timeline.</em></h1>{experience.memories.length ? <Timeline memories={experience.memories} /> : <p className="muted">Add photos with dates to build your timeline.</p>}</div>}
+        {scene === 'timeline' && <div className="scene-content wide"><p className="eyebrow">THE STORY SO FAR</p><h1>Our little <em>timeline.</em></h1>{experience.memories.length ? <Timeline memories={experience.memories} buzz={buzz} onDone={next} /> : <p className="muted">Add photos with dates to build your timeline.</p>}</div>}
         {scene === 'wishjar' && <div className="scene-content"><p className="eyebrow">MADE WITH LOVE BY YOUR PEOPLE</p><h1>Your <em>wish jar.</em></h1><WishJar colors={palette.balloons} wishes={[...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes].length ? [...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes] : (experience.balloonWishes || []).filter(Boolean).map(text => ({ name: '', text }))} /></div>}
         {scene === 'finale' && <div className="scene-content finale-content"><Fireworks colors={palette.balloons} /><div className="confetti" aria-hidden="true">{confetti.map(i => <i key={i} style={{ left: `${(i * 29) % 100}%`, animationDelay: `${(i % 9) * .14}s`, transform: `rotate(${i * 17}deg)` }} />)}</div><div className="final-fireworks" aria-hidden="true"><i /><i /><i /></div><Sparkles className="final-spark" size={38} /><p className="eyebrow">A SCRAPBOOK OF MOMENTS</p>
           <div className="scrapbook" aria-label="Scrapbook of moments">
