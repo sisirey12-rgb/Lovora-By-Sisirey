@@ -16,7 +16,7 @@ type Phase = 'enter' | 'play' | 'leave'
 const ENTER = { rotate: [70, -44, 28, -17, 9, -4, 0], opacity: 1 }
 const LEAVE = { rotate: [0, -16, 34, -58, 84], y: ['0vh', '0vh', '0vh', '3vh', '45vh'], opacity: [1, 1, 1, 1, 0] }
 /** Cat video in its own scene: swings in on a wire → video plays → swings out → next scene. */
-export default function CatVideoScene({ palette, onDone, buzz, src }: { palette: string[]; onDone: () => void; buzz: (p: number | number[]) => void; src?: string }) {
+export default function CatVideoScene({ palette, onDone, buzz, src, custom }: { palette: string[]; onDone: () => void; buzz: (p: number | number[]) => void; src?: string; custom?: boolean }) {
   const [phase, setPhase] = useState<Phase>('enter')
   const [needsTap, setNeedsTap] = useState(false)
   const video = useRef<HTMLVideoElement>(null)
@@ -51,7 +51,7 @@ export default function CatVideoScene({ palette, onDone, buzz, src }: { palette:
         {BALLOONS.map((b, i) => <span key={i} className="cvx-b" aria-hidden="true" style={{ [b.l ? 'left' : 'right']: b.x, top: `${b.y}%`, ['--s' as string]: b.s, ['--d' as string]: `${b.d}s`, ['--c' as string]: colors[i % colors.length] } as React.CSSProperties} />)}
         {STARS.map((st, i) => <span key={i} className="cvx-star" aria-hidden="true" style={{ top: st.t, bottom: st.b, left: st.l, right: st.r, ['--d' as string]: `${i * .35}s` } as React.CSSProperties}>✦</span>)}
         {phase !== 'enter' && <div className="cvx-burst" aria-hidden="true">{CONFETTI.map((c, i) => <i key={i} style={{ ['--dx' as string]: `${c.dx}px`, ['--dy' as string]: `${c.dy}px`, ['--r' as string]: c.r, ['--c' as string]: colors[c.c % colors.length] } as React.CSSProperties} />)}</div>}
-        <div className={`cv-card ${src ? 'cv-custom' : ''}`} aria-label={src ? 'Video message' : 'Portrait cat video'}>
+        <div className={`cv-card ${custom ? 'cv-custom' : ''}`} aria-label="Video surprise">
           <video ref={video} src={src || hostedBirthdayVideo} playsInline preload="auto" onPlay={() => audio.pauseForVideo()} onEnded={finish} onError={finish} onPause={e => { if (!e.currentTarget.ended && phase === 'play' && !finished.current) setNeedsTap(true) }} />
           {needsTap && phase === 'play' && <button className="cv-tap" onClick={() => { play() }}><Play size={22} fill="currentColor" /> Tap to play</button>}
         </div>

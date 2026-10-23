@@ -44,3 +44,26 @@
 
 /* Personalize step split into pages */
 .sub-dots{display:flex;gap:8px;margin:2px 0 14px}.sub-dots i{width:26px;height:5px;border-radius:99px;background:#ffffff30;transition:.25s}.sub-dots i.done{background:#f4a5d7aa}.sub-dots i.on{width:44px;background:#ff8fc2}
+
+/* 4) Bow game (hs-*): heart pulse, burst, shock rings, title and footer. These were missing, which made the bow scene look glitchy. */
+.player.hs-on{background:radial-gradient(ellipse at 50% 28%,#fff8f1,#ffe4d8 72%)!important;color:#5a2740}
+.hs-on .player-top .icon-btn{background:#fff;color:#7a2a50;border:1px solid #f3c9d6}
+.hs-title{position:absolute;top:1.5%;left:0;right:0;margin:0;text-align:center;font-family:var(--lv-script,'Great Vibes',cursive);font-size:28px;color:#9c3a66;pointer-events:none}
+.hs-foot{position:absolute;bottom:2.5%;left:0;right:0;margin:0;text-align:center;font-size:12px;font-weight:800;letter-spacing:.3em;color:#b5546f;transition:opacity .3s;pointer-events:none}
+.hs-heart{transform-box:fill-box;transform-origin:center;animation:hsBeat 1.6s ease-in-out infinite}
+.hs-heart.hit{animation:hsImpact .9s cubic-bezier(.2,.8,.2,1) forwards}
+.hs-mini{animation:hsMini 1.3s cubic-bezier(.2,.8,.3,1) both}
+.hs-shock{fill:none;stroke:#ff7aa6;stroke-width:2;transform-box:fill-box;transform-origin:center;animation:hsShock .9s ease-out forwards}.hs-shock.two{stroke:#f6b73c;animation-delay:.15s}
+@keyframes hsBeat{50%{transform:scale(1.06)}}
+@keyframes hsImpact{35%{transform:scale(1.35)}100%{transform:scale(0);opacity:0}}
+@keyframes hsMini{0%{transform:translate(0,0) scale(.3);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.2);opacity:0}}
+@keyframes hsShock{from{transform:scale(.6);opacity:.9}to{transform:scale(3);opacity:0}}
+@media(prefers-reduced-motion:reduce){.hs-heart,.hs-mini,.hs-shock{animation:none!important}}
+
+/* 5) Occasion and person chips (editor page 1 and the template picker). */
+.occasion-field{grid-column:1/-1;display:grid;gap:10px}.occasion-field>span{font-size:13px;color:var(--muted)}
+.occasion-chips{display:flex;flex-wrap:wrap;gap:8px}
+.occasion-chips button{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:999px;padding:10px 14px;font-size:13px;font-weight:600;transition:transform .15s,border-color .15s,background .15s}
+.occasion-chips button:hover{transform:translateY(-1px)}
+.occasion-chips button.selected{border-color:#ed9ec7;background:#ed9ec72b;box-shadow:0 0 0 2px #ed9ec733}
+.template-gallery .occasion-chips{margin:0 0 16px}

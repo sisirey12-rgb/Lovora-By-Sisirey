@@ -1,0 +1,137 @@
+import os
+import base64
+import getpass
+import requests
+
+OWNER = "sisirey12-rgb"
+REPO = "Lovora-By-Sisirey"
+BRANCH = "main"
+ROOT = "/storage/emulated/0/api/LOVORA-main"
+API = f"https://api.github.com/repos/{OWNER}/{REPO}"
+
+token = getpass.getpass("GitHub PAT (input hidden): ").strip()
+if not token:
+    raise SystemExit("Token is required.")
+
+s = requests.Session()
+s.headers.update({
+    "Authorization": f"Bearer {token}",
+    "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"
+})
+
+def request(method, path, **kwargs):
+    r = s.request(method, API + path, timeout=120, **kwargs)
+    if not r.ok:
+        raise SystemExit(
+            f"GitHub API error {r.status_code}: {r.text[:1200]}"
+        )
+    return r.json() if r.content else {}
+
+# Exclude local Git data, dependencies, secrets and this script.
+SKIP_DIRS = {
+    ".git", "node_modules", ".vercel", "__pycache__"
+}
+
+def skip_file(rel):
+    parts = rel.split("/")
+    name = parts[-1]
+    if any(part in SKIP_DIRS for part in parts):
+        return True
+    if name == ".env" or (
+        name.startswith(".env.") and name != ".env.example"
+    ):
+        return True
+    if name in {".DS_Store", "replace_repo.py"}:
+        return True
+    return False
+
+files = {}
+for folder, dirs, names in os.walk(ROOT):
+    dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS)
+    for name in sorted(names):
+        full = os.path.join(folder, name)
+        rel = os.path.relpath(full, ROOT).replace(os.sep, "/")
+        if skip_file(rel) or os.path.islink(full):
+            continue
+        files[rel] = full
+
+if not files:
+    raise SystemExit("No project files found. Aborting.")
+
+print(f"\nFiles in the new tree: {len(files)}")
+for name in sorted(files):
+    print("  " + name)
+
+print("\nWARNING: This replaces the entire file tree on main.")
+print("Files not in this local list will disappear from main.")
+if input('Type REPLACE ALL to continue: ') != "REPLACE ALL":
+    raise SystemExit("Cancelled.")
+
+email = input("Git commit email: ").strip()
+if not email or "@" not in email:
+    raise SystemExit("Enter a valid commit email.")
+
+# Read current main commit. It becomes the parent of the new commit.
+ref = request("GET", f"/git/ref/heads/{BRANCH}")
+old_sha = ref["object"]["sha"]
+
+entries = []
+for i, (rel, full) in enumerate(sorted(files.items()), 1):
+    with open(full, "rb") as f:
+        content = base64.b64encode(f.read()).decode("ascii")
+
+    blob = request("POST", "/git/blobs", json={
+        "content": content,
+        "encoding": "base64"
+    })
+
+    executable = os.access(full, os.X_OK)
+    entries.append({
+        "path": rel,
+        "mode": "100755" if executable else "100644",
+        "type": "blob",
+        "sha": blob["sha"]
+    })
+    print(f"[{i}/{len(files)}] Prepared {rel}")
+
+# CRITICAL: no base_tree is supplied.
+# This tree contains ONLY the new local project files.
+new_tree = request("POST", "/git/trees", json={
+    "tree": entries
+})
+
+if new_tree.get("truncated"):
+    raise SystemExit("Tree truncated. Aborting.")
+
+# Keep history by making the new commit a child of the old commit.
+new_commit = request("POST", "/git/commits", json={
+    "message": "Replace main with fresh Lovora project tree",
+    "tree": new_tree["sha"],
+    "parents": [old_sha],
+    "author": {
+        "name": "Sisirey Vox",
+        "email": email
+    },
+    "committer": {
+        "name": "Sisirey Vox",
+        "email": email
+    }
+})
+
+# Check main hasn't changed while files were uploading.
+latest = request("GET", f"/git/ref/heads/{BRANCH}")
+if latest["object"]["sha"] != old_sha:
+    raise SystemExit(
+        "main changed during upload. Refusing to update it; retry."
+    )
+
+request("PATCH", f"/git/refs/heads/{BRANCH}", json={
+    "sha": new_commit["sha"],
+    "force": False
+})
+
+print("\nSUCCESS: The main branch now uses the new file tree.")
+print("Files:", len(files))
+print("Commit:", new_commit["html_url"])
+print("Repo: https://github.com/" + OWNER + "/" + REPO + "/tree/main")

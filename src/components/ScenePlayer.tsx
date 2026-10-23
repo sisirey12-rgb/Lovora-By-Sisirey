@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Heart, Volume2, VolumeX, RotateCcw, Download, Share2, Sparkles, X } from 'lucide-react'
 import type { Experience, SceneId } from '../types'
-import { sceneLabels, bouquetStyles, themePalettes, normalizeScenes, fontById, suggestions, revealFor, toTitleCase } from '../data'
+import { sceneLabels, bouquetStyles, themePalettes, normalizeScenes, fontById, suggestions, revealFor, toTitleCase, videoFor } from '../data'
 import { sfx } from '../lib/sfx'
 import TapFX from './TapFX'
 import MemoryGallery from './MemoryGallery'
@@ -170,7 +170,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
 
         {scene === 'letter' && <div className="scene-content"><EnvelopeLetter recipient={experience.recipient} greeting={greeting} text={letterText} closing={experience.closing} sender={experience.sender} buzz={buzz} onDone={next} />{experience.voiceData && <VoiceNote src={experience.voiceData} />}</div>}
 
-        {scene === 'video' && <div className="scene-content wide"><CatVideoScene palette={palette.balloons} onDone={next} buzz={buzz} src={experience.videoData} /></div>}
+        {scene === 'video' && <div className="scene-content wide"><CatVideoScene palette={palette.balloons} onDone={next} buzz={buzz} src={videoFor(experience)} custom={!!experience.videoData} /></div>}
 
         {scene === 'memories' && <div className="scene-content wide"><p className="eyebrow">OUR LITTLE TIME CAPSULE</p><h1>Little moments, <em>big feelings.</em></h1>{experience.memories.length ? <MemoryGallery memories={experience.memories} colors={palette.balloons} buzz={buzz} />
           : <div className="empty-memory"><span>♡</span><p>Some memories are kept in the heart.</p><small>Add photos or videos in the creator to make this part yours.</small></div>}<button className="primary-btn" onClick={next}>One last thing <ArrowRight size={17} /></button></div>}

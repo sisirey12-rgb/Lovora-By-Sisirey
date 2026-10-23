@@ -1,21 +1,10 @@
 import type { Occasion, ThemeName, SceneId } from './types'
+import { occasionKey } from './lib/occasionContent'
 export const occasions: { name: Occasion; icon: string; desc: string }[] = [
   { name: 'Birthday', icon: '🎂', desc: 'A wish wrapped in magic' },
   { name: 'Anniversary', icon: '💞', desc: 'Celebrate your story' },
-  { name: 'Friendship', icon: '🫶', desc: 'For your favourite human' },
   { name: 'Love letter', icon: '💌', desc: 'Say what matters' },
   { name: 'Special surprise', icon: '✨', desc: 'Just because they matter' },
-  { name: 'Memory collection', icon: '📸', desc: 'A little world of moments' },
-  { name: 'Eid', icon: '🌙', desc: 'Eid Mubarak, with love' },
-  { name: 'Diwali', icon: '🪔', desc: 'Lights, sweets and joy' },
-  { name: "Valentine's Day", icon: '💘', desc: 'Be mine, again' },
-  { name: 'Graduation', icon: '🎓', desc: 'So proud of you' },
-  { name: 'New baby', icon: '👶', desc: 'Welcome, little one' },
-  { name: 'Get well soon', icon: '🌷', desc: 'Warm hugs for a hard day' },
-  { name: 'Sorry', icon: '🕊️', desc: 'Say it softly' },
-  { name: 'Farewell', icon: '👋', desc: 'Until we meet again' },
-  { name: "Mother's Day", icon: '💐', desc: 'Thank you, Mom' },
-  { name: "Father's Day", icon: '👔', desc: 'Thank you, Dad' },
 ]
 export const themes: { name: ThemeName; colors: string; description: string }[] = [
   { name: 'Rose Romance', colors: 'linear-gradient(135deg,#ff9db7,#5e285e)', description: 'Blush, roses & tender glow' },
@@ -36,7 +25,7 @@ export const themes: { name: ThemeName; colors: string; description: string }[] 
   { name: 'Mocha Cream', colors: 'linear-gradient(135deg,#e8c9a8,#7a4a38)', description: 'Cosy coffee and cream' },
 ]
 export const defaultScenes: SceneId[] = ['heart','intro','cake','balloons','letter','video','memories','timeline','wishjar','finale']
-export const sceneLabels: Record<SceneId, string> = { heart: 'Floating heart', intro: 'Magical intro', cake: 'Birthday cake', balloons: 'Pop the balloons', letter: 'Personal letter', video: 'Cat video surprise', memories: 'Photo memories', timeline: 'Memory timeline', wishjar: 'Wish jar', coupons: 'Coupon book', finale: 'Grand finale' }
+export const sceneLabels: Record<SceneId, string> = { heart: 'Floating heart', intro: 'Magical intro', cake: 'Surprise cake', balloons: 'Pop the balloons', letter: 'Personal letter', video: 'Video surprise', memories: 'Photo memories', timeline: 'Memory timeline', wishjar: 'Wish jar', coupons: 'Coupon book', finale: 'Grand finale' }
 
 
 export const messageTemplates = [
@@ -52,6 +41,15 @@ export const messageTemplates = [
 // One owner-hosted soundtrack and one owner-hosted birthday video.
 export const hostedMusic = '/media/music/celebration.mp3'
 export const hostedBirthdayVideo = '/media/birthday-videos/birthday-cat.mp4'
+/** One placeholder video per occasion. Replace the files in public/media/occasion-videos/ with your own clips (same names). */
+export const occasionVideos: Record<string, string> = {
+  Birthday: '/media/occasion-videos/birthday.mp4',
+  Anniversary: '/media/occasion-videos/anniversary.mp4',
+  'Love letter': '/media/occasion-videos/love-letter.mp4',
+  'Special surprise': '/media/occasion-videos/special-surprise.mp4',
+}
+export const videoFor = (e: { occasion?: string; videoData?: string }) => e.videoData || occasionVideos[e.occasion || ''] || occasionVideos['Special surprise']
+export const cakeLabel = (o?: string) => (o === 'Birthday' ? 'Birthday cake' : o === 'Anniversary' ? 'Anniversary cake' : o === 'Love letter' ? 'Cake of love' : 'Surprise cake')
 export const hostedPopSound = '/media/effects/balloon-pop.mp3'
 
 export const cakeStyles = [
@@ -146,12 +144,9 @@ export const suggestions = {
 }
 
 /** The big animated words (arrow reveal, intro and finale). Editable per surprise; these are the defaults per occasion. */
-export const revealDefaults: Record<Occasion, string> = {
-  Birthday: 'HAPPY BIRTHDAY', Anniversary: 'HAPPY ANNIVERSARY', Friendship: 'HAPPY FRIENDSHIP', 'Love letter': 'FOR YOU, WITH LOVE', 'Special surprise': 'A SPECIAL SURPRISE', 'Memory collection': 'OUR MEMORIES',
-  Eid: 'EID MUBARAK', Diwali: 'HAPPY DIWALI', "Valentine's Day": 'BE MY VALENTINE', Graduation: 'CONGRATULATIONS', 'New baby': 'WELCOME LITTLE ONE', 'Get well soon': 'GET WELL SOON', Sorry: "I'M SORRY", Farewell: 'WE WILL MISS YOU', "Mother's Day": "HAPPY MOTHER'S DAY", "Father's Day": "HAPPY FATHER'S DAY",
-}
+export const revealDefaults: Record<Occasion, string> = { Birthday: 'HAPPY BIRTHDAY', Anniversary: 'HAPPY ANNIVERSARY', 'Love letter': 'FOR YOU, WITH LOVE', 'Special surprise': 'A SPECIAL SURPRISE' }
 /** Tap-to-redeem coupons used by the Coupon book scene when the creator has not written their own. */
 export const defaultCoupons = ['One big hug, any time', 'Movie night, your choice', 'Breakfast in bed', 'One day of no arguing', 'A dance in the kitchen', 'Your favourite treat, on me']
-export const revealFor = (e: { occasion?: Occasion; revealText?: string }) => (e.revealText || '').trim().slice(0, 40) || revealDefaults[e.occasion || 'Birthday'] || 'HAPPY BIRTHDAY'
+export const revealFor = (e: { occasion?: Occasion; revealText?: string }) => (e.revealText || '').trim().slice(0, 40) || revealDefaults[occasionKey(e.occasion)]
 export const toTitleCase = (t: string) => t.toLowerCase().replace(/(^|[\s'-])([a-zà-ÿ])/g, (_m, a: string, b: string) => a + b.toUpperCase())
-export const revealPresets = ['EID MUBARAK', 'HAPPY DIWALI', 'BE MY VALENTINE', 'WELCOME LITTLE ONE', 'GET WELL SOON', "I'M SORRY", 'HAPPY BIRTHDAY', 'HAPPY ANNIVERSARY', 'I LOVE YOU', 'CONGRATULATIONS', 'THANK YOU', 'MISS YOU', 'HAPPY FRIENDSHIP DAY', 'JUST FOR YOU']
+export const revealPresets = ['HAPPY BIRTHDAY', 'HAPPY ANNIVERSARY', 'FOR YOU, WITH LOVE', 'A SPECIAL SURPRISE', 'I LOVE YOU', 'JUST FOR YOU', 'THANK YOU', 'MISS YOU']
