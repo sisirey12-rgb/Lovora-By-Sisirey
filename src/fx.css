@@ -1,0 +1,46 @@
+/* Loaded last. 1) effects span the whole screen, 2) cat-video card is an exact 9:16 frame with party effects around it, 3) bow-game top bar like the reference. */
+
+/* 1) Scenes used to be only as wide as their content and clipped everything outside it, so pop bursts / confetti looked cropped to a narrow strip. */
+.player{overflow-x:hidden}
+.player>.scene{align-self:stretch;width:100%;max-width:none;overflow:visible!important}
+.cv-scene{overflow:visible!important;width:100%}
+
+/* 2) Cat video: card is exactly 9:16 (the video is 720x1280) and sized by height, so nothing is cropped. */
+.cv-scene .cv-hang{width:auto!important;display:flex;justify-content:center}
+.cv-scene .cv-rig{width:auto!important;display:inline-block}
+.cv-scene .cv-card{aspect-ratio:9/16!important;width:auto!important;max-width:none!important;max-height:none!important;height:min(62dvh,640px,calc((100vw - 110px)*1.7778))!important;border:3px solid #fff3fa;box-shadow:0 22px 60px #0006,0 0 0 6px color-mix(in srgb,var(--c,#ff8fc2) 35%,transparent),0 0 46px color-mix(in srgb,var(--c,#ff8fc2) 70%,transparent);animation:cvxGlow 3.2s ease-in-out infinite}
+.cv-scene .cv-card video{width:100%;height:100%;object-fit:cover;display:block;background:#120a19}
+@keyframes cvxGlow{50%{box-shadow:0 22px 60px #0006,0 0 0 9px color-mix(in srgb,var(--c,#ff8fc2) 45%,transparent),0 0 72px color-mix(in srgb,var(--c,#ff8fc2) 85%,transparent)}}
+.cvx-b{position:absolute;z-index:2;width:calc(46px*var(--s,1));height:calc(58px*var(--s,1));border-radius:50% 50% 48% 52%;background:radial-gradient(circle at 32% 26%,#ffffffcc 0,#fff0 34%),var(--c);box-shadow:inset -6px -9px 16px #0003,0 8px 20px #0003;animation:cvxFloat 3.6s ease-in-out var(--d,0s) infinite,cvxPop .8s cubic-bezier(.2,1.5,.4,1) var(--d,0s) both;transform-origin:50% 120%;pointer-events:none}
+.cvx-b:after{content:"";position:absolute;left:50%;top:100%;width:1.5px;height:calc(64px*var(--s,1));background:linear-gradient(#ffffffcc,#ffffff00)}
+.cvx-b:before{content:"";position:absolute;left:50%;top:calc(100% - 3px);margin-left:-4px;border:4px solid transparent;border-bottom-color:var(--c);border-top:0}
+@keyframes cvxFloat{50%{transform:translateY(-9px) rotate(4deg)}}
+@keyframes cvxPop{from{opacity:0;transform:scale(0)}}
+.cvx-star{position:absolute;z-index:3;color:#fff6c9;font-size:20px;text-shadow:0 0 12px #ffd36e,0 0 24px #ff8fc2;animation:cvxTwinkle 2.2s ease-in-out var(--d,0s) infinite;pointer-events:none}
+@keyframes cvxTwinkle{0%,100%{opacity:.25;transform:scale(.6) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(45deg)}}
+.cvx-burst{position:absolute;left:50%;top:50%;width:0;height:0;z-index:4;pointer-events:none}
+.cvx-burst i{position:absolute;width:8px;height:14px;border-radius:2px;background:var(--c);opacity:0;animation:cvxBurst 1.5s cubic-bezier(.15,.7,.3,1) forwards}
+@keyframes cvxBurst{0%{opacity:1;transform:translate(0,0) rotate(0) scale(.5)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(1)}}
+.cvx-heart{position:absolute;bottom:-40px;font-size:22px;opacity:0;animation:cvxRise 7s ease-in var(--d,0s) infinite;text-shadow:0 0 14px currentColor}
+@keyframes cvxRise{0%{opacity:0;transform:translateY(0) scale(.6)}15%{opacity:.8}100%{opacity:0;transform:translateY(-105dvh) scale(1.2) rotate(18deg)}}
+@media(prefers-reduced-motion:reduce){.cvx-b,.cvx-star,.cvx-heart,.cv-scene .cv-card{animation:none!important}.cvx-b{opacity:1}}
+
+/* 3) Bow game: Back pill, centred "preview mode" pill, no progress bar (like the reference). */
+.hs-on .player-progress,.hs-on .player-top>button[aria-label="Save share card"]{display:none}
+.hs-on .icon-btn.hs-back{width:auto;height:46px;padding:0 18px 0 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:16px}
+.hs-preview{position:fixed;top:calc(22px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:linear-gradient(180deg,#ffd36e,#f4b942);color:#7a4a08;font-weight:800;font-size:13px;letter-spacing:.16em;box-shadow:0 8px 22px rgba(0,0,0,.28)}
+
+/* Extras: creator cards, voice note, coupon book */
+.extras-card{display:grid;gap:10px}.extras-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.voice-note{display:flex;justify-content:center;margin-top:14px}
+.cpn-book{width:100%;display:grid;gap:12px;justify-items:center;text-align:center}
+.cpn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,460px)}
+.cpn{position:relative;display:grid;gap:6px;text-align:left;padding:16px 14px 14px;border-radius:16px;color:#fff;border:2px dashed color-mix(in srgb,var(--c) 70%,#fff);background:linear-gradient(145deg,color-mix(in srgb,var(--c) 42%,#1a0c35),color-mix(in srgb,var(--c) 18%,#1a0c35));box-shadow:0 10px 26px #0004;cursor:pointer;overflow:hidden;transition:transform .18s}
+.cpn:active{transform:scale(.97)}.cpn:before,.cpn:after{content:"";position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#150a28;margin-top:-7px}.cpn:before{left:-8px}.cpn:after{right:-8px}
+.cpn-n{font-size:10px;letter-spacing:.18em;opacity:.8}.cpn strong{font-size:16px;line-height:1.25}.cpn small{opacity:.8;font-size:12px}
+.cpn.used{opacity:.75;filter:saturate(.7)}.cpn-stamp{position:absolute;right:10px;bottom:6px;font-size:44px;font-style:normal;color:#fff;opacity:.9;transform:rotate(-14deg);animation:cpnStamp .45s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes cpnStamp{from{transform:scale(2.4) rotate(-30deg);opacity:0}}
+.cv-scene .cv-card.cv-custom video{object-fit:contain}
+
+/* Personalize step split into pages */
+.sub-dots{display:flex;gap:8px;margin:2px 0 14px}.sub-dots i{width:26px;height:5px;border-radius:99px;background:#ffffff30;transition:.25s}.sub-dots i.done{background:#f4a5d7aa}.sub-dots i.on{width:44px;background:#ff8fc2}

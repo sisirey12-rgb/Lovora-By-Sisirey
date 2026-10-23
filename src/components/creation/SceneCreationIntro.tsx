@@ -12,7 +12,7 @@ type Props = {
 }
 
 const sceneGlyph: Record<SceneId, string> = {
-  heart: '♡', intro: '✦', cake: '🎂', balloons: '🎈', letter: '💌', video: '🐈', memories: '📸', timeline: '🕰️', wishjar: '🫙', finale: '✨',
+  heart: '♡', intro: '✦', cake: '🎂', balloons: '🎈', letter: '💌', video: '🐈', memories: '📸', timeline: '🕰️', wishjar: '🫙', coupons: '🎟️', finale: '✨',
 }
 const stageNames = ['Gathering the little details', 'Building your scenes', 'Adding the final sparkle']
 
