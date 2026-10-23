@@ -1,88 +1,105 @@
-// Vercel Node function: makes the 1200x630 share preview for a published surprise.
-// It loads the template picture (public/og-template.jpg) and writes the recipient's name inside the pink brush banner
-// and the sender after "Created by:", in a script font that matches the artwork.
+// Vercel Node function (not Edge: the Edge bundler rejects the @vercel/og import): draws a personal 1200x630 preview picture for a published surprise.
 // Used as og:image by api/share.js, so links shared on WhatsApp / Instagram / Telegram show the person's name.
 import { ImageResponse } from '@vercel/og'
 
-// ---- EDIT THESE (all numbers are px on the 1200x630 picture) -------------------------------------------------------
-const TEMPLATES = ['/og-template.jpg', '/og-template.png', '/og-image.png']
-// Font for name + sender. First choice: your own file at public/fonts/name.ttf (TTF/OTF/WOFF, not WOFF2). Else Google "Pacifico".
-const FONT_FILES = ['/fonts/name.ttf']
-const GOOGLE_FONT = 'Pacifico'
-const NAME_COLOR = '#34115a'      // dark purple, like the [ ] brackets
-const FROM_COLOR = '#ffe0fa'      // soft pink-white, like the "Created by:" label
-const NAME_BOX = { cx: 372, cy: 226, w: 392, maxSize: 78, minSize: 34 }   // inside the [ ] in the pink banner
-const FROM_BOX = { cx: 424, cy: 543, w: 186, maxSize: 34, minSize: 18 }   // on the line after "Created by:"
-const NAME_MAX_CHARS = 22, FROM_MAX_CHARS = 20
-const FALLBACK_NAME = 'Someone special'   // used when the link has no name (e.g. the plain site link)
-// ----------------------------------------------------------------------------------------------------------------------
-
-const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s)
+const THEMES = {
+ "Rose Romance": [
+  "#ff9db7",
+  "#5e285e"
+ ],
+ "Midnight Galaxy": [
+  "#131b51",
+  "#a35cff"
+ ],
+ "Peach Dream": [
+  "#ffd0b5",
+  "#f37f9c"
+ ],
+ "Golden Celebration": [
+  "#482a63",
+  "#e6b85e"
+ ],
+ "Lavender Night": [
+  "#bba7ff",
+  "#38225f"
+ ],
+ "Sakura Garden": [
+  "#ffd0e3",
+  "#b54d87"
+ ],
+ "Ocean Hearts": [
+  "#8fe4e8",
+  "#245d91"
+ ],
+ "Pastel Wonderland": [
+  "#ffe2f2",
+  "#b8d8ff"
+ ],
+ "Neon Fantasy": [
+  "#18122f",
+  "#ff4fc8"
+ ],
+ "Meow Magic": [
+  "#f4a5d7",
+  "#a68bff"
+ ],
+ "Sunset Glow": [
+  "#ff9a5c",
+  "#c2307a"
+ ],
+ "Emerald Garden": [
+  "#7be0a8",
+  "#1c5c4a"
+ ],
+ "Cotton Candy": [
+  "#ffc2e8",
+  "#a8d8ff"
+ ],
+ "Royal Velvet": [
+  "#7b2cbf",
+  "#240046"
+ ],
+ "Aurora Sky": [
+  "#5ef2c8",
+  "#4a5bd6"
+ ],
+ "Mocha Cream": [
+  "#e8c9a8",
+  "#7a4a38"
+ ]
+};
 const el = (style, children) => ({ type: 'div', props: { style: { display: 'flex', ...style }, children } })
-const LATIN = /^[\p{Script=Latin}\p{P}\p{S}\p{Z}\p{N}]*$/u   // the script font only has Latin letters; other alphabets use the built-in font
-
-let templateCache = null, fontCache = null
-async function loadTemplate(origin) {
-  if (templateCache) return templateCache
-  for (const path of TEMPLATES) {
-    try {
-      const r = await fetch(origin + path, { signal: AbortSignal.timeout(4000) })
-      if (!r.ok) continue
-      const buf = Buffer.from(await r.arrayBuffer())
-      const mime = buf[0] === 0x89 ? 'image/png' : buf[0] === 0xff ? 'image/jpeg' : null
-      if (!mime) continue
-      return (templateCache = `data:${mime};base64,${buf.toString('base64')}`)
-    } catch { /* try the next one */ }
-  }
-  return null
-}
-async function loadFont(origin) {
-  if (fontCache) return fontCache
-  const ok = d => ({ name: 'Script', data: d, weight: 400, style: 'normal' })
-  for (const path of FONT_FILES) {
-    try { const r = await fetch(origin + path, { signal: AbortSignal.timeout(4000) }); if (r.ok) { const d = await r.arrayBuffer(); if (d.byteLength > 1000 && !(new Uint8Array(d)[0] === 0x3c)) return (fontCache = ok(d)) } } catch { /* next */ }
-  }
-  try {   // old browser id makes Google return a plain .ttf (satori cannot read woff2)
-    const css = await (await fetch(`https://fonts.googleapis.com/css2?family=${GOOGLE_FONT.replace(/ /g, '+')}`, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30' }, signal: AbortSignal.timeout(4000) })).text()
-    const url = css.match(/url\((https:[^)]+)\)/)?.[1]
-    if (url) return (fontCache = ok(await (await fetch(url, { signal: AbortSignal.timeout(5000) })).arrayBuffer()))
-  } catch { /* use the built-in font */ }
-  return null
-}
-// one-line text sized to fit a box width (script fonts average ~0.52em per character)
-const fit = (text, box) => Math.max(box.minSize, Math.min(box.maxSize, Math.floor(box.w / (Math.max(text.length, 1) * 0.52))))
-const line = (text, box, color, family, extra = {}) => el({ position: 'absolute', left: box.cx - 300, width: 600, top: box.cy - 60, height: 120, alignItems: 'center', justifyContent: 'center' }, [
-  el({ fontSize: fit(text, box), fontFamily: family, color, whiteSpace: 'nowrap', lineHeight: 1.2, ...extra }, text),
-])
+const txt = (style, s) => el(style, s)
+const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s)
 
 export default async function handler(req, res) {
   const id = String((req.query && req.query.id) || new URL(req.url, 'http://x').searchParams.get('id') || '')
-  const proto = req.headers['x-forwarded-proto'] || 'https'
-  const origin = `${proto}://${req.headers['x-forwarded-host'] || req.headers.host}`
-  let to = '', from = ''
+  let to = '', from = '', theme = 'Meow Magic'
   const url = process.env.VITE_SUPABASE_URL, key = process.env.VITE_SUPABASE_ANON_KEY
-  const dataP = (async () => {
-    if (!(url && key && /^[A-Za-z0-9_-]{6,64}$/.test(id))) return
+  if (url && key && /^[A-Za-z0-9_-]{6,64}$/.test(id)) {
     try {
       const r = await fetch(`${url}/rest/v1/published_experiences?id=eq.${encodeURIComponent(id)}&select=payload`, { headers: { apikey: key, Authorization: `Bearer ${key}` } })
       const p = (await r.json())?.[0]?.payload
-      if (p) { to = clip(String(p.recipient || '').trim(), NAME_MAX_CHARS); from = clip(String(p.sender || '').trim(), FROM_MAX_CHARS) }
+      if (p) { to = clip(String(p.recipient || '').trim(), 24); from = clip(String(p.sender || '').trim(), 28); if (THEMES[p.theme]) theme = p.theme }
     } catch { /* generic picture */ }
-  })()
-  const [tpl, font] = await Promise.all([loadTemplate(origin), loadFont(origin), dataP])
-  const name = to || FALLBACK_NAME
-  const useScript = font && LATIN.test(name + from)
-  const family = useScript ? 'Script' : 'sans-serif'
-  const bold = useScript ? {} : { fontWeight: 700 }
-
-  const children = []
-  if (tpl) children.push({ type: 'img', props: { src: tpl, width: 1200, height: 630, style: { position: 'absolute', left: 0, top: 0, width: 1200, height: 630 } } })
-  children.push(line(name, NAME_BOX, NAME_COLOR, family, { ...bold, textShadow: '0 1px 0 rgba(255,255,255,.55)' }))
-  if (from) children.push(line(from, FROM_BOX, FROM_COLOR, family, { ...bold, textShadow: '0 2px 8px rgba(40,0,70,.6)' }))
-  const image = el({ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(135deg,#1a0c35,#5e285e)' }, children)
-
+  }
+  const [c1, c2] = THEMES[theme] || ['#f4a5d7', '#a68bff']
+  const size = to.length > 16 ? 84 : to.length > 10 ? 112 : 140
+  const balloon = (left, top, w, h, a, b) => el({ position: 'absolute', left, top, width: w, height: h, borderRadius: '50%', background: `linear-gradient(135deg, ${a}, ${b})`, opacity: 0.85 }, '')
+  const image = el({ width: '100%', height: '100%', position: 'relative', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, #1a0c35 0%, ${c2} 55%, ${c1} 120%)`, color: '#fff', fontFamily: 'sans-serif' }, [
+    balloon(70, 60, 110, 140, '#ffd36e', '#ff8fc2'), balloon(210, 250, 80, 100, '#ffffff', c1), balloon(1010, 70, 120, 150, c1, '#ffffff'), balloon(930, 330, 90, 112, '#ffd36e', c2), balloon(1090, 380, 70, 88, '#ff8fc2', c1),
+    el({ width: 120, height: 120, borderRadius: '50%', background: '#3a1a55', border: '5px solid #ff8fc2', position: 'relative', alignItems: 'center', justifyContent: 'center', marginBottom: 26 }, [
+      el({ position: 'absolute', top: -16, left: 14, width: 34, height: 34, background: '#ff8fc2', transform: 'rotate(45deg)' }, ''),
+      el({ position: 'absolute', top: -16, right: 14, width: 34, height: 34, background: '#ff8fc2', transform: 'rotate(45deg)' }, ''),
+      el({ width: 76, height: 56, borderRadius: '50%', background: '#ffd36e' }, ''),
+    ]),
+    txt({ fontSize: 40, letterSpacing: 8, color: '#ffd36e' }, to ? 'HAPPY BIRTHDAY' : 'A BIRTHDAY SURPRISE'),
+    txt({ fontSize: size, fontWeight: 800, lineHeight: 1.05, marginTop: 6, textAlign: 'center' }, to || 'is waiting for you'),
+    txt({ fontSize: 36, marginTop: 22, color: '#ffd9ea' }, from ? `from ${from}` : 'open your surprise'),
+    txt({ position: 'absolute', bottom: 30, fontSize: 30, color: '#ff8fc2' }, 'Lovora Meow by Sisirey'),
+  ])
   try {
-    const out = new ImageResponse(image, { width: 1200, height: 630, ...(useScript ? { fonts: [font] } : {}) })
+    const out = new ImageResponse(image, { width: 1200, height: 630 })
     const png = Buffer.from(await out.arrayBuffer())
     res.setHeader('Content-Type', 'image/png')
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
