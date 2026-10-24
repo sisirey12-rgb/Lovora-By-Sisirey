@@ -38,6 +38,31 @@ const middle: Record<Relation, string> = {
   Dad: 'You taught me how to be strong and kind at the same time. Thank you for every lesson and every quiet way you showed you cared.',
   Friend: 'Thank you for the laughs, the honesty and for never letting me feel alone.',
 }
+/** Anniversary reads differently for every person: a sibling's, parents' or a friend's story is not a partner's. */
+const annOpen: Record<Relation, string> = {
+  Brother: 'Happy anniversary, bro! Watching you build a life with the people you love is one of my favourite things.',
+  Sister: 'Happy anniversary, sis! Watching you build your own happy story is one of my favourite things.',
+  Partner: 'Happy anniversary, my love. Another year with you and I would still choose every single day again.',
+  Mom: 'Happy anniversary! Watching your love grow through every year taught me what a real home feels like.',
+  Dad: 'Happy anniversary! Watching you and Mom stand by each other through every year taught me what love looks like.',
+  Friend: 'Happy anniversary! Here is to everything we have been through, and everything still ahead.',
+}
+const annMid: Record<Relation, string> = {
+  Brother: 'You have always been someone I look up to, tease and trust, and I love seeing that same warmth in your home today.',
+  Sister: 'You have always been my person to laugh, argue and share secrets with, and I love seeing that same warmth in your home today.',
+  Partner: middle.Partner,
+  Mom: 'Thank you for the patience, the laughter and the quiet teamwork that built our family. You two are my favourite love story.',
+  Dad: 'Thank you for showing me, without making a speech of it, what showing up for each other means. You two are my favourite love story.',
+  Friend: middle.Friend,
+}
+const annClose: Record<Relation, string> = {
+  Brother: 'I am so proud of you both, and I cannot wait for what comes next.',
+  Sister: 'I am so proud of you both, and I cannot wait for what comes next.',
+  Partner: 'I am so proud of us, and I cannot wait for what comes next.',
+  Mom: 'Here is to many more years together.',
+  Dad: 'Here is to many more years together.',
+  Friend: 'Here is to many more years of us.',
+}
 const closer: Record<Occasion, string> = {
   Birthday: 'I hope this year gives you everything you deserve.',
   Anniversary: 'I am so proud of us, and I cannot wait for what comes next.',
@@ -50,9 +75,17 @@ const wishes: Record<Occasion, Record<Kind, string[]>> = {
   'Love letter': { family: ['I am grateful for you.', 'You are loved more than words can say.', 'Thank you for always being there.'], partner: ['You are my favourite person.', 'I would choose you in every universe.', 'You make my heart feel at home.'], friend: ['I am lucky to call you my friend.', 'You make life better.', 'Thank you for always showing up.'] },
   'Special surprise': { family: ['You deserve something lovely today.', 'I am thinking of you.', 'Never forget how special you are.'], partner: ['You came to my mind, so I smiled.', 'You deserve something lovely today.', 'I love you, just because.'], friend: ['This is your sign to smile.', 'You deserve something lovely today.', 'Thanks for being my person.'] },
 }
+const annWishes: Record<Relation, string[]> = {
+  Brother: ['May your home always be full of laughter.', 'Wishing you many more happy years together.', 'I am always on your side, both of you.'],
+  Sister: ['May your home always be full of laughter.', 'Wishing you many more happy years together.', 'I am always on your side, both of you.'],
+  Partner: wishes.Anniversary.partner,
+  Mom: ['Your love is the reason our home feels like home.', 'Thank you for showing us what love looks like.', 'Here is to many more years together.'],
+  Dad: ['Your love is the reason our home feels like home.', 'Thank you for showing us what love looks like.', 'Here is to many more years together.'],
+  Friend: wishes.Anniversary.friend,
+}
 const titleFor = (o: Occasion, r: Relation): string => ({
   Birthday: { Brother: 'Happy Birthday, you legend', Sister: 'Happy Birthday, sis', Partner: 'Happy Birthday, my love', Mom: 'Happy Birthday, Mom', Dad: 'Happy Birthday, Dad', Friend: 'Happy Birthday, partner in crime' },
-  Anniversary: { Brother: 'Happy Anniversary, bro', Sister: 'Happy Anniversary, sis', Partner: 'Happy Anniversary, my love', Mom: 'Happy Anniversary, Mom', Dad: 'Happy Anniversary, Dad', Friend: 'Happy Anniversary, my friend' },
+  Anniversary: { Brother: 'Happy Anniversary, bro', Sister: 'Happy Anniversary, sis', Partner: 'Happy Anniversary, my love', Mom: 'Happy Anniversary, Mom & Dad', Dad: 'Happy Anniversary, Mom & Dad', Friend: 'Happy Anniversary, my friend' },
   'Love letter': { Brother: 'A letter for my brother', Sister: 'A letter for my sister', Partner: 'A love letter, just for you', Mom: 'A letter for Mom', Dad: 'A letter for Dad', Friend: 'A letter for my friend' },
   'Special surprise': { Brother: 'A little something for you, bro', Sister: 'A little something for you, sis', Partner: 'A little something, just because', Mom: 'A little something for Mom', Dad: 'A little something for Dad', Friend: 'A little something, just because' },
 } as Record<Occasion, Record<Relation, string>>)[o][r]
@@ -141,23 +174,28 @@ export type OccasionContent = Pick<Experience, 'occasion' | 'relation' | 'title'
 
 export function messageFor(o: Occasion, r: Relation, short = false, lang: Lang = 'English') {
   const k = kindOf(r), h = lang === 'Hinglish'
-  const op = (h ? hOpener : opener)[o][k], mi = (h ? hMiddle : middle)[r], cl = (h ? hCloser : closer)[o]
+  const ann = o === 'Anniversary' && !h   // anniversary has its own wording for every person (Hinglish keeps the shared text)
+  const op = ann ? annOpen[r] : (h ? hOpener : opener)[o][k], mi = ann ? annMid[r] : (h ? hMiddle : middle)[r], cl = ann ? annClose[r] : (h ? hCloser : closer)[o]
   return short ? `${op} ${cl}` : `${op} ${mi} ${cl}`
 }
 /** All the text and style choices for one occasion + person. The editor and the landing page templates both use this. */
 export function contentFor(o: Occasion, r: Relation, _scenes?: Experience['scenes'], lang: Lang = 'English'): OccasionContent {
   const k = kindOf(r), h = lang === 'Hinglish'
-  const w = wishes[o][k]
+  const w = o === 'Anniversary' ? annWishes[r] : wishes[o][k]
   const sc = flowFor(o, r)
   return { occasion: o, relation: r, title: titleFor(o, r), greeting: (h ? hGreet : greet)[r], message: messageFor(o, r, false, lang), closing: (h ? hClosing : closing)[r], moments: [...momentsBase[r].items], language: lang, balloonWishes: [...w, 'You make ordinary days brighter.', 'Thank you for being exactly you.'], balloonCount: 5, secretMessage: secretFor(o, r), theme: themeMx[o][r], cakeStyle: cakeMx[o][r], fontStyle: fontOcc[o] && r !== 'Dad' ? fontOcc[o]! : relFont[r], bouquetStyle: relBouquet[r], textAnim: relAnim[r], scenes: sc, revealText: undefined }
 }
 /** Suggestion chips shown under the editor fields, tuned to the chosen occasion. */
-export function suggestFor(o: Occasion) {
+export function suggestFor(o: Occasion, r?: Relation) {
   const t = ({
     Birthday: { title: ['A birthday wish made just for you', 'Something small, from my whole heart', 'Our little world, wrapped for you'], greeting: ['Happy Birthday, {name}! 🎂', 'Dear {name},', 'My dearest {name},'], wishes: ['May your year taste like cake and feel like home.', 'You deserve every good thing coming your way.', 'I wish you slow mornings and big laughs.', 'May every dream you hold find its way to you.'] },
     Anniversary: { title: ['Our story, so far', 'Another year, same love', 'To the one I chose'], greeting: ['Happy Anniversary, {name} ♡', 'My dearest {name},', 'Dear {name},'], wishes: ['Every year with you is my favourite one.', 'Here is to many more chapters.', 'You are my home.', 'Thank you for every little thing.'] },
     'Love letter': { title: ['Open this when you miss me', 'The words I never say enough', 'A letter, just for you'], greeting: ['My dearest {name},', 'To the one who owns my heart,', 'Dear {name},'], wishes: ['You are my favourite hello.', 'I am grateful for you every day.', 'You make my world softer.', 'Thank you for being you.'] },
     'Special surprise': { title: ['A little something, just because', 'Something small, from my whole heart', 'Thinking of you'], greeting: ['Hey you, {name} ♡', 'Dear {name},', 'Hi {name}!'], wishes: ['You deserve something lovely today.', 'I am thinking of you.', 'This is your sign to smile.', 'Never forget how special you are.'] },
   } as Record<string, { title: string[]; greeting: string[]; wishes: string[] }>)[o]
-  return t
+  if (!r || r === 'Partner') return t
+  // no hearts or couple wording for family and friends
+  const soft = (xs: string[]) => xs.map(x => x.replace('♡', '✦').replace('To the one who owns my heart,', 'To someone who means the world to me,'))
+  const title = o === 'Anniversary' ? ({ Brother: ['Cheers to your story', 'Happy anniversary, you two', 'So proud of you both'], Sister: ['Cheers to your story', 'Happy anniversary, you two', 'So proud of you both'], Mom: ['To my favourite love story', 'Happy anniversary, Mom & Dad', 'Thank you for showing us'], Dad: ['To my favourite love story', 'Happy anniversary, Mom & Dad', 'Thank you for showing us'], Friend: ['Cheers to the years', 'Our story, so far', 'Here is to many more'] } as Record<string, string[]>)[r] : t.title
+  return { ...t, title, greeting: soft(t.greeting), wishes: o === 'Anniversary' ? annWishes[r] : t.wishes }
 }

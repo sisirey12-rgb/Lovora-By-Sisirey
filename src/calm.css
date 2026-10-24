@@ -1,0 +1,67 @@
+/* Calm layer: a quieter landing page, a lighter editor and a different surrounding for every occasion and person. Loaded last. */
+
+/* ---------- landing ---------- */
+.calm-hero{min-height:0;padding-top:96px;padding-bottom:56px}
+.calm-hero .hero-lede{max-width:460px}
+.occ-tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;z-index:2;width:100%;max-width:520px;justify-self:end}
+.occ-tile{position:relative;overflow:hidden;isolation:isolate;display:grid;align-content:end;gap:4px;min-height:170px;padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.16);color:#fff;text-align:left;cursor:pointer;transition:transform .25s,box-shadow .25s}
+.occ-tile:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,.28)}
+.occ-tile .occ-emoji{position:absolute;top:14px;left:16px;font-size:34px}
+.occ-tile strong{font-size:18px}.occ-tile small{opacity:.85;font-size:12px;line-height:1.35}
+.occ-tile:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,transparent 35%,rgba(10,5,25,.55))}
+.occ-tile.world-birthday{background-color:#d9487f}.occ-tile.world-anniversary{background-color:#7a3a9a}.occ-tile.world-love-letter{background-color:#b5475f}.occ-tile.world-special-surprise{background-color:#3b3a8c}
+@media(max-width:900px){.occ-tiles{justify-self:stretch;max-width:none;margin-top:26px}}
+@media(max-width:420px){.occ-tile{min-height:140px;padding:14px}}
+.calm-how{display:block;padding:60px clamp(24px,12vw,175px) 80px}.calm-how .how-copy{max-width:560px;margin:0 auto}
+.template-gallery{padding-top:50px}
+.template-card.world-card{min-height:190px}
+
+/* ---------- a different surrounding for each occasion (used by the player, the tiles and the template cards) ---------- */
+.world-birthday{background-image:radial-gradient(circle at 18% 22%,#ffffff2e 0 3px,transparent 4px),radial-gradient(circle at 70% 14%,#ffe9a62e 0 4px,transparent 5px),radial-gradient(circle at 42% 70%,#a6e3ff2e 0 3px,transparent 4px),radial-gradient(circle at 86% 62%,#ffb3d92e 0 4px,transparent 5px),linear-gradient(160deg,#ff9a5c22,#ff5fa222);background-size:90px 90px,120px 120px,100px 100px,140px 140px,100% 100%}
+.world-anniversary{background-image:radial-gradient(circle at 20% 80%,#ffd98a40 0,transparent 38%),radial-gradient(circle at 80% 20%,#fff1c440 0,transparent 34%),linear-gradient(180deg,#00000014,#ffd98a14)}
+.world-love-letter{background-image:radial-gradient(ellipse at 30% 0,#ffc2d940,transparent 55%),radial-gradient(ellipse at 80% 100%,#f7a7ca38,transparent 55%),linear-gradient(180deg,#ffffff08,#ffb3c814)}
+.world-special-surprise{background-image:radial-gradient(circle at 15% 25%,#fff 0 1px,transparent 2px),radial-gradient(circle at 60% 15%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 85% 55%,#fff 0 1px,transparent 2px),radial-gradient(circle at 35% 80%,#fff 0 1.5px,transparent 2.5px),linear-gradient(200deg,#7a5cff26,#00000020);background-size:130px 130px,170px 170px,110px 110px,150px 150px,100% 100%}
+.world-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
+.world-bg span{position:absolute;bottom:-40px;opacity:.5;animation:worldFloat 16s linear infinite;filter:saturate(.9)}
+@keyframes worldFloat{0%{transform:translateY(0) rotate(0);opacity:0}12%{opacity:.5}88%{opacity:.5}100%{transform:translateY(-112vh) rotate(24deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){.world-bg span{animation:none;bottom:auto;top:30%;opacity:.25}}
+/* person tweaks on top of the occasion look */
+.world-rel-brother.world-birthday,.world-rel-brother.world-special-surprise{background-blend-mode:screen}
+.world-rel-mom.world-bg::after,.world-rel-sister.world-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,#ffd6e633,transparent 60%)}
+.world-rel-dad.world-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0,#ffd98a26,transparent 60%)}
+.world-rel-friend.world-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 20% 100%,#7be0ff22,transparent 55%)}
+
+/* ---------- opening scene for brothers, sisters, parents and friends ---------- */
+.ro{display:grid;justify-items:center;gap:18px;text-align:center;padding:12px 0}
+.ro-line{margin:0;letter-spacing:.2em;font-size:11px;font-weight:800;text-transform:uppercase;opacity:.8}
+.ro-stage{position:relative;width:min(70vw,260px);height:min(70vw,260px);display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.18),rgba(255,255,255,.04) 70%);color:inherit;cursor:pointer;box-shadow:0 0 60px rgba(255,255,255,.08),inset 0 0 40px rgba(255,255,255,.05);-webkit-tap-highlight-color:transparent}
+.ro-stage:disabled{cursor:default}
+.ro-emblem{font-size:clamp(72px,22vw,110px);line-height:1;filter:drop-shadow(0 8px 22px rgba(0,0,0,.35))}
+.ro-fists{display:flex;align-items:center;justify-content:center;gap:0;font-size:clamp(60px,18vw,92px);filter:drop-shadow(0 8px 22px rgba(0,0,0,.35))}
+.ro-fists>span{display:inline-block}
+.ro-puffs{position:absolute;inset:0;pointer-events:none}
+.ro-puffs i{position:absolute;top:44%;font-style:normal;font-size:24px;animation:roPuff 1.1s ease-out forwards}
+@keyframes roPuff{0%{transform:translateY(0) scale(.6);opacity:1}100%{transform:translateY(-120px) scale(1.2);opacity:0}}
+.ro-dots{display:flex;gap:10px}.ro-dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.25);transition:background .25s,transform .25s}.ro-dots i.on{background:#fff;transform:scale(1.25)}
+.ro-hint{margin:0;font-size:15px;opacity:.9}
+.ro-stage:not(:disabled){animation:roBreathe 2.4s ease-in-out infinite}
+@keyframes roBreathe{0%,100%{box-shadow:0 0 40px rgba(255,255,255,.06)}50%{box-shadow:0 0 70px rgba(255,255,255,.18)}}
+@media(prefers-reduced-motion:reduce){.ro-stage:not(:disabled){animation:none}.ro-puffs i{animation-duration:.01s}}
+
+/* ---------- lighter editor ---------- */
+.editor-main .form-grid{margin-top:18px}
+.fold-stack{display:grid;gap:10px;margin-top:20px}
+.fold{border:1px solid var(--border);border-radius:16px;background:color-mix(in srgb,var(--panel) 70%,transparent);overflow:hidden}
+.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;min-height:52px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary strong{font-size:15px}.fold>summary small{color:var(--muted);font-size:12px;margin-left:auto;text-align:right}
+.fold>summary:after{content:"+";font-size:20px;line-height:1;color:var(--accent);flex:none}
+.fold[open]>summary:after{content:"–"}
+.fold[open]>summary{border-bottom:1px solid var(--border)}
+.fold-body{display:grid;gap:14px;padding:16px}
+.fold-body .count-chips{display:flex;flex-wrap:wrap;gap:8px}
+.step-track small{white-space:nowrap}
+@media(max-width:560px){.step-track{gap:4px}.step-track button small{font-size:10px}}
+
+/* hearts stay with partners: everyone else loses the rising hearts and the heart on the letter */
+.no-hearts .cvx-heart,.no-hearts .env-sheet-heart{display:none}

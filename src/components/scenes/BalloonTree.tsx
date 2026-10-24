@@ -17,23 +17,23 @@ const SLOTS = [[300, 92], [190, 165], [410, 165], [135, 262], [465, 262], [255, 
 const shade = (hex: string, amt: number) => { const n = parseInt(hex.slice(1), 16); const f = (c: number) => Math.max(0, Math.min(255, Math.round(c + (amt > 0 ? (255 - c) * amt : c * amt)))); return `#${[(n >> 16) & 255, (n >> 8) & 255, n & 255].map(f).map(v => v.toString(16).padStart(2, '0')).join('')}` }
 const rng = (seed: number) => () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
 
-function useCanopy() {
+function useCanopy(round: boolean) {
   return useMemo(() => {
     const R = rng(7), pts: { x: number; y: number }[] = []
     for (let tries = 0; tries < 900 && pts.length < 26; tries++) {
       const hx = (R() * 2.6 - 1.3), hy = (R() * 2.6 - 1.3)
-      if (Math.pow(hx * hx + hy * hy - 1, 3) - hx * hx * Math.pow(hy, 3) > 0) continue   // inside the classic heart curve
+      if (round ? hx * hx + hy * hy > 1.15 : Math.pow(hx * hx + hy * hy - 1, 3) - hx * hx * Math.pow(hy, 3) > 0) continue   // inside the classic heart curve (partners) or a round crown (everyone else)
       const x = 300 + hx * 130, y = 175 - hy * 100
       if (pts.some(p => Math.hypot(p.x - x, p.y - y) < 40)) continue
       pts.push({ x, y })
     }
     return pts
-  }, [])
+  }, [round])
 }
 
-function HeartBalloon({ grad, glyph }: { grad: string; glyph?: string }) {
+function HeartBalloon({ grad, glyph, round }: { grad: string; glyph?: string; round?: boolean }) {
   return <svg viewBox="0 0 44 60" className="hb-svg" aria-hidden="true">
-    <path d="M22 50 C15 42 1 33 3 18 C5 5 18 3 22 14 C26 3 39 5 41 18 C43 33 29 42 22 50Z" fill={`url(#${grad})`} stroke="#ffffff55" strokeWidth=".8" />
+    <path d={round ? "M22 4 C34 4 40 15 40 26 C40 38 31 46 22 50 C13 46 4 38 4 26 C4 15 10 4 22 4Z" : "M22 50 C15 42 1 33 3 18 C5 5 18 3 22 14 C26 3 39 5 41 18 C43 33 29 42 22 50Z"} fill={`url(#${grad})`} stroke="#ffffff55" strokeWidth=".8" />
     <path d="M9 15 Q12 8 18 11" stroke="#fff" strokeOpacity=".75" strokeWidth="2.6" fill="none" strokeLinecap="round" />
     <path d="M22 50 L18 55 L26 55Z" fill={`url(#${grad})`} /><path d="M22 55 C20 58 24 59 22 60" stroke="#ffffffaa" strokeWidth=".8" fill="none" />
     {glyph && <text x="22" y="29" textAnchor="middle" fontSize="12" fill="#fff" fontFamily="Playfair Display, serif">{glyph}</text>}
@@ -44,9 +44,9 @@ function HeartBalloon({ grad, glyph }: { grad: string; glyph?: string }) {
  * 1) trunk and branches draw themselves (bare tree)  2) heart balloons inflate at the base, rise and take their place  3) they sway forever.
  * Colours come from the selected theme's palette.
  */
-export default function BalloonTree({ palette, count, popped, onPop }: { palette: ThemePalette; count: number; popped: number[]; onPop: (i: number, variant: number) => void }) {
+export default function BalloonTree({ palette, count, popped, onPop, round = false, glyph = '♡' }: { palette: ThemePalette; count: number; popped: number[]; onPop: (i: number, variant: number) => void; round?: boolean; glyph?: string }) {
   const uid = useId().replace(/:/g, '')
-  const canopy = useCanopy()
+  const canopy = useCanopy(round)
   const [ready, setReady] = useState(false)
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   useEffect(() => { const t = window.setTimeout(() => setReady(true), reduced ? 0 : 4300); return () => window.clearTimeout(t) }, [reduced])
@@ -56,7 +56,7 @@ export default function BalloonTree({ palette, count, popped, onPop }: { palette
     ['--sx' as string]: `${(300 - x) / w * 100}%`, ['--sy' as string]: `${(455 - y) / (w * 1.36) * 100}%`, ['--delay' as string]: `${delay}s`, ['--sway' as string]: `${(delay + 2.2).toFixed(2)}s`,
   } as CSSProperties)
   const slots = SLOTS.slice(0, Math.max(3, Math.min(10, count)))
-  const glyphs = ['♡', '✦', '♡', '✧', '♡', '✦', '♡', '✧', '♡', '✦']
+  const glyphs = [glyph, '✦', glyph, '✧', glyph, '✦', glyph, '✧', glyph, '✦']
   return <div className="tb-wrap" style={{ ['--branch' as string]: palette.branch, ['--trunk' as string]: palette.trunk, ['--tb-glow' as string]: palette.glow } as CSSProperties}>
     <svg width="0" height="0" className="tb-defs" aria-hidden="true"><defs>{colors.map((c, i) => <radialGradient key={i} id={`g${i}-${uid}`} cx=".32" cy=".28" r=".85"><stop offset="0" stopColor={shade(c, .55)} /><stop offset=".45" stopColor={c} /><stop offset="1" stopColor={shade(c, -.35)} /></radialGradient>)}</defs></svg>
     <div className="tb-glow" />
@@ -67,14 +67,14 @@ export default function BalloonTree({ palette, count, popped, onPop }: { palette
       {TWIGS.map((d, i) => <path key={d} d={d} pathLength="1" className="tb-branch tb-twig" style={{ ['--delay' as string]: `${1.9 + i * .1}s`, ['--dur' as string]: '.7s' } as CSSProperties} />)}
     </svg>
     <div className="tb-layer" aria-hidden="true">
-      {canopy.map((p, i) => <span key={i} className="tb-balloon tb-canopy" style={place(p.x, p.y, BALLOON_W, 3 + (i * .09))}><HeartBalloon grad={`g${i % colors.length}-${uid}`} /></span>)}
+      {canopy.map((p, i) => <span key={i} className="tb-balloon tb-canopy" style={place(p.x, p.y, BALLOON_W, 3 + (i * .09))}><HeartBalloon grad={`g${i % colors.length}-${uid}`} round={round} /></span>)}
     </div>
     <div className="tb-layer">
       {slots.map(([x, y], i) => {
         const isPopped = popped.includes(i)
         return <div key={i} className={`tb-balloon tb-wish ${isPopped ? 'popped' : ''} ${ready ? 'ready' : ''}`} style={place(x, y, WISH_W, 3.4 + i * .16)}>
-          {!isPopped && <button type="button" className="tb-wish-btn" onClick={() => onPop(i, i)} disabled={!ready} aria-label={`Pop wish balloon ${i + 1}`}><HeartBalloon grad={`g${(i + 2) % colors.length}-${uid}`} glyph={glyphs[i]} /></button>}
-          {isPopped && <span className={`tb-burst tb-burst-${i % 4}`} aria-hidden="true">{Array.from({ length: i % 4 === 1 ? 16 : 14 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * (360 / (i % 4 === 1 ? 16 : 14))}deg`, background: colors[(i + k) % colors.length], color: colors[(i + k) % colors.length], ['--r' as string]: `${58 + (k % 3) * 22}px`, ['--d' as string]: `${(k % 4) * .03}s` } as CSSProperties}>{i % 4 === 0 ? '♥' : i % 4 === 2 ? '✿' : i % 4 === 3 ? '★' : ''}</i>)}<b className="tb-ring" /></span>}
+          {!isPopped && <button type="button" className="tb-wish-btn" onClick={() => onPop(i, i)} disabled={!ready} aria-label={`Pop wish balloon ${i + 1}`}><HeartBalloon grad={`g${(i + 2) % colors.length}-${uid}`} glyph={glyphs[i]} round={round} /></button>}
+          {isPopped && <span className={`tb-burst tb-burst-${i % 4}`} aria-hidden="true">{Array.from({ length: i % 4 === 1 ? 16 : 14 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * (360 / (i % 4 === 1 ? 16 : 14))}deg`, background: colors[(i + k) % colors.length], color: colors[(i + k) % colors.length], ['--r' as string]: `${58 + (k % 3) * 22}px`, ['--d' as string]: `${(k % 4) * .03}s` } as CSSProperties}>{i % 4 === 0 ? (round ? '✦' : '♥') : i % 4 === 2 ? '✿' : i % 4 === 3 ? '★' : ''}</i>)}<b className="tb-ring" /></span>}
         </div>
       })}
     </div>

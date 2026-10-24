@@ -23,7 +23,10 @@ import { trackOpen, pingView } from '../services/stats'
 import type { Wish } from './WishJar'
 import { saveShareCard } from '../lib/shareCard'
 import { audio } from '../lib/audioManager'
-import Particles from './Particles'
+import WorldAmbient from './WorldAmbient'
+import RelationOpener from './scenes/RelationOpener'
+import { glyphFor, isPartnerWorld } from '../lib/worlds'
+import { occasionKey } from '../lib/occasionContent'
 import BouquetArtwork from './BouquetArtwork'
 import BowScene from './scenes/BowScene'
 import CakeAssembly from './scenes/CakeAssembly'
@@ -129,7 +132,8 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   const greeting = experience.greeting || `Dear ${experience.recipient || 'you'},`
   const font = fontById(experience.fontStyle)
   const revealTitle = revealFor(experience)   // editable big words (defaults per occasion)
-  const heartLight = scene === 'heart' && !heartCovered && !(heartOpen && !revealPlaying)   // cream bow-game look until the black halves close
+  const useBow = isPartnerWorld(experience.relation), glyph = glyphFor(experience.relation)
+  const heartLight = useBow && scene === 'heart' && !heartCovered && !(heartOpen && !revealPlaying)   // cream bow-game look until the black halves close
   const fontVars = { ['--lv-display' as string]: font.display, ['--lv-script' as string]: font.script, ['--lv-body' as string]: font.body } as React.CSSProperties
   const [bouquetPhase, setBouquetPhase] = useState<0 | 1 | 2>(0)
   const openBouquet = () => { if (bouquetPhase) return; setBouquetPhase(1); buzz([15, 25, 15]); sfx.boom('stars'); window.setTimeout(() => { setBouquetPhase(2); setBouquetOpen(true); buzz([20, 30, 20, 30, 60]); sfx.boom('love') }, 1100) }
@@ -138,21 +142,21 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   if (locked) return <div className={`player ${themeClass} countdown-lock`} role="dialog" aria-modal="true" aria-label="Surprise countdown"><div className="countdown-lock-card"><span className="scene-emoji">♡</span><p className="eyebrow">A LITTLE WORLD IS WAITING</p><h1>Something lovely is<br /><em>almost here.</em></h1><p>{experience.openingInstruction || 'Your surprise is waiting for the right moment.'}</p><div className="countdown-clock">{[{ label: 'DAYS', value: Math.floor(countdown / 86400000) }, { label: 'HOURS', value: Math.floor(countdown / 3600000) % 24 }, { label: 'MINUTES', value: Math.floor(countdown / 60000) % 60 }, { label: 'SECONDS', value: Math.floor(countdown / 1000) % 60 }].map(part => <div key={part.label}><strong>{String(part.value).padStart(2, '0')}</strong><small>{part.label}</small></div>)}</div><small className="countdown-note">Unlocks at midnight on {experience.targetDate} · local device time</small>{experience.targetDate && <button className="primary-btn" onClick={() => addReminder(experience.targetDate!, `🎂 Open your surprise${experience.sender ? ' from ' + experience.sender : ''}`, window.location.href)}>🔔 Remind me on the day</button>}<button className="secondary-btn" onClick={onClose}>Back</button></div></div>
 
   if (!opened) return <div className={`player ${themeClass}`} style={fontVars}><GiftIntro recipient={experience.recipient} secret={experience.secretMessage} colors={palette.balloons} onOpen={() => { audio.unlock(); setOpened(true) }} /></div>
-  return <div ref={rootRef} className={`player ta-host ta-${experience.textAnim || 'rise'} ${themeClass} ${heartLight ? 'hs-on' : ''}`} style={fontVars} role="dialog" aria-modal="true" aria-label="Interactive surprise">
+  return <div ref={rootRef} className={`player ta-host ta-${experience.textAnim || 'rise'} ${themeClass} ${heartLight ? 'hs-on' : ''} ${useBow ? '' : 'no-hearts'}`} style={fontVars} role="dialog" aria-modal="true" aria-label="Interactive surprise">
     <TapFX active={scene === 'finale' || scene === 'memories'} colors={palette.balloons} buzz={buzz} />
     <div className="player-top">
       <button className={`icon-btn ${heartLight ? 'hs-back' : ''}`} onClick={onClose} aria-label="Close experience">{heartLight ? <><ArrowLeft size={18} /> Back</> : <X />}</button>
-      {heartLight && preview && <span className="hs-preview" role="note">👁 PREVIEW MODE</span>}
+      {scene === 'heart' && !heartOpen && preview && <span className="hs-preview" role="note">👁 PREVIEW MODE</span>}
       <div className="player-progress">{scenes.map((s, i) => <button key={s} onClick={() => setIndex(i)} className={i === index ? 'active' : ''} aria-label={`Go to ${sceneLabels[s]}`} />)}</div>
       <button className="icon-btn" onClick={() => void saveShareCard(experience.recipient, experience.sender, palette.balloons)} aria-label="Save share card"><Download /></button>
       <button className="icon-btn" onClick={() => { audio.unlock(); setSoundOn(v => !v) }} aria-label={soundOn ? 'Mute sound' : 'Turn sound on'}>{soundOn ? <Volume2 /> : <VolumeX />}</button>
     </div>
-    <Particles count={8} />
+    <WorldAmbient occasion={occasionKey(experience.occasion)} relation={experience.relation} />
     <AnimatePresence mode="wait">
       <motion.section key={scene} className={`scene scene-${scene}`} initial={{ opacity: 0, y: 18, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12, scale: .99 }} transition={{ duration: .28, ease: 'easeOut' }} aria-live="polite">
         {scene === 'heart' && <div className="scene-content cupid-scene">
-          {(!heartOpen || (revealPlaying && !heartCovered)) && <BowScene onHit={onHit} buzz={buzz} onGesture={unlockAudio} />}
-          {heartOpen && !revealPlaying && <><p className="eyebrow">MADE JUST FOR YOU</p><h1>{toTitleCase(revealTitle)}</h1><h2>{experience.recipient || 'Beautiful human'} <span>♡</span></h2></>}
+          {(!heartOpen || (revealPlaying && !heartCovered)) && (useBow ? <BowScene onHit={onHit} buzz={buzz} onGesture={unlockAudio} /> : <RelationOpener relation={experience.relation} occasion={occasionKey(experience.occasion)} onHit={onHit} buzz={buzz} onGesture={unlockAudio} />)}
+          {heartOpen && !revealPlaying && <><p className="eyebrow">MADE JUST FOR YOU</p><h1>{toTitleCase(revealTitle)}</h1><h2>{experience.recipient || 'Beautiful human'} <span>{glyph}</span></h2></>}
         </div>}
         {scene === 'heart' && revealPlaying && <BirthdayReveal title={revealTitle} name={experience.recipient || 'Beautiful human'} display={font.display} script={font.script} accent={palette.balloons[0]} onCovered={() => setHeartCovered(true)} onDone={onRevealDone} />}
 
@@ -164,9 +168,9 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
           {wish && <button className="primary-btn" onClick={next}>Keep going <ArrowRight size={17} /></button>}</div>}
 
         {scene === 'balloons' && <div className="scene-content wide balloon-scene no-select"><p className="eyebrow">LITTLE WISHES, JUST FOR YOU</p><h1>A little <em>wish tree.</em></h1>
-          <p className="muted">Pop each heart balloon to release a wish · {popped.length}/{balloonCount}</p>
+          <p className="muted">Pop each balloon to release a wish · {popped.length}/{balloonCount}</p>
           {popped.length === 0 && <p className="pop-instruction" role="note"><span>👆</span> Tap the big glowing balloons to pop them — each one hides a wish for you.</p>}
-          <BalloonTree palette={palette} count={balloonCount} popped={popped} onPop={onPop} />
+          <BalloonTree palette={palette} count={balloonCount} popped={popped} onPop={onPop} round={!useBow} glyph={glyph} />
           {popped.length > 0 && <div className="wish-stack">{popped.map((i, k) => <motion.div key={i} className={`wish-card ${k === popped.length - 1 ? 'latest' : ''}`} initial={{ opacity: 0, scale: .7, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 230, damping: 17 }}><span>WISH {String(i + 1).padStart(2, '0')}</span><p>{experience.balloonWishes?.[i] || defaultWishes[i % defaultWishes.length]}</p></motion.div>)}</div>}
           {popped.length >= balloonCount && <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="all-wishes-note"><span>♡</span><strong>Every wish, just for you.</strong><p>Keep these little reminders close, today and always.</p><button className="primary-btn" onClick={next}>Open your letter <ArrowRight size={17} /></button></motion.div>}
         </div>}
@@ -188,7 +192,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
             <div className="scrap-photos">{experience.memories.filter(m => m.kind === 'image').slice(0, 4).map((m, i) => <figure key={m.id} className={`scrap-photo sp-${i}`}><span className="tape" /><img src={m.src} alt={m.caption || 'A cherished memory'} /><figcaption>{m.caption || '♡'}</figcaption></figure>)}{experience.memories.filter(m => m.kind === 'image').length === 0 && <figure className="scrap-photo sp-0 empty"><span className="tape" /><div>♡</div><figcaption>moments kept in the heart</figcaption></figure>}</div>
             <article className="scrap-letter"><span className="tape" /><small>{greeting}</small><p>{(letterText.length > 150 ? letterText.slice(0, 147).trimEnd() + '…' : letterText)}</p><em>{experience.closing || 'With love,'} {experience.sender}</em></article>
             <div className="scrap-wishes">{Array.from({ length: Math.min(3, balloonCount) }, (_, i) => <span key={i} className={`sticker st-${i}`}>{experience.balloonWishes?.[i] || defaultWishes[i % defaultWishes.length]}</span>)}</div>
-          </div><h1>{revealTitle}</h1><h2>{experience.recipient || 'Beautiful human'} <span>♡</span></h2><p className="scene-copy">{experience.message || 'May life keep surprising you with beautiful reasons to smile.'}</p>
+          </div><h1>{revealTitle}</h1><h2>{experience.recipient || 'Beautiful human'} <span>{glyph}</span></h2><p className="scene-copy">{experience.message || 'May life keep surprising you with beautiful reasons to smile.'}</p>
           <div className={`bouquet-reveal phase-${bouquetPhase} ${bouquetOpen ? 'opened' : ''}`}><button className={`bouquet-button bouquet-button-${experience.bouquetStyle || 'roses'}`} onClick={openBouquet} aria-label="Reveal your flower bouquet"><span className="bq-rays" aria-hidden="true" /><BouquetArtwork style={experience.bouquetStyle || 'roses'} opened={bouquetOpen} label={`${bouquetTitle || 'Flower'} bouquet`} />{bouquetPhase > 0 && <span className="bq-petal-rain" aria-hidden="true">{Array.from({ length: 18 }, (_, k) => <i key={k} style={{ ['--x' as string]: `${(k * 37) % 100}%`, ['--d' as string]: `${(k % 7) * .18}s`, ['--c' as string]: palette.balloons[k % palette.balloons.length] } as React.CSSProperties} />)}</span>}<small>{bouquetPhase === 2 ? `${bouquetTitle || 'A little bouquet'} — picked just for you ♡` : bouquetPhase === 1 ? 'Unwrapping…' : 'Tap to unwrap your flowers'}</small></button></div>
           <p className="tapfx-hint no-tapfx">✨ Tap anywhere else for fireworks, firecrackers, hearts &amp; confetti</p>
           <div className="final-actions"><button className="primary-btn" onClick={replay}><RotateCcw size={16} /> Replay</button><button className="secondary-btn" onClick={share}><Share2 size={16} /> Share</button></div>

@@ -38,3 +38,10 @@
 - Supabase → Authentication: enable Email provider; decide on "Confirm email"; add your site URL and redirect URLs.
 - Memory photos/videos are still base64 inside the row (8 MB cap per save). Real storage buckets would be better for many large files.
 - The 19:6 card crops the video with `object-fit: cover`.
+
+## Calmer landing, per-person worlds, lighter editor
+- Landing: removed the phone/camera mock-up, birthday cake, marquee and card grid. Four occasion tiles (each with its own backdrop) lead straight to the occasion → person picker.
+- Every occasion and person has its own world: opening scene, floating decoration and wording. Hearts, bow and arrow are for Partner only; Brother = fist bump, Sister = butterflies, Mom = bloom, Dad = trophy, Friend = party popper (`src/lib/worlds.ts`, `scenes/RelationOpener.tsx`, `WorldAmbient.tsx`).
+- Anniversary wording is now written separately for brother, sister, mom, dad and friend (`occasionContent.ts`).
+- Editor: 6 short steps (Who, Words, Look, Moments, Preview, Share). Optional things sit in closed sections. The scene-flow step is gone; the story is chosen by occasion + person.
+- Preview fix: the waiting screen timers restarted on every editor re-render, so the preview never opened. The waiting screen is removed and preview opens directly.
