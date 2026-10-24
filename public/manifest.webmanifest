@@ -1,0 +1,10 @@
+{
+  "name": "LOVORA MEOW",
+  "short_name": "Lovora",
+  "description": "Interactive surprises for birthdays, anniversaries, love letters and just because.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#12091f",
+  "theme_color": "#1d1029",
+  "icons": [{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
+}

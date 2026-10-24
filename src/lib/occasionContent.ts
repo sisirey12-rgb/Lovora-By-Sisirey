@@ -18,7 +18,6 @@ const kindOf = (r: Relation): Kind => (r === 'Partner' ? 'partner' : r === 'Frie
 
 const greet: Record<Relation, string> = { Brother: 'Dear bro,', Sister: 'Dear sis,', Partner: 'My love,', Mom: 'Dear Mom,', Dad: 'Dear Dad,', Friend: 'Dear friend,' }
 const closing: Record<Relation, string> = { Brother: 'Your sibling, always,', Sister: 'Your sibling, always,', Partner: 'Forever yours,', Mom: 'With all my love,', Dad: 'Your proud kid,', Friend: 'Your friend, always,' }
-const relTheme: Record<Relation, ThemeName> = { Brother: 'Ocean Hearts', Sister: 'Sakura Garden', Partner: 'Royal Velvet', Mom: 'Rose Romance', Dad: 'Mocha Cream', Friend: 'Cotton Candy' }
 const relCake: Record<Relation, string> = { Brother: 'chocolate', Sister: 'strawberry', Partner: 'red-velvet', Mom: 'floral', Dad: 'caramel', Friend: 'rainbow' }
 const relFont: Record<Relation, string> = { Brother: 'sweet', Sister: 'handwritten', Partner: 'parisian', Mom: 'classic', Dad: 'classic', Friend: 'bubbly' }
 const relBouquet: Record<Relation, string> = { Brother: 'sunflowers', Sister: 'peonies', Partner: 'roses', Mom: 'mixed', Dad: 'sunflowers', Friend: 'tulips' }
@@ -59,18 +58,98 @@ const titleFor = (o: Occasion, r: Relation): string => ({
 } as Record<Occasion, Record<Relation, string>>)[o][r]
 const secretFor = (o: Occasion, r: Relation) => o === 'Love letter' || r === 'Partner' ? 'The secret is simple: I would choose you in every universe.' : r === 'Mom' ? 'You found the secret: you are my hero, Mom.' : r === 'Dad' ? 'You found the secret: you are my hero, Dad.' : 'You found the secret: you are the best, and I mean it.'
 
-export type OccasionContent = Pick<Experience, 'occasion' | 'relation' | 'title' | 'greeting' | 'message' | 'closing' | 'balloonWishes' | 'balloonCount' | 'secretMessage' | 'theme' | 'cakeStyle' | 'fontStyle' | 'bouquetStyle' | 'textAnim' | 'scenes' | 'revealText'>
+type RM<T> = Record<Relation, T>
+const themeMx: Record<Occasion, RM<ThemeName>> = {
+  Birthday: { Brother: 'Ocean Hearts', Sister: 'Peach Dream', Partner: 'Rose Romance', Mom: 'Sakura Garden', Dad: 'Golden Celebration', Friend: 'Cotton Candy' },
+  Anniversary: { Brother: 'Aurora Sky', Sister: 'Lavender Night', Partner: 'Royal Velvet', Mom: 'Rose Romance', Dad: 'Mocha Cream', Friend: 'Sunset Glow' },
+  'Love letter': { Brother: 'Midnight Galaxy', Sister: 'Sakura Garden', Partner: 'Rose Romance', Mom: 'Peach Dream', Dad: 'Emerald Garden', Friend: 'Lavender Night' },
+  'Special surprise': { Brother: 'Neon Fantasy', Sister: 'Pastel Wonderland', Partner: 'Meow Magic', Mom: 'Emerald Garden', Dad: 'Ocean Hearts', Friend: 'Sunset Glow' },
+}
+const cakeMx: Record<Occasion, RM<string>> = {
+  Birthday: relCake,
+  Anniversary: { Brother: 'chocolate', Sister: 'blueberry', Partner: 'tiered', Mom: 'floral', Dad: 'vanilla-gold', Friend: 'heart-cake' },
+  'Love letter': { Brother: 'caramel', Sister: 'strawberry', Partner: 'heart-cake', Mom: 'red-velvet', Dad: 'chocolate', Friend: 'vanilla-gold' },
+  'Special surprise': { Brother: 'galaxy', Sister: 'lemon', Partner: 'red-velvet', Mom: 'matcha', Dad: 'caramel', Friend: 'rainbow' },
+}
+const fontOcc: Partial<Record<Occasion, string>> = { 'Love letter': 'parisian', Anniversary: 'vows', 'Special surprise': 'bubbly' }
+/** The scene order is different for every occasion and person, so no two surprises play the same story. */
+const flows: Record<Occasion, RM<Experience['scenes']>> = {
+  Birthday: {
+    Brother: ['heart', 'intro', 'balloons', 'cake', 'video', 'letter', 'moments', 'wishjar', 'finale'],
+    Sister: ['heart', 'intro', 'cake', 'balloons', 'letter', 'memories', 'video', 'moments', 'wishjar', 'finale'],
+    Partner: ['heart', 'intro', 'letter', 'cake', 'coupons', 'memories', 'timeline', 'moments', 'video', 'finale'],
+    Mom: ['heart', 'intro', 'letter', 'moments', 'memories', 'timeline', 'cake', 'balloons', 'video', 'finale'],
+    Dad: ['heart', 'intro', 'cake', 'moments', 'letter', 'memories', 'balloons', 'video', 'finale'],
+    Friend: ['heart', 'intro', 'balloons', 'cake', 'wishjar', 'memories', 'video', 'moments', 'finale'],
+  },
+  Anniversary: {
+    Brother: ['heart', 'intro', 'timeline', 'memories', 'moments', 'video', 'letter', 'finale'],
+    Sister: ['heart', 'intro', 'timeline', 'memories', 'moments', 'video', 'letter', 'finale'],
+    Partner: ['heart', 'intro', 'counter', 'timeline', 'memories', 'letter', 'moments', 'coupons', 'video', 'cake', 'finale'],
+    Mom: ['heart', 'intro', 'counter', 'timeline', 'memories', 'moments', 'letter', 'video', 'wishjar', 'finale'],
+    Dad: ['heart', 'intro', 'counter', 'timeline', 'memories', 'moments', 'letter', 'video', 'wishjar', 'finale'],
+    Friend: ['heart', 'intro', 'counter', 'timeline', 'memories', 'moments', 'video', 'wishjar', 'finale'],
+  },
+  'Love letter': {
+    Brother: ['heart', 'intro', 'letter', 'moments', 'memories', 'video', 'wishjar', 'finale'],
+    Sister: ['heart', 'intro', 'letter', 'moments', 'memories', 'video', 'wishjar', 'finale'],
+    Partner: ['heart', 'intro', 'letter', 'moments', 'memories', 'coupons', 'timeline', 'video', 'finale'],
+    Mom: ['heart', 'intro', 'letter', 'moments', 'memories', 'video', 'finale'],
+    Dad: ['heart', 'intro', 'letter', 'moments', 'video', 'memories', 'finale'],
+    Friend: ['heart', 'intro', 'letter', 'moments', 'memories', 'wishjar', 'video', 'finale'],
+  },
+  'Special surprise': {
+    Brother: ['heart', 'intro', 'balloons', 'video', 'cake', 'moments', 'finale'],
+    Sister: ['heart', 'intro', 'balloons', 'video', 'cake', 'moments', 'finale'],
+    Partner: ['heart', 'intro', 'balloons', 'video', 'coupons', 'letter', 'memories', 'finale'],
+    Mom: ['heart', 'intro', 'balloons', 'letter', 'video', 'moments', 'finale'],
+    Dad: ['heart', 'intro', 'balloons', 'letter', 'video', 'moments', 'finale'],
+    Friend: ['heart', 'intro', 'balloons', 'wishjar', 'video', 'moments', 'finale'],
+  },
+}
+export const flowFor = (o: Occasion, r: Relation): Experience['scenes'] => [...flows[o][r]]
+export type Lang = 'English' | 'Hinglish'
+const hGreet: Record<Relation, string> = { Brother: 'Mere bhai,', Sister: 'Meri pyaari behna,', Partner: 'Meri jaan,', Mom: 'Meri pyaari Maa,', Dad: 'Mere Papa,', Friend: 'Mere yaar,' }
+const hClosing: Record<Relation, string> = { Brother: 'Tera bhai/behna, hamesha,', Sister: 'Tera bhai/behna, hamesha,', Partner: 'Hamesha tera/teri,', Mom: 'Dher saara pyaar ke saath,', Dad: 'Aapka bachcha,', Friend: 'Tera yaar, hamesha,' }
+const hOpener: Record<Occasion, Record<Kind, string>> = {
+  Birthday: { family: 'Janamdin mubarak! Aaj ka din sirf tumhara hai, toh cake bada hoga aur masti usse bhi badi.', partner: 'Janamdin mubarak meri jaan. Aaj main usse celebrate kar raha/rahi hoon jisse meri duniya khoobsurat hai.', friend: 'Janamdin mubarak yaar! Aaj ka din sirf tumhara hai, cake bada aur masti usse bhi badi.' },
+  Anniversary: { family: 'Anniversary mubarak! Aapki kahani dekhna mujhe bahut pasand hai.', partner: 'Anniversary mubarak meri jaan. Ek aur saal saath, aur main phir bhi har din tumhe hi chunta/chunti.', friend: 'Anniversary mubarak! Jo beeta uska shukriya, aur jo aane wala hai uska intezaar.' },
+  'Love letter': { family: 'Main kehta/kehti kam hoon, isliye likh diya: I love you, aur main tumhara/tumhari shukraguzar hoon.', partner: 'Ye baat dil se kehni thi, isliye likh di: I love you, jitna main bol bhi nahi sakta/sakti.', friend: 'Kuch baatein text se zyada deserve karti hain: yaar, tu mere life mein hai, bas yahi kaafi hai.' },
+  'Special surprise': { family: 'Koi khaas wajah nahi hai, bas tumhari yaad aayi aur socha ki muskaan bhej doon.', partner: 'Koi khaas wajah nahi hai, bas tumhari yaad aayi aur socha ki muskaan bhej doon.', friend: 'Koi khaas wajah nahi hai, bas tumhari yaad aayi aur socha ki muskaan bhej doon.' },
+}
+const hMiddle: Record<Relation, string> = {
+  Brother: 'Hum ladte hain, hasste hain, snacks chheente hain, par tumhare jaisa mujhe koi nahi samajhta.',
+  Sister: 'Hum ladte hain, hasste hain, cheezein udate hain, par tumhare jaisa mujhe koi nahi samajhta.',
+  Partner: 'Mujhe baar baar chunne ke liye shukriya, aur un chhote pal ke liye jo sabse zyada matter karte hain.',
+  Mom: 'Mujhme jo bhi achha hai woh aapse shuru hua. Aapke sabr, pyaar aur har un baat ke liye shukriya jiska aap kabhi hisaab nahi maangti.',
+  Dad: 'Aapne mujhe mazboot aur nek dono banna sikhaya. Har seekh aur har chuppi hui parwah ke liye shukriya.',
+  Friend: 'Hasi, sachchai aur mujhe kabhi akela na chhodne ke liye shukriya.',
+}
+const hCloser: Record<Occasion, string> = { Birthday: 'Ye saal tumhe woh sab de jo tum deserve karte ho.', Anniversary: 'Mujhe humpe garv hai, aur aage ka intezaar hai.', 'Love letter': 'Ye chhoti si duniya sambhal ke rakhna, jab mann ho khol lena.', 'Special surprise': 'Hamesha yaad rakhna ki tum kitne khaas ho.' }
 
-export function messageFor(o: Occasion, r: Relation, short = false) {
-  const k = kindOf(r)
-  return short ? `${opener[o][k]} ${closer[o]}` : `${opener[o][k]} ${middle[r]} ${closer[o]}`
+const momentsBase: Record<Relation, { title: string; items: string[] }> = {
+  Mom: { title: 'Things I learned from you', items: ['How to stay kind even on hard days', 'That a warm meal can fix almost anything', 'How to keep going and still smile', 'That love shows up in small, daily ways'] },
+  Dad: { title: 'Things you taught me', items: ['To keep my word', 'To stay calm when things get loud', 'That hard work and kindness can go together', 'That showing up matters most'] },
+  Partner: { title: 'Reasons I love you', items: ['Your laugh makes every day lighter', 'You listen like it matters, because it does', 'You make home feel like a person', 'Being with you feels easy and exciting at once'] },
+  Friend: { title: 'Why you are my person', items: ['You show up without being asked', 'Silence with you is never awkward', 'You are honest and kind together', 'Every memory is better with you in it'] },
+  Brother: { title: 'Why you are the best', items: ['You always have my back', 'You make me laugh at the worst times', 'You push me to be better', 'No one else gets our stories'] },
+  Sister: { title: 'Why you are the best', items: ['You always have my back', 'You make me laugh at the worst times', 'You push me to be better', 'No one else gets our stories'] },
+}
+export const momentsTitle = (r?: Relation) => momentsBase[r || 'Friend'].title
+
+export type OccasionContent = Pick<Experience, 'occasion' | 'relation' | 'title' | 'greeting' | 'message' | 'closing' | 'balloonWishes' | 'balloonCount' | 'secretMessage' | 'theme' | 'cakeStyle' | 'fontStyle' | 'bouquetStyle' | 'textAnim' | 'scenes' | 'revealText' | 'moments' | 'language'>
+
+export function messageFor(o: Occasion, r: Relation, short = false, lang: Lang = 'English') {
+  const k = kindOf(r), h = lang === 'Hinglish'
+  const op = (h ? hOpener : opener)[o][k], mi = (h ? hMiddle : middle)[r], cl = (h ? hCloser : closer)[o]
+  return short ? `${op} ${cl}` : `${op} ${mi} ${cl}`
 }
 /** All the text and style choices for one occasion + person. The editor and the landing page templates both use this. */
-export function contentFor(o: Occasion, r: Relation, scenes: Experience['scenes']): OccasionContent {
-  const k = kindOf(r)
+export function contentFor(o: Occasion, r: Relation, _scenes?: Experience['scenes'], lang: Lang = 'English'): OccasionContent {
+  const k = kindOf(r), h = lang === 'Hinglish'
   const w = wishes[o][k]
-  const sc = o === 'Love letter' && k === 'partner' ? ([...scenes.filter(s => s !== 'finale'), 'coupons', 'finale'] as Experience['scenes']) : [...scenes]
-  return { occasion: o, relation: r, title: titleFor(o, r), greeting: greet[r], message: messageFor(o, r), closing: closing[r], balloonWishes: [...w, 'You make ordinary days brighter.', 'Thank you for being exactly you.'], balloonCount: 5, secretMessage: secretFor(o, r), theme: relTheme[r], cakeStyle: relCake[r], fontStyle: relFont[r], bouquetStyle: relBouquet[r], textAnim: relAnim[r], scenes: sc, revealText: undefined }
+  const sc = flowFor(o, r)
+  return { occasion: o, relation: r, title: titleFor(o, r), greeting: (h ? hGreet : greet)[r], message: messageFor(o, r, false, lang), closing: (h ? hClosing : closing)[r], moments: [...momentsBase[r].items], language: lang, balloonWishes: [...w, 'You make ordinary days brighter.', 'Thank you for being exactly you.'], balloonCount: 5, secretMessage: secretFor(o, r), theme: themeMx[o][r], cakeStyle: cakeMx[o][r], fontStyle: fontOcc[o] && r !== 'Dad' ? fontOcc[o]! : relFont[r], bouquetStyle: relBouquet[r], textAnim: relAnim[r], scenes: sc, revealText: undefined }
 }
 /** Suggestion chips shown under the editor fields, tuned to the chosen occasion. */
 export function suggestFor(o: Occasion) {

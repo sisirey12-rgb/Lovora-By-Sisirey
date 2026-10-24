@@ -67,3 +67,53 @@
 .occasion-chips button:hover{transform:translateY(-1px)}
 .occasion-chips button.selected{border-color:#ed9ec7;background:#ed9ec72b;box-shadow:0 0 0 2px #ed9ec733}
 .template-gallery .occasion-chips{margin:0 0 16px}
+
+/* 6) Optional lock screen for public links */
+.unlock-gate{min-height:100svh;display:grid;place-items:center;padding:24px}
+.unlock-card{width:min(420px,100%);display:grid;gap:14px;padding:28px;border-radius:24px;border:1px solid var(--border);background:var(--panel);text-align:center}
+.unlock-card input{padding:14px 16px;border-radius:14px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:16px;text-align:center}
+.unlock-card .error-text{color:#ff8fa8;margin:0}
+
+/* 7) Scenes added in batch 1, install button, share actions, larger text */
+.counter-grid{display:flex;gap:14px;justify-content:center;margin:18px 0}.counter-grid div{min-width:84px;padding:14px 10px;border-radius:18px;border:1px solid var(--border);background:var(--panel)}
+.counter-grid b{display:block;font-size:40px;line-height:1}.counter-grid span{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.counter-clock{font-variant-numeric:tabular-nums;font-size:22px;letter-spacing:.1em;margin:0 0 18px;opacity:.85}
+.moments-list{list-style:none;display:grid;gap:10px;padding:0;margin:14px 0;text-align:left}
+.moments-list li{display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:16px;border:1px solid var(--border);background:var(--panel);animation:momIn .45s ease both}
+.moments-list li span{display:grid;place-items:center;min-width:28px;height:28px;border-radius:50%;background:#ed9ec733;font-weight:700;font-size:13px}
+@keyframes momIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.install-btn{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40;padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-weight:600}
+.share-actions{display:grid;gap:10px;margin:12px 0}.share-actions .secondary-btn{text-align:center;text-decoration:none}
+.remind-send{display:grid;gap:6px;font-size:13px}.remind-send input{padding:10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text)}
+html.big-text{font-size:118%}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+.tpl-flow{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}.tpl-flow i{font-style:normal;font-size:10px;padding:3px 7px;border-radius:999px;background:#ffffff22;border:1px solid #ffffff2a}
+
+/* Developer credit: compact variant inside the scene player, and on the lock screen */
+.dev-credit em{font-style:normal;opacity:.8;margin-left:4px}
+.dev-credit.compact{position:fixed;left:0;right:0;bottom:calc(2px + env(safe-area-inset-bottom,0px));z-index:30;flex-basis:auto;border:0;margin:0;padding:0;width:100%;gap:8px;flex-direction:row;font-size:10px;pointer-events:none}
+.dev-credit.compact a{pointer-events:auto;transform:scale(.72)}
+.dev-credit.compact .dev-links{gap:2px}
+.player-bottom{margin-bottom:26px}
+.unlock-gate{flex-direction:column}.unlock-gate .dev-credit{margin-top:22px}
+
+/* Quick mode sheet and autosave pill */
+.quick-backdrop{position:fixed;inset:0;z-index:80;background:#0009;display:grid;align-items:end;justify-items:center;backdrop-filter:blur(4px)}
+.quick-sheet{position:relative;width:min(480px,100%);max-height:92svh;overflow:auto;display:grid;gap:12px;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));border-radius:26px 26px 0 0;background:var(--bg-2,#1b1030);border:1px solid var(--border);animation:quickUp .3s ease both}
+.quick-sheet h2{margin:0}.quick-sheet label{display:grid;gap:6px;font-size:13px}
+.quick-sheet input:not([hidden]){padding:14px 16px;border-radius:14px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:16px}
+.quick-x{position:absolute;right:14px;top:14px}
+.quick-photo{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;border:1px dashed var(--border);background:transparent;color:var(--text)}
+.quick-photo img{width:44px;height:44px;border-radius:10px;object-fit:cover}
+.spin{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes quickUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media(min-width:700px){.quick-backdrop{align-items:center}.quick-sheet{border-radius:26px}}
+.autosave-pill{position:fixed;left:12px;bottom:calc(46px + env(safe-area-inset-bottom,0px));z-index:35;padding:6px 12px;border-radius:999px;font-size:12px;background:var(--panel);border:1px solid var(--border);color:var(--text)}
+.autosave-pill.failed{border-color:#ff8fa8}
+
+/* Paywall */
+.paywall .price-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.paywall .price-row b{font-size:40px;line-height:1}
+.paywall .price-row s{opacity:.55;font-size:18px}.launch-tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:#ffd36e;color:#3a2200}
+.paywall .price-row small{flex-basis:100%;opacity:.7}
+.paywall-list{list-style:none;padding:0;margin:0;display:grid;gap:8px;font-size:14px}.paywall-list li{display:flex;gap:8px;align-items:flex-start}.paywall-list svg{flex:none;margin-top:3px;color:#7be0a4}

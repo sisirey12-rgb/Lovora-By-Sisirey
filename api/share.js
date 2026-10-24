@@ -11,8 +11,8 @@ export default async function handler(req, res) {
   try { html = await (await fetch(`${origin}/`)).text() } catch { res.status(500).send('Could not load the app.'); return }
 
   let found = false
-  let title = 'A birthday surprise is waiting for you 🎂'
-  let desc = 'Lovora Meow by Sisirey: tap to open a little birthday world made just for you.'
+  let title = 'A surprise is waiting for you ✨'
+  let desc = 'Lovora Meow by Sisirey: tap to open a little world made just for you.'
   const url = process.env.VITE_SUPABASE_URL, key = process.env.VITE_SUPABASE_ANON_KEY
   if (url && key && /^[A-Za-z0-9_-]{6,64}$/.test(id)) {
     try {
@@ -21,7 +21,8 @@ export default async function handler(req, res) {
       if (p) {
         found = true
         const to = clip(String(p.recipient || '').trim(), 40), from = clip(String(p.sender || '').trim(), 40)
-        if (to) title = `A birthday surprise for ${to} 🎂`
+        const T = { Birthday: n => `A birthday surprise for ${n} 🎂`, Anniversary: n => `An anniversary surprise for ${n} 💞`, 'Love letter': n => `A love letter for ${n} 💌`, 'Special surprise': n => `A special surprise for ${n} ✨` }
+        if (to) title = (T[p.occasion] || T['Special surprise'])(to)
         desc = from ? `${from} made you something special. Tap to open it 🎁` : 'Someone made you something special. Tap to open it 🎁'
       }
     } catch { /* fall back to the generic preview */ }

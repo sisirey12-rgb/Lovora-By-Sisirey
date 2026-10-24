@@ -11,6 +11,9 @@ import Timeline from './Timeline'
 import BirthdayIntro from './BirthdayIntro'
 import BirthdayReveal from './BirthdayReveal'
 import WishJar from './WishJar'
+import DevCredit from './DevCredit'
+import { CounterScene, MomentsScene } from './scenes/ExtraScenes'
+import { momentsTitle } from '../lib/occasionContent'
 import Fireworks from './Fireworks'
 import FullScreenFX from './FullScreenFX'
 import ThankYou from './ThankYou'
@@ -36,7 +39,7 @@ const defaultWishes = suggestions.wishes.slice(0, 5)
 const hapticsAllowed = () => { try { return localStorage.getItem('lovora-haptics') !== 'off' } catch { return true } }
 
 export default function ScenePlayer({ experience, onClose, preview = false }: Props) {
-  const scenes = useMemo(() => { const s = normalizeScenes(experience.scenes, experience.v).filter(x => known.includes(x)); return s.length ? s : (['heart'] as SceneId[]) }, [experience.scenes, experience.v])
+  const scenes = useMemo(() => { const s = normalizeScenes(experience.scenes, experience.v).filter(x => known.includes(x)).filter(x => x === 'counter' ? !!experience.togetherSince : x === 'moments' ? (experience.moments || []).some(t => t.trim()) : true); return s.length ? s : (['heart'] as SceneId[]) }, [experience.scenes, experience.v, experience.togetherSince, experience.moments])
   const [index, setIndex] = useState(0)
   const [opened, setOpened] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -177,6 +180,8 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
 
         {scene === 'timeline' && <div className="scene-content wide"><p className="eyebrow">THE STORY SO FAR</p><h1>Our little <em>timeline.</em></h1>{experience.memories.length ? <Timeline memories={experience.memories} buzz={buzz} onDone={next} /> : <p className="muted">Add photos with dates to build your timeline.</p>}</div>}
         {scene === 'coupons' && <div className="scene-content"><CouponBook coupons={experience.coupons} colors={palette.balloons} buzz={buzz} onDone={next} /></div>}
+        {scene === 'counter' && <CounterScene since={experience.togetherSince || ''} onDone={next} />}
+        {scene === 'moments' && <MomentsScene title={momentsTitle(experience.relation)} items={experience.moments || []} onDone={next} buzz={buzz} />}
         {scene === 'wishjar' && <div className="scene-content"><p className="eyebrow">MADE WITH LOVE BY YOUR PEOPLE</p><h1>Your <em>wish jar.</em></h1><WishJar colors={palette.balloons} wishes={[...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes].length ? [...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes] : (experience.balloonWishes || []).filter(Boolean).map(text => ({ name: '', text }))} /></div>}
         {scene === 'finale' && <div className="scene-content finale-content"><FullScreenFX><Fireworks colors={palette.balloons} /></FullScreenFX><div className="confetti" aria-hidden="true">{confetti.map(i => <i key={i} style={{ left: `${(i * 29) % 100}%`, animationDelay: `${(i % 9) * .14}s`, transform: `rotate(${i * 17}deg)` }} />)}</div><div className="final-fireworks" aria-hidden="true"><i /><i /><i /></div><Sparkles className="final-spark" size={38} /><p className="eyebrow">A SCRAPBOOK OF MOMENTS</p>
           <div className="scrapbook" aria-label="Scrapbook of moments">
@@ -193,6 +198,8 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
       </motion.section>
     </AnimatePresence>
     <div className="player-bottom"><button className="text-btn" onClick={previous} disabled={index === 0}><ArrowLeft size={16} /> Back</button><span>{index + 1} / {scenes.length} · {sceneLabels[scene]}</span>{index < scenes.length - 1 ? <button className="text-btn" onClick={next}>Next <ArrowRight size={16} /></button> : <button className="text-btn" onClick={onClose}>Finish <Heart size={16} /></button>}</div>
+    <DevCredit compact />
+    <button className="haptics-toggle" style={{ right: "auto", left: 12 }} onClick={() => { const on = document.documentElement.classList.toggle("big-text"); try { localStorage.setItem("lovora-bigtext", on ? "on" : "off") } catch { /* ignore */ } }} title="Larger text">Aa</button>
     <button className="haptics-toggle" onClick={() => { const v = !hapticsOn; setHapticsOn(v); try { localStorage.setItem('lovora-haptics', v ? 'on' : 'off') } catch { /* ignore */ } }} title="Toggle optional vibration">Haptics: {hapticsOn ? 'on' : 'off'}</button>
   </div>
 }

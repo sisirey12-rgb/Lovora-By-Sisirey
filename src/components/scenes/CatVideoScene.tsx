@@ -10,6 +10,8 @@ const BALLOONS = [{ l: 1, x: -44, y: 8, s: 1.05, d: 0 }, { l: 1, x: -30, y: 36, 
 const STARS = [{ t: '-14px', l: '-14px' }, { t: '-14px', r: '-14px' }, { b: '-14px', l: '-14px' }, { b: '-14px', r: '-14px' }, { t: '46%', l: '-22px' }, { t: '46%', r: '-22px' }]
 const CONFETTI = Array.from({ length: 26 }, (_, i) => ({ dx: Math.cos(i * 2.399) * (90 + (i % 5) * 38), dy: Math.sin(i * 2.399) * (110 + (i % 4) * 42) - 40, r: `${(i * 83) % 540}deg`, c: i }))
 
+/** Videos play up to 15 seconds; anything longer is cut off so scenes stay snappy. */
+const MAX_VIDEO_MS = 15000
 type Phase = 'enter' | 'play' | 'leave'
 // Pendulum: the card hangs from a nail on two wires. It is released from the side and swings in with a decaying swing,
 // plays, then swings out with growing swings until it lets go and drops away.
@@ -21,13 +23,14 @@ export default function CatVideoScene({ palette, onDone, buzz, src, custom }: { 
   const [needsTap, setNeedsTap] = useState(false)
   const video = useRef<HTMLVideoElement>(null)
   const finished = useRef(false)
+  const cap = useRef(0)
   const timers = useRef<number[]>([])
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   const play = useCallback(() => {
     const v = video.current; if (!v) return
     v.play().then(() => setNeedsTap(false)).catch(() => setNeedsTap(true))
   }, [])
-  useEffect(() => () => { timers.current.forEach(window.clearTimeout); audio.resumeAfterVideo() }, [])
+  useEffect(() => () => { window.clearTimeout(cap.current); timers.current.forEach(window.clearTimeout); audio.resumeAfterVideo() }, [])
   const finish = useCallback(() => {
     if (finished.current) return
     finished.current = true
@@ -52,7 +55,7 @@ export default function CatVideoScene({ palette, onDone, buzz, src, custom }: { 
         {STARS.map((st, i) => <span key={i} className="cvx-star" aria-hidden="true" style={{ top: st.t, bottom: st.b, left: st.l, right: st.r, ['--d' as string]: `${i * .35}s` } as React.CSSProperties}>✦</span>)}
         {phase !== 'enter' && <div className="cvx-burst" aria-hidden="true">{CONFETTI.map((c, i) => <i key={i} style={{ ['--dx' as string]: `${c.dx}px`, ['--dy' as string]: `${c.dy}px`, ['--r' as string]: c.r, ['--c' as string]: colors[c.c % colors.length] } as React.CSSProperties} />)}</div>}
         <div className={`cv-card ${custom ? 'cv-custom' : ''}`} aria-label="Video surprise">
-          <video ref={video} src={src || hostedBirthdayVideo} playsInline preload="auto" onPlay={() => audio.pauseForVideo()} onEnded={finish} onError={finish} onPause={e => { if (!e.currentTarget.ended && phase === 'play' && !finished.current) setNeedsTap(true) }} />
+          <video ref={video} src={src || hostedBirthdayVideo} playsInline preload="auto" onPlay={() => { audio.pauseForVideo(); window.clearTimeout(cap.current); cap.current = window.setTimeout(() => finish(), MAX_VIDEO_MS) }} onEnded={finish} onError={finish} onPause={e => { if (!e.currentTarget.ended && phase === 'play' && !finished.current) setNeedsTap(true) }} />
           {needsTap && phase === 'play' && <button className="cv-tap" onClick={() => { play() }}><Play size={22} fill="currentColor" /> Tap to play</button>}
         </div>
       </motion.div>

@@ -25,7 +25,7 @@ export const themes: { name: ThemeName; colors: string; description: string }[] 
   { name: 'Mocha Cream', colors: 'linear-gradient(135deg,#e8c9a8,#7a4a38)', description: 'Cosy coffee and cream' },
 ]
 export const defaultScenes: SceneId[] = ['heart','intro','cake','balloons','letter','video','memories','timeline','wishjar','finale']
-export const sceneLabels: Record<SceneId, string> = { heart: 'Floating heart', intro: 'Magical intro', cake: 'Surprise cake', balloons: 'Pop the balloons', letter: 'Personal letter', video: 'Video surprise', memories: 'Photo memories', timeline: 'Memory timeline', wishjar: 'Wish jar', coupons: 'Coupon book', finale: 'Grand finale' }
+export const sceneLabels: Record<SceneId, string> = { heart: 'Floating heart', intro: 'Magical intro', cake: 'Surprise cake', balloons: 'Pop the balloons', letter: 'Personal letter', video: 'Video surprise', memories: 'Photo memories', timeline: 'Memory timeline', wishjar: 'Wish jar', coupons: 'Coupon book', counter: 'Together-since counter', moments: 'Special moments', finale: 'Grand finale' }
 
 
 export const messageTemplates = [
@@ -42,13 +42,10 @@ export const messageTemplates = [
 export const hostedMusic = '/media/music/celebration.mp3'
 export const hostedBirthdayVideo = '/media/birthday-videos/birthday-cat.mp4'
 /** One placeholder video per occasion. Replace the files in public/media/occasion-videos/ with your own clips (same names). */
-export const occasionVideos: Record<string, string> = {
-  Birthday: '/media/occasion-videos/birthday.mp4',
-  Anniversary: '/media/occasion-videos/anniversary.mp4',
-  'Love letter': '/media/occasion-videos/love-letter.mp4',
-  'Special surprise': '/media/occasion-videos/special-surprise.mp4',
-}
-export const videoFor = (e: { occasion?: string; videoData?: string }) => e.videoData || occasionVideos[e.occasion || ''] || occasionVideos['Special surprise']
+const occSlug: Record<string, string> = { Birthday: 'birthday', Anniversary: 'anniversary', 'Love letter': 'love-letter', 'Special surprise': 'special-surprise' }
+/** public/media/occasion-videos/<occasion>/<person>.mp4, one placeholder per occasion and person (24 total). Replace any file, keeping its name. */
+export const occasionVideoPath = (occasion?: string, relation?: string) => `/media/occasion-videos/${occSlug[occasionKey(occasion)]}/${(relation || 'friend').toLowerCase()}.mp4`
+export const videoFor = (e: { occasion?: string; relation?: string; videoData?: string }) => e.videoData || occasionVideoPath(e.occasion, e.relation)
 export const cakeLabel = (o?: string) => (o === 'Birthday' ? 'Birthday cake' : o === 'Anniversary' ? 'Anniversary cake' : o === 'Love letter' ? 'Cake of love' : 'Surprise cake')
 export const hostedPopSound = '/media/effects/balloon-pop.mp3'
 

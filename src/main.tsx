@@ -12,3 +12,6 @@ import './fx.css'
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode><AuthProvider><App /></AuthProvider></React.StrictMode>
 )
+
+if ('serviceWorker' in navigator && import.meta.env.PROD) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}) })
+try { if (localStorage.getItem('lovora-bigtext') === 'on') document.documentElement.classList.add('big-text') } catch { /* ignore */ }

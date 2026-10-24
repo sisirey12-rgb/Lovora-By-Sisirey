@@ -5,6 +5,7 @@ export function friendlyError(err: unknown, fallback = 'Something went wrong. Pl
   const msg = (e.message || (typeof err === 'string' ? err : '') || '').toString()
   const low = msg.toLowerCase()
   if (!msg) return fallback
+  if (low.includes('payment_required')) return 'Please complete the payment to make this surprise shareable. Previewing is always free.'
   if (low.includes('invalid login credentials')) return 'That email and password do not match. Check them and try again.'
   if (low.includes('email not confirmed')) return 'Please confirm your email first — open the link we sent you, then sign in.'
   if (low.includes('user already registered') || low.includes('already been registered')) return 'An account with this email already exists. Try signing in instead.'
