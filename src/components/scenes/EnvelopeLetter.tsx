@@ -6,6 +6,7 @@ type Stage = 'closed' | 'flap' | 'rise' | 'read'
 type Props = { recipient: string; greeting: string; text: string; closing: string; sender: string; buzz: (p: number | number[]) => void; onDone: () => void }
 
 /** Envelope: seal cracks → flap rotates open in 3D → letter slides up out of the pocket → letter unfolds and types itself. */
+import ReadAloud from '../ReadAloud'
 export default function EnvelopeLetter({ recipient, greeting, text, closing, sender, buzz, onDone }: Props) {
   const [stage, setStage] = useState<Stage>('closed')
   const [typed, setTyped] = useState(0)
@@ -51,6 +52,7 @@ export default function EnvelopeLetter({ recipient, greeting, text, closing, sen
       <span className="letter-flower">✿</span>
       <p className="eyebrow">A LETTER FOR {recipient || 'YOU'}</p>
       <h2>{greeting}</h2>
+      <ReadAloud text={`${greeting}. ${text}. ${closing || 'With love'}, ${sender || ''}`} />
       <p className="letter-message">{text.slice(0, typed)}{typed < text.length && <span className="type-caret">▍</span>}</p>
       <p className="letter-closing" style={{ opacity: finished ? 1 : 0 }}>{closing || 'With love,'}<br /><strong>{sender || 'Someone who cares'}</strong></p>
     </article>}

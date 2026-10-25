@@ -10,7 +10,7 @@ import GiftIntro from './GiftIntro'
 import Timeline from './Timeline'
 import BirthdayIntro from './BirthdayIntro'
 import { introFor } from '../data'
-import { SpinWheel, StarSky, Vows, Lanterns, WaxSeal, MysteryBoxes, ScratchCard } from './scenes/OccasionScenes'
+import { Polaroids, SpinWheel, StarSky, Vows, Lanterns, WaxSeal, MysteryBoxes, ScratchCard } from './scenes/OccasionScenes'
 import OccasionDeco from './OccasionDeco'
 import BirthdayReveal from './BirthdayReveal'
 import WishJar from './WishJar'
@@ -42,14 +42,14 @@ import VoiceNote from './VoiceNote'
 type Props = { experience: Experience; onClose: () => void; preview?: boolean }
 const known = Object.keys(sceneLabels) as SceneId[]
 const defaultWishes = suggestions.wishes.slice(0, 5)
-const hapticsAllowed = () => { try { return localStorage.getItem('lovora-haptics') !== 'off' } catch { return true } }
+const hapticsAllowed = () => true   // haptics are always on
 
 export default function ScenePlayer({ experience, onClose, preview = false }: Props) {
   const photoCount = experience.memories.length
   const scenes = useMemo(() => {
     // the story order is set by occasion + person (older surprises are brought into line); no coupon book any more
     const base = experience.relation ? flowFor(occasionKey(experience.occasion), experience.relation) : normalizeScenes(experience.scenes, experience.v)
-    const s = base.filter(x => known.includes(x) && x !== 'coupons').filter(x => x === 'counter' ? !!experience.togetherSince : x === 'moments' ? (experience.moments || []).some(t => t.trim()) : (x === 'memories' || x === 'timeline') ? photoCount > 0 : true)
+    const s = base.filter(x => known.includes(x) && x !== 'coupons').filter(x => x === 'counter' ? !!experience.togetherSince : x === 'moments' ? (experience.moments || []).some(t => t.trim()) : (x === 'memories' || x === 'timeline' || x === 'polaroids') ? photoCount > 0 : true)
     return s.length ? s : (['heart'] as SceneId[])
   }, [experience.scenes, experience.v, experience.occasion, experience.relation, experience.togetherSince, experience.moments, photoCount])
   const [index, setIndex] = useState(0)
@@ -92,7 +92,6 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   const [thanksOpen, setThanksOpen] = useState(false)
   const [heartCovered, setHeartCovered] = useState(false)   // black halves have closed: bow scene is removed so it can't show through when they split
   const [soundOn, setSoundOn] = useState(true)
-  const [hapticsOn, setHapticsOn] = useState(hapticsAllowed)
   const [, setMemoryIndex] = useState(0)
   const [bouquetOpen, setBouquetOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
@@ -112,8 +111,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   const buzzScale = ({ 'Love letter': .55, Anniversary: .8, 'Special surprise': 1.1 } as Record<string, number>)[experience.occasion] ?? 1
   const buzz = useCallback((pattern: number | number[]) => { try { if (navigator.vibrate && hapticsAllowed()) navigator.vibrate(Array.isArray(pattern) ? pattern.map(n => Math.round(n * buzzScale)) : Math.round(pattern * buzzScale)) } catch { /* unsupported */ } }, [buzzScale])
   useEffect(() => { sfx.setPack(experience.occasion) }, [experience.occasion])
-  const [calm, setCalm] = useState(() => { try { return localStorage.getItem('lovora-calm') === 'on' } catch { return false } })
-  useEffect(() => { document.documentElement.classList.toggle('calm', calm); try { localStorage.setItem('lovora-calm', calm ? 'on' : 'off') } catch { /* ignore */ } return () => document.documentElement.classList.remove('calm') }, [calm])
+  useEffect(() => { document.documentElement.classList.remove('calm', 'big-text') }, [])
   const unlockAudio = useCallback(() => { audio.unlock(); sfx.unlock() }, [])
 
   // countdown ticks only while the lock screen is visible (no per-second re-render of the animated scenes)
@@ -196,6 +194,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
           : <div className="empty-memory"><span>♡</span><p>Some memories are kept in the heart.</p><small>Add photos or videos in the creator to make this part yours.</small></div>}<button className="primary-btn" onClick={next}>One last thing <ArrowRight size={17} /></button></div>}
 
         {scene === 'timeline' && <div className="scene-content wide"><p className="eyebrow">THE STORY SO FAR</p><h1>Our little <em>timeline.</em></h1>{experience.memories.length ? <Timeline memories={experience.memories} buzz={buzz} onDone={next} /> : <p className="muted">Add photos with dates to build your timeline.</p>}</div>}
+        {scene === 'polaroids' && <Polaroids exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'spinwheel' && <SpinWheel exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'starsky' && <StarSky exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'vows' && <Vows exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
@@ -224,8 +223,6 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
       </motion.section>
     </AnimatePresence>
     <div className="player-bottom"><button className="text-btn" onClick={previous} disabled={index === 0}><ArrowLeft size={16} /> Back</button><span>{index + 1} / {scenes.length} · {sceneLabels[scene]}</span>{index < scenes.length - 1 ? <button className="text-btn" onClick={next}>Next <ArrowRight size={16} /></button> : <button className="text-btn" onClick={onClose}>Finish <Heart size={16} /></button>}</div>
-    <button className="haptics-toggle" style={{ right: "auto", left: 12 }} onClick={() => { const on = document.documentElement.classList.toggle("big-text"); try { localStorage.setItem("lovora-bigtext", on ? "on" : "off") } catch { /* ignore */ } }} title="Larger text">Aa</button>
-    <button className="haptics-toggle" style={{ right: "auto", left: 12, top: 52 }} onClick={() => setCalm(v => !v)} title="Calm mode: fewer moving effects" aria-pressed={calm}>{calm ? "Calm: on" : "Calm: off"}</button>
-    <button className="haptics-toggle" onClick={() => { const v = !hapticsOn; setHapticsOn(v); try { localStorage.setItem('lovora-haptics', v ? 'on' : 'off') } catch { /* ignore */ } }} title="Toggle optional vibration">Haptics: {hapticsOn ? 'on' : 'off'}</button>
+    
   </div>
 }

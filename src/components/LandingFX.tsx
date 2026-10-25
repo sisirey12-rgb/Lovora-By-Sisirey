@@ -22,7 +22,6 @@ export function Rotator() {
 export function LandingChrome() {
   const glow = useRef<HTMLDivElement>(null), bar = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const move = (e: PointerEvent) => { if (glow.current) glow.current.style.transform = `translate(${e.clientX - 180}px,${e.clientY - 180}px)` }
     const scroll = () => { const h = document.documentElement; if (bar.current) bar.current.style.transform = `scaleX(${h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)})` }
     window.addEventListener('pointermove', move, { passive: true }); window.addEventListener('scroll', scroll, { passive: true }); scroll()

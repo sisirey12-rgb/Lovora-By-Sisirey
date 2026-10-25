@@ -158,5 +158,12 @@ export default function BouquetArtwork({ style = 'roses', compact = false, opene
       <ellipse cx="110" cy="166" rx="7.5" ry="6.5" fill={p.ribbon} stroke="#ffffff8a" strokeWidth="1" /><path d="M106 164 Q110 161 114 164" fill="none" stroke="#fff" strokeOpacity=".6" strokeWidth="1" />
     </g>
     {opened && <g className="bq-sparkles" fill="#ffe5a5"><path d="M28 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3Z" /><path d="M190 43 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2Z" /><circle cx="183" cy="81" r="2.5" /><circle cx="37" cy="125" r="2" /><circle cx="110" cy="12" r="2.2" /></g>}
-  </svg>
+      {/* hand-tied stem handle below the wrap */}
+    <g className="bq-handle" strokeLinecap="round" fill="none">
+      {[[97, 184, 94, 210], [103, 184, 101, 211], [110, 184, 110, 212], [117, 184, 119, 211], [123, 184, 126, 210]].map(([x1, y1, x2, y2], k) => <path key={k} d={`M${x1} ${y1} L${x2} ${y2}`} stroke={k % 2 ? shade(p.leaf, .12) : p.leaf} strokeWidth="4.4" />)}
+      <path d="M92 198 Q110 204 128 198" stroke={p.ribbon} strokeWidth="5" />
+      <path d="M110 199 Q99 191 94 198 Q101 206 110 200Z M110 199 Q121 191 126 198 Q119 206 110 200Z" fill={p.ribbon} stroke="none" />
+      <circle cx="110" cy="200" r="3" fill="#fff" opacity=".55" stroke="none" />
+    </g>
+</svg>
 }

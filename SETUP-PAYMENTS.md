@@ -1,6 +1,6 @@
 # Paid sharing setup (Razorpay)
 
-Previewing is free. A public share link needs a one-time payment per surprise: Rs 99 at launch, then Rs 149.
+Previewing is free. A public share link needs a one-time payment per surprise: Rs 149 at launch, then Rs 299.
 
 1. Supabase -> SQL editor: run `supabase/migrations/0005_payments.sql` (also 0004 if you have not yet).
    Existing published surprises are kept working (marked paid). From now on the database itself refuses to publish an unpaid surprise.

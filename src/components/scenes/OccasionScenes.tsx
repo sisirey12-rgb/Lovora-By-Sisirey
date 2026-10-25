@@ -9,30 +9,31 @@ const Next = ({ onClick, label = 'Continue' }: { onClick: () => void; label?: st
 const lines = (a: string[] | undefined, fallback: string[], n: number) => { const l = (a || []).map(x => x.trim()).filter(Boolean); return (l.length ? l : fallback).slice(0, n) }
 const polar = (r: number, deg: number): [number, number] => [Math.cos((deg - 90) * Math.PI / 180) * r, Math.sin((deg - 90) * Math.PI / 180) * r]
 
-/* ---------------- BIRTHDAY / SPECIAL: spin the wheel of wishes ---------------- */
+/* ---------------- BIRTHDAY / SPECIAL: spin the wheel, a wish card opens ---------------- */
+const ICONS = ['🎁', '💖', '🎈', '🎂', '✨', '🍰', '🎉', '🌟']
 export function SpinWheel({ exp, colors, onDone, buzz }: P) {
   const items = useMemo(() => lines(exp.balloonWishes, ['Big hug', 'Free cake', 'Make a wish', 'Dance party', 'Best day ever', 'A surprise gift'], 8), [exp.balloonWishes])
   const n = items.length, seg = 360 / n
-  const [rot, setRot] = useState(0), [spinning, setSpinning] = useState(false), [win, setWin] = useState<number | null>(null)
+  const [rot, setRot] = useState(0), [spinning, setSpinning] = useState(false), [win, setWin] = useState<number | null>(null), [openCard, setOpenCard] = useState(false)
   const spin = () => {
-    if (spinning) return; sfx.unlock(); setSpinning(true); setWin(null); buzz(20)
-    const target = Math.floor(Math.random() * n), final = rot + 360 * 5 + (360 - (target * seg + seg / 2)) - (rot % 360)
+    if (spinning) return; sfx.unlock(); setSpinning(true); setWin(null); setOpenCard(false); buzz(20)
+    const target = Math.floor(Math.random() * n), final = rot + 360 * 6 + (360 - (target * seg + seg / 2)) - (rot % 360)
     setRot(final)
-    let k = 0; const t = window.setInterval(() => { sfx.tick(); if (++k > 34) window.clearInterval(t) }, 120)
-    window.setTimeout(() => { setSpinning(false); setWin(target); sfx.wish(); sfx.boom('confetti'); buzz([40, 30, 80]) }, 4300)
+    let k = 0; const t = window.setInterval(() => { sfx.tick(); if (++k > 36) window.clearInterval(t) }, 115)
+    window.setTimeout(() => { setSpinning(false); setWin(target); sfx.chime(); buzz([40, 30, 80]); window.setTimeout(() => { setOpenCard(true); sfx.lid(); sfx.wish(); sfx.boom('confetti'); buzz([30, 30, 100]) }, 650) }, 4400)
   }
-  const label = (s: string) => (s.length > 13 ? s.slice(0, 12) + '…' : s)
-  return <div className="scene-content occ-scene">
-    <p className="eyebrow">SPIN FOR YOUR LUCK</p><h1>The wheel of <em>wishes.</em></h1>
-    <div className="wheel-wrap"><div className="wheel-pin" aria-hidden="true" />
-      <svg className="wheel" viewBox="-110 -110 220 220" style={{ transform: `rotate(${rot}deg)`, transition: spinning ? 'transform 4.2s cubic-bezier(.12,.7,.1,1)' : 'none' }} role="img" aria-label="Wheel of wishes">
-        {items.map((it, i) => { const [x1, y1] = polar(104, i * seg), [x2, y2] = polar(104, (i + 1) * seg), [tx, ty] = polar(66, i * seg + seg / 2)
-          return <g key={i}><path d={`M0 0L${x1} ${y1}A104 104 0 0 1 ${x2} ${y2}Z`} fill={colors[i % colors.length] || '#ff8fc2'} stroke="rgba(255,255,255,.55)" strokeWidth="1.5" />
-            <text x={tx} y={ty} fill="#2a1038" fontSize="9" fontWeight="800" textAnchor="middle" transform={`rotate(${i * seg + seg / 2} ${tx} ${ty})`}>{label(it)}</text></g> })}
-        <circle r="14" fill="#fff" stroke="#ffd36e" strokeWidth="4" />
+  return <div className="scene-content occ-scene wheel-scene">
+    <p className="eyebrow">SPIN FOR YOUR LUCK</p><h1>Spin the <em>wheel.</em></h1>
+    <div className={`wheel-wrap ${spinning ? 'going' : ''}`}><div className="wheel-pin" aria-hidden="true" /><div className="wheel-ring" aria-hidden="true" />
+      <svg className="wheel" viewBox="-110 -110 220 220" style={{ transform: `rotate(${rot}deg)`, transition: spinning ? 'transform 4.3s cubic-bezier(.12,.7,.08,1)' : 'none' }} role="img" aria-label="Wheel of wishes">
+        <defs>{items.map((_, i) => <radialGradient key={i} id={`wg${i}`} cx="50%" cy="50%" r="60%"><stop offset="0" stopColor="#fff" stopOpacity=".55" /><stop offset=".6" stopColor={colors[i % colors.length] || '#ff8fc2'} /><stop offset="1" stopColor={colors[i % colors.length] || '#ff8fc2'} /></radialGradient>)}</defs>
+        {items.map((_, i) => { const [x1, y1] = polar(104, i * seg), [x2, y2] = polar(104, (i + 1) * seg), [tx, ty] = polar(70, i * seg + seg / 2)
+          return <g key={i} className={win === i && !spinning ? 'wseg win' : 'wseg'}><path d={`M0 0L${x1} ${y1}A104 104 0 0 1 ${x2} ${y2}Z`} fill={`url(#wg${i})`} stroke="rgba(255,255,255,.7)" strokeWidth="1.6" />
+            <text x={tx} y={ty + 7} fontSize="22" textAnchor="middle" transform={`rotate(${i * seg + seg / 2} ${tx} ${ty})`}>{ICONS[i % ICONS.length]}</text></g> })}
+        <circle r="17" fill="#fff" stroke="#ffd36e" strokeWidth="5" /><text y="6" fontSize="16" textAnchor="middle">💝</text>
       </svg></div>
-    {win !== null && <div className="occ-result" key={win}><small>Your wish</small><strong>{items[win]}</strong></div>}
-    {win === null ? <button className="primary-btn occ-next" onClick={spin} disabled={spinning}>{spinning ? 'Spinning…' : 'Spin the wheel'}</button> : <div className="occ-actions"><button className="secondary-btn" onClick={spin}>Spin again</button><Next onClick={onDone} /></div>}
+    {win !== null && <div className={`wish-card ${openCard ? 'open' : ''}`} key={win}><div className="wish-card-in"><span>{ICONS[win % ICONS.length]}</span><small>Your wish</small><strong>{items[win]}</strong></div></div>}
+    {win === null ? <button className="primary-btn occ-next" onClick={spin} disabled={spinning}>{spinning ? 'Spinning...' : 'Spin the wheel'}</button> : <div className="occ-actions"><button className="secondary-btn" onClick={spin} disabled={spinning}>Spin again</button>{openCard && <Next onClick={onDone} />}</div>}
   </div>
 }
 
@@ -157,5 +158,21 @@ export function ScratchCard({ exp, onDone, buzz }: P) {
       <canvas ref={cv} className="scratch-foil" onPointerDown={e => { last.current = null; scratch(e) }} onPointerMove={scratch} onPointerUp={() => { last.current = null }} style={{ opacity: done ? 0 : 1, transition: 'opacity .8s', touchAction: 'none' }} aria-label="Scratch card" />
     </div>
     {done ? <Next onClick={onDone} /> : <small className="muted">Use your finger to scratch</small>}
+  </div>
+}
+
+/* ---------------- PHOTOS: polaroids hanging on a string ---------------- */
+export function Polaroids({ exp, onDone, buzz }: P) {
+  const photos = useMemo(() => exp.memories.filter(m => m.kind === 'image').slice(0, 6), [exp.memories])
+  const [seen, setSeen] = useState<string[]>([]), [big, setBig] = useState<string | null>(null)
+  const rows = [photos.slice(0, Math.ceil(photos.length / 2)), photos.slice(Math.ceil(photos.length / 2))].filter(r => r.length)
+  const open = (id: string) => { sfx.sparkle(); buzz(14); setBig(id); setSeen(s => s.includes(id) ? s : [...s, id]) }
+  const cur = photos.find(p => p.id === big)
+  return <div className="scene-content occ-scene">
+    <p className="eyebrow">HUNG WITH CARE</p><h1>Our little <em>gallery.</em></h1>
+    <div className="pol-wall">{rows.map((row, r) => <div className="pol-row" key={r}><svg className="pol-string" viewBox="0 0 100 14" preserveAspectRatio="none" aria-hidden="true"><path d="M0 2 Q50 16 100 2" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth=".7" /></svg>
+      {row.map((p, i) => <button key={p.id} className={`pol ${seen.includes(p.id) ? 'seen' : ''}`} onClick={() => open(p.id)} style={{ ['--rot' as string]: `${((i + r * 2) % 3 - 1) * 4 + (i % 2 ? 2 : -2)}deg`, ['--dl' as string]: `${(i + r) * .35}s`, ['--sag' as string]: `${Math.sin((i + .5) / row.length * Math.PI) * 16}px` } as CSSProperties}><span className="pin" /><figure><img src={p.src} alt={p.caption || 'A memory'} loading="lazy" /><figcaption>{p.caption || '♥'}</figcaption></figure></button>)}</div>)}</div>
+    {cur && <div className="pol-big" onClick={() => setBig(null)} role="dialog" aria-label="Photo"><figure><img src={cur.src} alt={cur.caption || 'A memory'} /><figcaption>{cur.caption || 'A moment I keep'}</figcaption></figure><small>tap to close</small></div>}
+    <Next onClick={onDone} label={seen.length < photos.length ? 'Skip' : 'Continue'} />
   </div>
 }

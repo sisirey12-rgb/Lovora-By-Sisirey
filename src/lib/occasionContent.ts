@@ -113,10 +113,10 @@ const fontOcc: Partial<Record<Occasion, string>> = { 'Love letter': 'parisian', 
 export const flowFor = (o: Occasion, r: Relation): Experience['scenes'] => {
   const s: Experience['scenes'] = ['heart', 'intro']
   if (o === 'Birthday') {
-    s.push('balloons', 'cake', 'spinwheel', 'memories', 'moments')
+    s.push('balloons', 'cake', 'spinwheel', 'polaroids', 'moments')
     if (r === 'Friend' || r === 'Sister') s.push('wishjar')
   } else if (o === 'Anniversary') {
-    s.push('counter', 'starsky', 'timeline', 'moments', 'vows')
+    s.push('counter', 'starsky', 'polaroids', 'timeline', 'moments', 'vows')
     if (r === 'Partner') s.push('cake')
     if (r === 'Mom' || r === 'Dad') s.push('wishjar')
   } else if (o === 'Love letter') {
@@ -124,7 +124,7 @@ export const flowFor = (o: Occasion, r: Relation): Experience['scenes'] => {
   } else {
     s.push('mystery', 'balloons')
     if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('cake')
-    s.push('scratch', 'memories', 'moments')
+    s.push('scratch', 'polaroids', 'moments')
     if (r === 'Friend') s.push('wishjar')
   }
   s.push('video', 'letter', 'finale')

@@ -11,6 +11,7 @@ export default function BirthdayIntro({ text, subtitle, colors, style = 'confett
   let n = 0
   return <div className={`scene-content bi bi-${style}`} style={{ ['--bi-fs' as string]: fs } as CSSProperties}>
     <FullScreenFX><div className={`bi-bg bi-bg-${style}`} /><IntroFX style={style} colors={colors} /></FullScreenFX>
+    <div className="bi-halo" aria-hidden="true"><i /><i /><i /><b /></div>
     <span className="scene-emoji bi-star">✦</span>
     <p className="eyebrow">A MOMENT MADE WITH LOVE</p>
     <h1 className="bi-title" aria-label={text}>{text.split(' ').map((w, wi) => <span className="bi-word" key={wi} aria-hidden="true">{[...w].map((ch, ci) => { const i = n++; return <span key={ci} className="bi-ch" style={{ ['--i' as string]: i } as CSSProperties}>{ch}</span> })}</span>)}</h1>

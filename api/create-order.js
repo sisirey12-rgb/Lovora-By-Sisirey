@@ -6,8 +6,16 @@ export default async function handler(req, res) {
   if (!user) return res.status(401).json({ error: 'Please sign in again.' })
   const id = String(req.body?.experienceId || '')
   if (!isUuid(id)) return res.status(400).json({ error: 'Invalid surprise.' })
-  const row = (await sb(`experiences?id=eq.${id}&owner_id=eq.${user.id}&select=id,paid`)).data?.[0]
-  if (!row) return res.status(404).json({ error: 'Save your surprise first, then pay.' })
+  const look = await sb(`experiences?id=eq.${id}&owner_id=eq.${user.id}&select=id,paid`)
+  if (!look.ok) {
+    console.error('experience lookup failed', look.status, look.data)
+    const msg = look.status === 401 || look.status === 403 || !process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? 'Server setup missing: add SUPABASE_SERVICE_ROLE_KEY in Vercel > Environment Variables and redeploy.'
+      : 'Database setup missing: run supabase/migrations/0005_payments.sql in the Supabase SQL editor (the "paid" column is not there yet).'
+    return res.status(500).json({ error: msg })
+  }
+  const row = look.data?.[0]
+  if (!row) return res.status(404).json({ error: 'We could not find this surprise on your account yet. Tap Preview once so it is saved, then try again.' })
   if (row.paid) return res.status(200).json({ alreadyPaid: true })
   // Owner bypass: emails in OWNER_EMAILS (comma separated, set in Vercel) never pay. Checked on the server from the signed-in email.
   const owners = String(process.env.OWNER_EMAILS || '').toLowerCase().split(/[,\s;]+/).filter(Boolean)
