@@ -119,3 +119,13 @@
 .template-card em{font-style:normal;font-weight:800;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.2);width:fit-content;transition:background .3s,transform .3s}.template-card:hover em{background:#fff;color:#4a1f55;transform:translateX(4px)}
 .occasion-chips button{border-radius:99px;transition:transform .25s,box-shadow .25s}.occasion-chips button.selected{box-shadow:0 10px 26px -8px rgba(255,120,190,.7);transform:translateY(-2px)}
 @media(prefers-reduced-motion:reduce){.vb-aurora i,.vb-float span,.hero-pill,.primary-btn.big-btn,.primary-btn.big-btn:after,.template-card:after,.template-card .tpl-emoji{animation:none!important}}
+
+/* ---- account modal ---- */
+.account-sheet{display:grid;gap:14px}
+.acc-head{display:flex;align-items:center;gap:14px}.acc-head h2{margin:2px 0;font-size:24px}.acc-head small{display:flex;align-items:center;gap:5px;opacity:.7;word-break:break-all}
+.acc-avatar{flex:none;width:64px;height:64px;border-radius:22px;display:grid;place-items:center;font:700 28px 'Fredoka',sans-serif;color:#3a1646;background:linear-gradient(135deg,#ff8fc2,#ffd36e);box-shadow:0 14px 30px -10px rgba(255,120,190,.7)}
+.acc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.acc-stats div{display:grid;justify-items:center;gap:2px;padding:12px 6px;border-radius:18px;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.14)}
+.acc-stats svg{color:#ff8fc2}.acc-stats b{font-size:15px}.acc-stats small{font-size:10px;opacity:.65}
+.acc-row{display:flex;gap:8px}.acc-row input{flex:1;min-width:0}
+.acc-line{display:flex;gap:8px;align-items:center;margin:0;font-size:12px;opacity:.75}.acc-ok{margin:0;color:#7be0a8;font-size:13px}
