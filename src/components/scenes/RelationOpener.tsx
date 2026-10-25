@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { openerCopy, openerFor, openerLine, type OpenerKind } from '../../lib/worlds'
 import type { Occasion, Relation } from '../../types'
@@ -38,6 +38,7 @@ export default function RelationOpener({ relation, occasion, onHit, buzz, onGest
             <motion.span animate={{ x: done ? -8 : -60 + taps * 22, rotate: done ? 0 : 12 }} transition={{ type: 'spring', stiffness: 220, damping: 14 }}>🤛</motion.span>
           </span>
         : <AnimatePresence mode="wait"><motion.span key={stage} className="ro-emblem" aria-hidden="true" initial={{ scale: .4, opacity: 0, rotate: -14 }} animate={{ scale: grow, opacity: 1, rotate: 0 }} exit={{ scale: 1.3, opacity: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 13 }}>{stage}</motion.span></AnimatePresence>}
+      {kind === 'butterfly' && taps > 0 && <span className="ro-flock" aria-hidden="true">{Array.from({ length: taps * 4 }, (_, i) => <b key={i} style={{ ['--i' as string]: i, ['--dx' as string]: `${((i * 53) % 220) - 110}px`, ['--dy' as string]: `${-80 - ((i * 37) % 170)}px`, ['--hue' as string]: `${(i * 47) % 360}` } as CSSProperties}><i /><i /></b>)}</span>}
       <span className="ro-puffs" aria-hidden="true">{puffs.map(p => <i key={p.id} style={{ left: `calc(50% + ${p.x}px)` }}>{p.e}</i>)}</span>
     </button>
     <div className="ro-dots" aria-hidden="true">{Array.from({ length: TAPS }, (_, i) => <i key={i} className={i < taps ? 'on' : ''} />)}</div>

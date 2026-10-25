@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
+const ICONS: Record<string, string> = { link: '💬', gift: '🎁', balloons: '🎈', cake: '🎂', letter: '💌', finale: '🎆' }
 const STEPS = [
   { id: 'link', label: 'Open the link', text: 'They get one link on WhatsApp, Instagram or anywhere.' },
   { id: 'gift', label: 'Tap the gift', text: 'The gift opens and the surprise begins.' },
@@ -27,11 +28,7 @@ export default function PhoneDemo() {
       <div className="pd-screen">
         <AnimatePresence mode="wait">
           <motion.div key={cur.id} className={`pd-scene pd-${cur.id}`} initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.03 }} transition={{ duration: .35 }}>
-            {cur.id === 'link' && <>
-              <div className="pd-chat-head"><i /><b>Sisirey</b><small>online</small></div>
-              <div className="pd-bubble"><div className="pd-card"><img src="/logo.png" alt="" width="34" height="34" /><div><strong>A surprise is waiting for you ✨</strong><small>lovorameow.app</small></div></div><span>lovorameow.app/s/9f3k</span><em>10:24</em></div>
-              <div className="pd-finger" aria-hidden="true">👆</div>
-            </>}
+            {cur.id === 'link' && <LinkPreview />}
             {cur.id === 'gift' && <>
               <small className="pd-eyebrow">A LITTLE GIFT FOR</small><h4>Aarav</h4>
               <div className="pd-gift" aria-hidden="true"><i className="pd-lid" /><i className="pd-box" /></div>
@@ -62,7 +59,29 @@ export default function PhoneDemo() {
         <div className="pd-bar" aria-hidden="true" />
       </div>
     </div>
-    <div className="pd-steps" role="tablist" aria-label="How a surprise plays">{STEPS.map((s, i) => <button key={s.id} type="button" role="tab" aria-selected={i === step} className={i === step ? 'on' : i < step ? 'seen' : ''} onClick={() => { setStep(i); setAuto(false) }}><span>{i + 1}</span><small>{s.label}</small></button>)}</div>
+    <div className="pd-steps" role="tablist" aria-label="How a surprise plays">{STEPS.map((x, i) => <button key={x.id} type="button" role="tab" aria-selected={i === step} className={i === step ? 'on' : i < step ? 'seen' : ''} onClick={() => { setStep(i); setAuto(false) }}><b className="pd-ico" aria-hidden="true">{ICONS[x.id]}</b><span>{i + 1}</span><small>{x.label}</small>{i === step && auto && <i className="pd-prog" key={step} />}</button>)}</div>
     <p className="pd-caption" aria-live="polite"><strong>{step + 1}. {cur.label}.</strong> {cur.text}</p>
   </div>
+}
+
+/** The first step: the link arriving in WhatsApp, then in an Instagram inbox, like it would on a real phone. */
+function LinkPreview() {
+  const [app, setApp] = useState<'wa' | 'ig'>('wa')
+  useEffect(() => { const t = window.setTimeout(() => setApp('ig'), 1700); return () => window.clearTimeout(t) }, [])
+  const card = <div className="pd-card"><img src="/logo.png" alt="" width="34" height="34" /><div><strong>A surprise is waiting for you ✨</strong><small>lovorameow-sisirey.vercel.app</small></div></div>
+  return <AnimatePresence mode="wait"><motion.div key={app} className="pd-app" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: .3 }}>
+    {app === 'wa' ? <div className="pd-wa">
+      <div className="pd-chat-head"><i /><b>Sisirey</b><small>online</small><span className="pd-apptag wa">WhatsApp</span></div>
+      <div className="pd-bubble">{card}<span>lovorameow-sisirey.vercel.app/s/9f3k</span><em>10:24 ✓✓</em></div>
+      <div className="pd-bubble r"><p>Open it when you are alone 🥹</p><em>10:24 ✓✓</em></div>
+      <div className="pd-finger" aria-hidden="true">👆</div>
+    </div> : <div className="pd-ig">
+      <div className="pd-ig-top"><b>Messages</b><span className="pd-apptag ig">Instagram</span></div>
+      <div className="pd-ig-stories">{['#ff8fc2', '#ffd36e', '#7fd6ff', '#b79bff'].map((c, i) => <i key={i} style={{ ['--c' as string]: c } as CSSProperties} />)}</div>
+      <div className="pd-ig-row hot"><i className="av" /><div><strong>Sisirey</strong><small>sent you a surprise ✨ · now</small></div><u /></div>
+      <div className="pd-ig-card">{card}</div>
+      {['riya', 'kabir', 'maa'].map(n => <div className="pd-ig-row" key={n}><i className="av dim" /><div><strong>{n}</strong><small>Seen · 2h</small></div></div>)}
+      <div className="pd-finger" aria-hidden="true">👆</div>
+    </div>}
+  </motion.div></AnimatePresence>
 }

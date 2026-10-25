@@ -9,6 +9,7 @@ import MemoryGallery from './MemoryGallery'
 import GiftIntro from './GiftIntro'
 import Timeline from './Timeline'
 import BirthdayIntro from './BirthdayIntro'
+import { introFor } from '../data'
 import BirthdayReveal from './BirthdayReveal'
 import WishJar from './WishJar'
 import DevCredit from './DevCredit'
@@ -165,7 +166,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
         </div>}
         {scene === 'heart' && revealPlaying && <BirthdayReveal title={revealTitle} name={experience.recipient || 'Beautiful human'} display={font.display} script={font.script} accent={palette.balloons[0]} onCovered={() => setHeartCovered(true)} onDone={onRevealDone} />}
 
-        {scene === 'intro' && <BirthdayIntro text={`${toTitleCase(revealTitle)}${experience.recipient ? ', ' + experience.recipient : ''}!`} subtitle={experience.title} colors={palette.balloons} onNext={next} />}
+        {scene === 'intro' && <BirthdayIntro text={`${toTitleCase(revealTitle)}${experience.recipient ? ', ' + experience.recipient : ''}!`} subtitle={experience.title} colors={palette.balloons} style={introFor(experience)} onNext={next} />}
 
         {scene === 'cake' && <div className="scene-content"><p className="eyebrow">MAKE A WISH</p>
           <CakeAssembly style={experience.cakeStyle || 'strawberry'} age={experience.age} wished={wish} onWish={onWish} buzz={buzz} />
@@ -191,7 +192,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
         {scene === 'counter' && <CounterScene since={experience.togetherSince || ''} onDone={next} />}
         {scene === 'moments' && <MomentsScene title={momentsTitle(experience.relation)} items={experience.moments || []} onDone={next} buzz={buzz} />}
         {scene === 'wishjar' && <div className="scene-content"><p className="eyebrow">MADE WITH LOVE BY YOUR PEOPLE</p><h1>Your <em>wish jar.</em></h1><WishJar colors={palette.balloons} wishes={[...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes].length ? [...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes] : (experience.balloonWishes || []).filter(Boolean).map(text => ({ name: '', text }))} /></div>}
-        {scene === 'finale' && <div className="scene-content finale-content"><FullScreenFX><Fireworks colors={palette.balloons} /></FullScreenFX><div className="confetti" aria-hidden="true">{confetti.map(i => <i key={i} style={{ left: `${(i * 29) % 100}%`, animationDelay: `${(i % 9) * .14}s`, transform: `rotate(${i * 17}deg)` }} />)}</div><div className="final-fireworks" aria-hidden="true"><i /><i /><i /></div><Sparkles className="final-spark" size={38} /><p className="eyebrow">A SCRAPBOOK OF MOMENTS</p>
+        {scene === 'finale' && <div className="scene-content finale-content"><FullScreenFX><Fireworks colors={palette.balloons} /></FullScreenFX><FullScreenFX><div className="confetti" aria-hidden="true">{confetti.map(i => <i key={i} style={{ left: `${(i * 29) % 100}%`, animationDelay: `${(i % 9) * .14}s`, transform: `rotate(${i * 17}deg)` }} />)}</div></FullScreenFX><div className="final-fireworks" aria-hidden="true"><i /><i /><i /></div><Sparkles className="final-spark" size={38} /><p className="eyebrow">A SCRAPBOOK OF MOMENTS</p>
           <div className="scrapbook" aria-label="Scrapbook of moments">
             <div className="scrap-photos">{experience.memories.filter(m => m.kind === 'image').slice(0, 4).map((m, i) => <figure key={m.id} className={`scrap-photo sp-${i}`}><span className="tape" /><img src={m.src} alt={m.caption || 'A cherished memory'} /><figcaption>{m.caption || '♡'}</figcaption></figure>)}{experience.memories.filter(m => m.kind === 'image').length === 0 && <figure className="scrap-photo sp-0 empty"><span className="tape" /><div>♡</div><figcaption>moments kept in the heart</figcaption></figure>}</div>
             <article className="scrap-letter"><span className="tape" /><small>{greeting}</small><p>{(letterText.length > 150 ? letterText.slice(0, 147).trimEnd() + '…' : letterText)}</p><em>{experience.closing || 'With love,'} {experience.sender}</em></article>

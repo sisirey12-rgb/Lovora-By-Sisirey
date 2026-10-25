@@ -9,6 +9,7 @@ import './meow.css'
 import './pro.css'
 import './fx.css'
 import './calm.css'
+import './vibe.css'
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode><AuthProvider><App /></AuthProvider></React.StrictMode>

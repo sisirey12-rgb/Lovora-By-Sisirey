@@ -63,6 +63,16 @@ export const cakeStyles = [
   { id: 'tiered', title: 'Three-tier celebration', emoji: '🎂' },
   { id: 'blueberry', title: 'Blueberry cloud', emoji: '🫐' },
   { id: 'floral', title: 'Floral garden cake', emoji: '🌸' },
+  { id: 'tiramisu', title: 'Tiramisu dream', emoji: '☕' },
+  { id: 'oreo', title: 'Cookies & cream', emoji: '🍪' },
+  { id: 'mango', title: 'Mango sunrise', emoji: '🥭' },
+  { id: 'lavender', title: 'Lavender honey', emoji: '🪻' },
+  { id: 'pistachio', title: 'Pistachio rose', emoji: '🌿' },
+  { id: 'cherry', title: 'Black forest cherry', emoji: '🍒' },
+  { id: 'cotton', title: 'Cotton candy cloud', emoji: '☁️' },
+  { id: 'midnight', title: 'Midnight gold', emoji: '🌙' },
+  { id: 'coconut', title: 'Coconut snow', emoji: '🥥' },
+  { id: 'rose-gold', title: 'Rose gold glam', emoji: '🌹' },
 ] as const
 export const bouquetStyles = [
   { id: 'roses', title: 'Velvet red roses', emoji: '🌹', flowers: '🌹🌹🌹' },
@@ -73,6 +83,12 @@ export const bouquetStyles = [
   { id: 'peonies', title: 'Pink peonies', emoji: '🌸', flowers: '🌸🌸🌸' },
   { id: 'wildflowers', title: 'Meadow wildflowers', emoji: '💐', flowers: '🌼🪻🌸' },
   { id: 'heart', title: 'Heart-shaped bouquet', emoji: '💝', flowers: '💗🌹💗' },
+  { id: 'lilies', title: 'Cream lilies', emoji: '🤍', flowers: '🤍🌼🤍' },
+  { id: 'lavender', title: 'Lavender field', emoji: '💜', flowers: '💜🪻💜' },
+  { id: 'blush', title: 'Blush garden roses', emoji: '🩷', flowers: '🩷🌸🩷' },
+  { id: 'royal', title: 'Royal blue hydrangea', emoji: '💙', flowers: '💙🦋💙' },
+  { id: 'sunset', title: 'Sunset ranunculus', emoji: '🧡', flowers: '🧡🌼🧡' },
+  { id: 'white', title: 'Pure white roses', emoji: '🤍', flowers: '🤍🌹🤍' },
   { id: 'bubbly', title: 'Bubbly bold', display: "'Fredoka', sans-serif", script: "'Lobster', cursive", body: "'DM Sans', sans-serif" },
   { id: 'cursive', title: 'Neat cursive', display: "'Caveat', cursive", script: "'Caveat', cursive", body: "'Caveat', cursive" },
 ] as const
@@ -147,3 +163,26 @@ export const defaultCoupons = ['One big hug, any time', 'Movie night, your choic
 export const revealFor = (e: { occasion?: Occasion; revealText?: string }) => (e.revealText || '').trim().slice(0, 40) || revealDefaults[occasionKey(e.occasion)]
 export const toTitleCase = (t: string) => t.toLowerCase().replace(/(^|[\s'-])([a-zà-ÿ])/g, (_m, a: string, b: string) => a + b.toUpperCase())
 export const revealPresets = ['HAPPY BIRTHDAY', 'HAPPY ANNIVERSARY', 'FOR YOU, WITH LOVE', 'A SPECIAL SURPRISE', 'I LOVE YOU', 'JUST FOR YOU', 'THANK YOU', 'MISS YOU']
+
+/** Heavy full-screen intro effects the creator can choose from. Every occasion and person starts with a fitting one. */
+export const introStyles = [
+  { id: 'confetti', title: 'Confetti cannons', emoji: '🎉', desc: 'Two cannons fire from the sides' },
+  { id: 'fireworks', title: 'Fireworks night', emoji: '🎆', desc: 'Shells burst across the sky' },
+  { id: 'petals', title: 'Falling petals', emoji: '🌸', desc: 'Soft petals drift and sway' },
+  { id: 'butterflies', title: 'Butterfly flight', emoji: '🦋', desc: 'Wings flapping across the screen' },
+  { id: 'galaxy', title: 'Galaxy warp', emoji: '🌌', desc: 'Fly through a field of stars' },
+  { id: 'neon', title: 'Neon pulse', emoji: '💠', desc: 'Glowing rings beat outward' },
+  { id: 'hearts', title: 'Rising hearts', emoji: '💗', desc: 'Hearts float up from below' },
+  { id: 'gold', title: 'Golden dust', emoji: '✨', desc: 'Shimmering gold sparkle' },
+  { id: 'aurora', title: 'Aurora waves', emoji: '🌠', desc: 'Flowing ribbons of light' },
+] as const
+export type IntroId = typeof introStyles[number]['id']
+const introByRelation: Record<string, IntroId> = { Brother: 'neon', Sister: 'butterflies', Partner: 'hearts', Mom: 'petals', Dad: 'gold', Friend: 'fireworks' }
+export const introFor = (e: { introStyle?: string; occasion?: string; relation?: string }): IntroId => {
+  const found = introStyles.find(i => i.id === e.introStyle); if (found) return found.id
+  if (e.occasion === 'Special surprise') return e.relation === 'Friend' ? 'galaxy' : (introByRelation[e.relation || ''] ?? 'galaxy')
+  if (e.occasion === 'Birthday' && e.relation === 'Friend') return 'confetti'
+  if (e.occasion === 'Anniversary' && e.relation === 'Partner') return 'fireworks'
+  if (e.occasion === 'Love letter') return 'petals'
+  return introByRelation[e.relation || ''] ?? 'confetti'
+}

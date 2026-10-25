@@ -12,6 +12,12 @@ const PAL: Record<string, Pal> = {
   peonies: { petals: ['#ffc2d5', '#ed83ad', '#d95788'], center: '#f5c56e', paper: '#f7e2e9', tissue: '#fff0f5', ribbon: '#c65b86', leaf: '#4b805b' },
   wildflowers: { petals: ['#f8d6e7', '#f2a4c6', '#d8a7ef'], center: '#f6cb67', paper: '#d8e8cf', tissue: '#f4faee', ribbon: '#6d8c67', leaf: '#477d5a' },
   mixed: { petals: ['#ffb6c8', '#f6ce73', '#c9a6f7'], center: '#f5d49a', paper: '#e8d8c8', tissue: '#fdf1e6', ribbon: '#a85c7c', leaf: '#47785b' },
+  lilies: { petals: ['#fffaf0', '#f3e6cf', '#e0c9a0'], center: '#f2b441', paper: '#f1ece0', tissue: '#fffdf7', ribbon: '#a58d62', leaf: '#4e8160' },
+  lavender: { petals: ['#d8c4ff', '#a984ec', '#7a52c7'], center: '#f7e3a0', paper: '#e6dcf3', tissue: '#f6f0ff', ribbon: '#6e4fb0', leaf: '#5a8a6a' },
+  blush: { petals: ['#ffe0e8', '#f7b4c6', '#e58aa5'], center: '#fbe2b0', paper: '#f8e8e4', tissue: '#fff6f6', ribbon: '#c98a9c', leaf: '#5b8a68' },
+  royal: { petals: ['#b9d3ff', '#6f9aea', '#3d62c2'], center: '#e8f0ff', paper: '#dbe5f6', tissue: '#f0f5ff', ribbon: '#344f94', leaf: '#3f7a6c' },
+  sunset: { petals: ['#ffd29a', '#ff9a52', '#e0603a'], center: '#7a3a22', paper: '#f4dcc0', tissue: '#fff2e2', ribbon: '#b0522e', leaf: '#4f7a4c' },
+  white: { petals: ['#ffffff', '#f2eef0', '#ddd3d8'], center: '#f5e2a8', paper: '#efe8e4', tissue: '#ffffff', ribbon: '#9a8a92', leaf: '#4b7d5c' },
   heart: { petals: ['#ffabc9', '#ec669d', '#bf3877'], center: '#ffe2ee', paper: '#f8d8e6', tissue: '#fff0f6', ribbon: '#9c3e70', leaf: '#47785b' },
 }
 /** Fan layout (x, y, scale, rotation) shared by every style so the bouquet always reads as a hand-tied cluster. */
@@ -22,6 +28,8 @@ const FAN = [
 const KIND: Record<string, Kind[]> = {
   roses: Array(7).fill('rose'), peonies: Array(7).fill('peony'), tulips: Array(7).fill('tulip'), sunflowers: Array(5).fill('sunflower'),
   orchids: Array(7).fill('orchid'), wildflowers: Array(7).fill('wild'), heart: Array(6).fill('heart'),
+  lilies: Array(6).fill('orchid'), lavender: Array(7).fill('wild'), blush: Array(7).fill('peony'), royal: Array(7).fill('wild'),
+  sunset: Array(6).fill('sunflower'), white: Array(7).fill('rose'),
   mixed: ['rose', 'wild', 'peony', 'orchid', 'tulip', 'rose', 'wild'],
 }
 const LEAVES = [

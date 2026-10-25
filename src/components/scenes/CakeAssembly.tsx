@@ -18,6 +18,16 @@ const STYLES: Record<string, Cfg> = {
   rainbow: { sponge: ['#8f6bff', '#ffb3d9'], cream: '#fff7ff', frost: '#e9dcff', frost2: '#ff9ccc', deco: 'hearts' },
   galaxy: { sponge: ['#2b2f7a', '#7a6cf0'], cream: '#d8d2ff', frost: '#3a3a96', frost2: '#8c7dff', deco: 'pearls' },
   caramel: { sponge: ['#b9762f', '#f0c27a'], cream: '#fff0d6', frost: '#e2a65a', frost2: '#8a5524', deco: 'choco' },
+  tiramisu: { sponge: ['#7a4e34', '#e6c9a0'], cream: '#fff4e2', frost: '#efd9b4', frost2: '#5a3524', deco: 'choco' },
+  oreo: { sponge: ['#2b2326', '#8c8085'], cream: '#fffdfb', frost: '#f6f1ee', frost2: '#4a3e42', deco: 'crumb' },
+  mango: { sponge: ['#f2a526', '#ffe08a'], cream: '#fff9e6', frost: '#ffd978', frost2: '#f08a1e', deco: 'gold' },
+  lavender: { sponge: ['#a78bdc', '#e8dcff'], cream: '#fbf8ff', frost: '#e2d4fa', frost2: '#b99bf0', deco: 'pearls' },
+  pistachio: { sponge: ['#8fbf7a', '#e3f2c9'], cream: '#fbfff4', frost: '#cfe8b3', frost2: '#f1a9c0', deco: 'flowers' },
+  cherry: { sponge: ['#3d1a20', '#9c3a4a'], cream: '#fff3f1', frost: '#fbe3e1', frost2: '#c91f45', deco: 'hearts' },
+  cotton: { sponge: ['#ffb3d9', '#bfe3ff'], cream: '#ffffff', frost: '#ffd9ee', frost2: '#a9d8ff', deco: 'pearls' },
+  midnight: { sponge: ['#16152e', '#4a3f86'], cream: '#efe6c4', frost: '#232248', frost2: '#e5b85c', deco: 'gold', tiered: true },
+  coconut: { sponge: ['#f4ead9', '#fffaf0'], cream: '#ffffff', frost: '#ffffff', frost2: '#e9dcc4', deco: 'pearls' },
+  'rose-gold': { sponge: ['#e6a99b', '#ffe3d6'], cream: '#fff7f2', frost: '#f6cfc2', frost2: '#d9a066', deco: 'gold', tiered: true },
   floral: { sponge: ['#eba7c2', '#fff2e6'], cream: '#fffaf2', frost: '#ffe9ef', frost2: '#f4b5ca', deco: 'flowers' },
 }
 
