@@ -27,7 +27,7 @@ export default function PhoneDemo() {
     <div className="pd-phone" role="img" aria-label={`Demo of a Lovora surprise: ${cur.label}`}>
       <div className="pd-screen">
         <AnimatePresence mode="wait">
-          <motion.div key={cur.id} className={`pd-scene pd-${cur.id}`} initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.03 }} transition={{ duration: .35 }}>
+          <motion.div key={cur.id} className={`pd-scene ${cur.id === 'link' || cur.id === 'finale' ? `pd-${cur.id}` : `pd-s-${cur.id}`}`} initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.03 }} transition={{ duration: .35 }}>
             {cur.id === 'link' && <LinkPreview />}
             {cur.id === 'gift' && <>
               <small className="pd-eyebrow">A LITTLE GIFT FOR</small><h4>Aarav</h4>

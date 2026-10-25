@@ -61,3 +61,33 @@
 .pd-steps button.on .pd-ico{animation:pdBob 1.6s ease-in-out infinite}
 .pd-prog{position:absolute;left:0;bottom:0;height:3px;background:linear-gradient(90deg,#ff8fc2,#ffd36e);animation:pdProg 3.4s linear both}@keyframes pdProg{from{width:0}to{width:100%}}
 @media(prefers-reduced-motion:reduce){.pd-phone,.ro-flock b,.ro-flock b i{animation:none!important}}
+
+/* ---- scene backgrounds: full screen, no seams ---- */
+.player>.scene:before,.player>.scene:after{display:none!important}
+.player>.scene{min-height:100%;background:transparent!important}
+.player:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 38%,var(--theme-glow,rgba(244,151,201,.22)),transparent 62%),radial-gradient(circle at 12% 92%,rgba(255,166,195,.12),transparent 40%),radial-gradient(circle at 92% 8%,rgba(161,132,255,.14),transparent 40%);animation:themeBreath 7s ease-in-out infinite alternate}
+.player .bq-rays{position:fixed!important;inset:-30% -30%!important}
+
+/* ---- landing: richer cards and effects ---- */
+.experience-grid{perspective:1000px}
+.experience-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.14)!important;backdrop-filter:blur(10px);transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s}
+.experience-card:before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;background:conic-gradient(from var(--ang,0deg),#ff8fc2,#ffd36e,#7fd6ff,#b79bff,#ff8fc2);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.55;animation:vbSpin 6s linear infinite;pointer-events:none}
+.experience-card:after{content:"";position:absolute;inset:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,.22),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
+.experience-card:hover,.experience-card:focus-visible{transform:translateY(-8px) rotateX(3deg);box-shadow:0 26px 60px -18px rgba(255,120,190,.55)}
+.experience-card:hover:after{opacity:1}
+.experience-card .card-emoji{display:inline-grid;place-items:center;width:58px;height:58px;font-size:30px;border-radius:18px;background:rgba(255,255,255,.14);box-shadow:0 8px 22px -6px rgba(0,0,0,.4);animation:vbFloat 3.4s ease-in-out infinite}
+.experience-card:nth-child(2n) .card-emoji{animation-delay:-1.2s}.experience-card:nth-child(3n) .card-emoji{animation-delay:-2.1s}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes vbSpin{to{--ang:360deg}}@keyframes vbFloat{50%{transform:translateY(-6px) rotate(-5deg)}}
+.intro-strip>div{border:1px solid rgba(255,255,255,.12);border-radius:22px;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02));backdrop-filter:blur(10px);transition:transform .3s}
+.intro-strip>div:hover{transform:translateY(-4px)}
+.hero .gradient-text{background-size:220% 100%;animation:vbShine 5s linear infinite}@keyframes vbShine{to{background-position:-220% 0}}
+.hero-art .floating-note{backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);box-shadow:0 18px 40px -14px rgba(0,0,0,.5);animation:vbFloat 4.6s ease-in-out infinite}
+.hero-art .note-two{animation-delay:-2s}
+.how-step{border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:14px;background:linear-gradient(160deg,rgba(255,255,255,.08),transparent);transition:transform .3s,border-color .3s}.how-step:hover{transform:translateX(6px);border-color:rgba(255,143,194,.6)}
+.how-card{box-shadow:0 30px 70px -20px rgba(255,100,170,.5),0 0 0 1px rgba(255,255,255,.14) inset;animation:vbFloat 6s ease-in-out infinite}
+.vb-marquee{overflow:hidden;padding:14px 0;border-block:1px solid rgba(255,255,255,.1);background:linear-gradient(90deg,rgba(255,143,194,.1),rgba(140,90,255,.1))}
+.vb-marquee div{display:flex;gap:34px;width:max-content;animation:vbMarq 26s linear infinite;font-weight:700;letter-spacing:.14em;font-size:12px;opacity:.85}
+@keyframes vbMarq{to{transform:translateX(-50%)}}
+.closing-cta{box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 40px 90px -30px rgba(255,100,170,.5)}
+@media(prefers-reduced-motion:reduce){.experience-card:before,.experience-card .card-emoji,.vb-marquee div,.hero .gradient-text,.how-card{animation:none!important}}
