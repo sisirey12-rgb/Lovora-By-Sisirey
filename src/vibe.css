@@ -134,3 +134,4 @@
 .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.2);background:#fff;color:#2b2b2f;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 10px 26px -12px rgba(0,0,0,.5);transition:transform .2s,box-shadow .2s}
 .google-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 16px 30px -12px rgba(0,0,0,.6)}.google-btn:disabled{opacity:.6}
 .auth-or{display:flex;align-items:center;gap:10px;margin:4px 0;font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6}.auth-or:before,.auth-or:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.25)}
+.gbtn-wrap{display:grid;justify-items:center;min-height:44px}.gbtn-host{width:100%;display:flex;justify-content:center;color-scheme:light}.gbtn-wait{font-size:12px;opacity:.6}
