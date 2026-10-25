@@ -10,6 +10,8 @@ import GiftIntro from './GiftIntro'
 import Timeline from './Timeline'
 import BirthdayIntro from './BirthdayIntro'
 import { introFor } from '../data'
+import { SpinWheel, StarSky, Vows, Lanterns, WaxSeal, MysteryBoxes, ScratchCard } from './scenes/OccasionScenes'
+import OccasionDeco from './OccasionDeco'
 import BirthdayReveal from './BirthdayReveal'
 import WishJar from './WishJar'
 import DevCredit from './DevCredit'
@@ -23,6 +25,7 @@ import { getWishes } from '../services/wishes'
 import { trackOpen, pingView } from '../services/stats'
 import type { Wish } from './WishJar'
 import { saveShareCard } from '../lib/shareCard'
+import ReactionCapture from './ReactionCapture'
 import { audio } from '../lib/audioManager'
 import WorldAmbient from './WorldAmbient'
 import RelationOpener from './scenes/RelationOpener'
@@ -104,9 +107,13 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   const hitTimer = useRef(0)
 
   // Stable helpers: scene components keep long-running timelines, so these must not change between renders.
-  const next = useCallback(() => setIndex(i => Math.min(i + 1, lenRef.current - 1)), [])
+  const next = useCallback(() => { sfx.next(); setIndex(i => Math.min(i + 1, lenRef.current - 1)) }, [])
   const previous = useCallback(() => setIndex(i => Math.max(i - 1, 0)), [])
-  const buzz = useCallback((pattern: number | number[]) => { try { if (navigator.vibrate && hapticsAllowed()) navigator.vibrate(pattern) } catch { /* unsupported */ } }, [])
+  const buzzScale = ({ 'Love letter': .55, Anniversary: .8, 'Special surprise': 1.1 } as Record<string, number>)[experience.occasion] ?? 1
+  const buzz = useCallback((pattern: number | number[]) => { try { if (navigator.vibrate && hapticsAllowed()) navigator.vibrate(Array.isArray(pattern) ? pattern.map(n => Math.round(n * buzzScale)) : Math.round(pattern * buzzScale)) } catch { /* unsupported */ } }, [buzzScale])
+  useEffect(() => { sfx.setPack(experience.occasion) }, [experience.occasion])
+  const [calm, setCalm] = useState(() => { try { return localStorage.getItem('lovora-calm') === 'on' } catch { return false } })
+  useEffect(() => { document.documentElement.classList.toggle('calm', calm); try { localStorage.setItem('lovora-calm', calm ? 'on' : 'off') } catch { /* ignore */ } return () => document.documentElement.classList.remove('calm') }, [calm])
   const unlockAudio = useCallback(() => { audio.unlock(); sfx.unlock() }, [])
 
   // countdown ticks only while the lock screen is visible (no per-second re-render of the animated scenes)
@@ -148,13 +155,13 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   if (locked) return <div className={`player ${themeClass} countdown-lock`} role="dialog" aria-modal="true" aria-label="Surprise countdown"><div className="countdown-lock-card"><span className="scene-emoji">♡</span><p className="eyebrow">A LITTLE WORLD IS WAITING</p><h1>Something lovely is<br /><em>almost here.</em></h1><p>{experience.openingInstruction || 'Your surprise is waiting for the right moment.'}</p><div className="countdown-clock">{[{ label: 'DAYS', value: Math.floor(countdown / 86400000) }, { label: 'HOURS', value: Math.floor(countdown / 3600000) % 24 }, { label: 'MINUTES', value: Math.floor(countdown / 60000) % 60 }, { label: 'SECONDS', value: Math.floor(countdown / 1000) % 60 }].map(part => <div key={part.label}><strong>{String(part.value).padStart(2, '0')}</strong><small>{part.label}</small></div>)}</div><small className="countdown-note">Unlocks at midnight on {experience.targetDate} · local device time</small>{experience.targetDate && <button className="primary-btn" onClick={() => addReminder(experience.targetDate!, `🎂 Open your surprise${experience.sender ? ' from ' + experience.sender : ''}`, window.location.href)}>🔔 Remind me on the day</button>}<button className="secondary-btn" onClick={onClose}>Back</button></div></div>
 
   if (!opened) return <div className={`player ${themeClass}`} style={fontVars}><GiftIntro recipient={experience.recipient} secret={experience.secretMessage} colors={palette.balloons} onOpen={() => { audio.unlock(); setOpened(true) }} /></div>
-  return <div ref={rootRef} className={`player ta-host ta-${experience.textAnim || 'rise'} ${themeClass} ${heartLight ? 'hs-on' : ''} ${useBow ? '' : 'no-hearts'}`} style={fontVars} role="dialog" aria-modal="true" aria-label="Interactive surprise">
+  return <div ref={rootRef} data-occ={experience.occasion} className={`player ta-host ta-${experience.textAnim || 'rise'} ${themeClass} ${heartLight ? 'hs-on' : ''} ${useBow ? '' : 'no-hearts'}`} style={fontVars} role="dialog" aria-modal="true" aria-label="Interactive surprise"><OccasionDeco occasion={experience.occasion} relation={experience.relation} />
     <TapFX active={scene === 'finale' || scene === 'memories'} colors={palette.balloons} buzz={buzz} />
     <div className="player-top">
       <button className={`icon-btn ${heartLight ? 'hs-back' : ''}`} onClick={onClose} aria-label="Close experience">{heartLight ? <><ArrowLeft size={18} /> Back</> : <X />}</button>
       {scene === 'heart' && !heartOpen && preview && <span className="hs-preview" role="note">👁 PREVIEW MODE</span>}
       <div className="player-progress">{scenes.map((s, i) => <button key={s} onClick={() => setIndex(i)} className={i === index ? 'active' : ''} aria-label={`Go to ${sceneLabels[s]}`} />)}</div>
-      <button className="icon-btn" onClick={() => void saveShareCard(experience.recipient, experience.sender, palette.balloons)} aria-label="Save share card"><Download /></button>
+      <button className="icon-btn" onClick={() => void saveShareCard(experience.recipient, experience.sender, palette.balloons, experience.occasion)} aria-label="Save share card"><Download /></button>
       <button className="icon-btn" onClick={() => { audio.unlock(); setSoundOn(v => !v) }} aria-label={soundOn ? 'Mute sound' : 'Turn sound on'}>{soundOn ? <Volume2 /> : <VolumeX />}</button>
     </div>
     <WorldAmbient occasion={occasionKey(experience.occasion)} relation={experience.relation} />
@@ -189,6 +196,13 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
           : <div className="empty-memory"><span>♡</span><p>Some memories are kept in the heart.</p><small>Add photos or videos in the creator to make this part yours.</small></div>}<button className="primary-btn" onClick={next}>One last thing <ArrowRight size={17} /></button></div>}
 
         {scene === 'timeline' && <div className="scene-content wide"><p className="eyebrow">THE STORY SO FAR</p><h1>Our little <em>timeline.</em></h1>{experience.memories.length ? <Timeline memories={experience.memories} buzz={buzz} onDone={next} /> : <p className="muted">Add photos with dates to build your timeline.</p>}</div>}
+        {scene === 'spinwheel' && <SpinWheel exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'starsky' && <StarSky exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'vows' && <Vows exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'lanterns' && <Lanterns exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'waxseal' && <WaxSeal exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'mystery' && <MysteryBoxes exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'scratch' && <ScratchCard exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'counter' && <CounterScene since={experience.togetherSince || ''} onDone={next} />}
         {scene === 'moments' && <MomentsScene title={momentsTitle(experience.relation)} items={experience.moments || []} onDone={next} buzz={buzz} />}
         {scene === 'wishjar' && <div className="scene-content"><p className="eyebrow">MADE WITH LOVE BY YOUR PEOPLE</p><h1>Your <em>wish jar.</em></h1><WishJar colors={palette.balloons} wishes={[...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes].length ? [...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes] : (experience.balloonWishes || []).filter(Boolean).map(text => ({ name: '', text }))} /></div>}
@@ -201,6 +215,8 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
           <div className={`bouquet-reveal phase-${bouquetPhase} ${bouquetOpen ? 'opened' : ''}`}><button className={`bouquet-button bouquet-button-${experience.bouquetStyle || 'roses'}`} onClick={openBouquet} aria-label="Reveal your flower bouquet"><span className="bq-rays" aria-hidden="true" /><BouquetArtwork style={experience.bouquetStyle || 'roses'} opened={bouquetOpen} label={`${bouquetTitle || 'Flower'} bouquet`} />{bouquetPhase > 0 && <span className="bq-petal-rain" aria-hidden="true">{Array.from({ length: 18 }, (_, k) => <i key={k} style={{ ['--x' as string]: `${(k * 37) % 100}%`, ['--d' as string]: `${(k % 7) * .18}s`, ['--c' as string]: palette.balloons[k % palette.balloons.length] } as React.CSSProperties} />)}</span>}<small>{bouquetPhase === 2 ? `${bouquetTitle || 'A little bouquet'} — picked just for you ♡` : bouquetPhase === 1 ? 'Unwrapping…' : 'Tap to unwrap your flowers'}</small></button></div>
           <p className="tapfx-hint no-tapfx">✨ Tap anywhere else for fireworks, firecrackers, hearts &amp; confetti</p>
           <div className="final-actions"><button className="primary-btn" onClick={replay}><RotateCcw size={16} /> Replay</button><button className="secondary-btn" onClick={share}><Share2 size={16} /> Share</button></div>
+          <div className="final-actions"><button className="secondary-btn" onClick={() => void saveShareCard(experience.recipient, experience.sender, palette.balloons, experience.occasion)}><Download size={16} /> Story card</button><ReactionCapture sender={experience.sender} /></div>
+          <a className="secondary-btn make-one" href={`/?ref=${encodeURIComponent(experience.id)}`} target="_blank" rel="noreferrer">💝 Make one for someone you love</a>
           <button className="primary-btn thanks-btn" onClick={() => setThanksOpen(true)}>Send a thank-you 💌</button>
           <button className="secondary-btn" onClick={() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); const pad = (n: number) => String(n).padStart(2, '0'); addReminder(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `💌 Make a new surprise for ${experience.recipient || 'someone you love'}`, window.location.origin) }}>🔔 Remind me next year</button>
           <DevCredit />
@@ -209,6 +225,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
     </AnimatePresence>
     <div className="player-bottom"><button className="text-btn" onClick={previous} disabled={index === 0}><ArrowLeft size={16} /> Back</button><span>{index + 1} / {scenes.length} · {sceneLabels[scene]}</span>{index < scenes.length - 1 ? <button className="text-btn" onClick={next}>Next <ArrowRight size={16} /></button> : <button className="text-btn" onClick={onClose}>Finish <Heart size={16} /></button>}</div>
     <button className="haptics-toggle" style={{ right: "auto", left: 12 }} onClick={() => { const on = document.documentElement.classList.toggle("big-text"); try { localStorage.setItem("lovora-bigtext", on ? "on" : "off") } catch { /* ignore */ } }} title="Larger text">Aa</button>
+    <button className="haptics-toggle" style={{ right: "auto", left: 12, top: 52 }} onClick={() => setCalm(v => !v)} title="Calm mode: fewer moving effects" aria-pressed={calm}>{calm ? "Calm: on" : "Calm: off"}</button>
     <button className="haptics-toggle" onClick={() => { const v = !hapticsOn; setHapticsOn(v); try { localStorage.setItem('lovora-haptics', v ? 'on' : 'off') } catch { /* ignore */ } }} title="Toggle optional vibration">Haptics: {hapticsOn ? 'on' : 'off'}</button>
   </div>
 }

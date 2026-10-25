@@ -2,7 +2,6 @@ import { price, sb, userFromReq, isUuid, configured } from './_shared.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
-  if (!configured()) return res.status(503).json({ error: 'Payments are not set up yet. Please try again later.' })
   const user = await userFromReq(req)
   if (!user) return res.status(401).json({ error: 'Please sign in again.' })
   const id = String(req.body?.experienceId || '')
@@ -10,13 +9,15 @@ export default async function handler(req, res) {
   const row = (await sb(`experiences?id=eq.${id}&owner_id=eq.${user.id}&select=id,paid`)).data?.[0]
   if (!row) return res.status(404).json({ error: 'Save your surprise first, then pay.' })
   if (row.paid) return res.status(200).json({ alreadyPaid: true })
-  // Owner bypass: emails listed in OWNER_EMAILS (comma separated, set in Vercel) never pay. The server checks the signed-in email, so nobody else can use it.
-  const owners = String(process.env.OWNER_EMAILS || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean)
+  // Owner bypass: emails in OWNER_EMAILS (comma separated, set in Vercel) never pay. Checked on the server from the signed-in email.
+  const owners = String(process.env.OWNER_EMAILS || '').toLowerCase().split(/[,\s;]+/).filter(Boolean)
   if (user.email && owners.includes(String(user.email).toLowerCase())) {
-    const now = new Date().toISOString()
-    await sb(`experiences?id=eq.${id}`, { method: 'PATCH', body: { paid: true, paid_at: now } })
+    let w = await sb(`experiences?id=eq.${id}`, { method: 'PATCH', body: { paid: true, paid_at: new Date().toISOString() } })
+    if (!w.ok) w = await sb(`experiences?id=eq.${id}`, { method: 'PATCH', body: { paid: true } })
+    if (!w.ok) { console.error('owner bypass failed', w.status, w.data); return res.status(500).json({ error: 'Could not unlock your surprise. Check the server logs.' }) }
     return res.status(200).json({ alreadyPaid: true })
   }
+  if (!configured()) return res.status(503).json({ error: 'Payments are not set up yet. Please try again later.' })
   const { amount } = price()   // the server decides the price, never the browser
   const key = process.env.RAZORPAY_KEY_ID, secret = process.env.RAZORPAY_KEY_SECRET
   const rz = await fetch('https://api.razorpay.com/v1/orders', {

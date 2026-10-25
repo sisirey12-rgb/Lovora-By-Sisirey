@@ -143,3 +143,9 @@ Sign in / sign up is built in and uses the Supabase project from `.env.local`. S
 - Google Cloud > OAuth consent screen > Branding: App name "Lovora Meow", upload the logo (120x120 PNG), set Application home page to your site, add your domain under Authorized domains.
 - Google Cloud > Credentials > your Web client > Authorised JavaScript origins: add `https://lovorameow-sisirey.vercel.app` (and `http://localhost:5173`).
 - Supabase > Providers > Google: if sign-in says "nonce" error, switch on "Skip nonce checks".
+
+## New in this version
+- Every occasion has its own scene set: Birthday (balloons, cake, wheel of wishes), Anniversary (star constellation, typed vows), Love letter (wax seal, sky lanterns), Special surprise (mystery boxes, scratch card). Each occasion also has its own background decoration and an editor banner showing the story.
+- Site themes: the palette button in the top bar (7 looks, saved per visitor).
+- Account centre: profile, all surprises with status, plan and security, settings. `/api/account` tells the app if the signed-in email is in `OWNER_EMAILS`.
+- Run `npm install` once (adds `lenis`).

@@ -1,10 +1,10 @@
 // Helpers shared by the payment functions. Files starting with "_" are not exposed as routes by Vercel.
 // Server-only environment variables (Vercel -> Settings -> Environment Variables):
 //   SUPABASE_SERVICE_ROLE_KEY, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET
-//   PRICE_INR (default 99, the launch price) and REGULAR_PRICE_INR (default 149, shown crossed out)
+//   PRICE_INR (default 149, the launch price) and REGULAR_PRICE_INR (default 299, shown crossed out)
 import crypto from 'node:crypto'
 
-export const price = () => ({ amount: Number(process.env.PRICE_INR || 99), regular: Number(process.env.REGULAR_PRICE_INR || 149) })
+export const price = () => ({ amount: Number(process.env.PRICE_INR || 149), regular: Number(process.env.REGULAR_PRICE_INR || 299) })
 const SB = () => process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const SERVICE = () => process.env.SUPABASE_SERVICE_ROLE_KEY
 export const configured = () => Boolean(SB() && SERVICE() && process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET)

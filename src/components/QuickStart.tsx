@@ -13,7 +13,7 @@ export type QuickForm = { to: string; from: string; photo: string; id: string }
 export default function QuickStart({ template, form, setForm, onClose, onFull, onPreview, onDone }: { template: Template; form: QuickForm; setForm: (f: QuickForm) => void; onClose: () => void; onFull: (e: Experience) => void; onPreview: (e: Experience) => void; onDone: () => void }) {
   const { to, from, photo, id } = form
   const setTo = (v: string) => setForm({ ...form, to: v }), setFrom = (v: string) => setForm({ ...form, from: v }), setPhoto = (v: string) => setForm({ ...form, photo: v })
-  const [amount, setAmount] = useState(99), [pay, setPay] = useState(false)
+  const [amount, setAmount] = useState(149), [pay, setPay] = useState(false)
   useEffect(() => { void getPrice().then(p => setAmount(p.amount)) }, [])
   const [saving, setSaving] = useState<Experience | null>(null)
   const [busy, setBusy] = useState(''), [err, setErr] = useState(''), [done, setDone] = useState<Experience | null>(null), [copied, setCopied] = useState(false)

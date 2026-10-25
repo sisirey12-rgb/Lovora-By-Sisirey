@@ -26,12 +26,7 @@ export function LandingChrome() {
     const move = (e: PointerEvent) => { if (glow.current) glow.current.style.transform = `translate(${e.clientX - 180}px,${e.clientY - 180}px)` }
     const scroll = () => { const h = document.documentElement; if (bar.current) bar.current.style.transform = `scaleX(${h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)})` }
     window.addEventListener('pointermove', move, { passive: true }); window.addEventListener('scroll', scroll, { passive: true }); scroll()
-    let io: IntersectionObserver | undefined
-    if (!reduce && 'IntersectionObserver' in window) {
-      io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('lf-in'); io?.unobserve(e.target) } }), { threshold: .12, rootMargin: '0px 0px -6% 0px' })
-      document.querySelectorAll<HTMLElement>('.inside-card,.how-step,.template-card,.lf-stat,.lf-show-card,.section-kicker,.inside-section h2,.calm-how h2,.template-gallery h2,.lf-cta').forEach((el, k) => { el.classList.add('lf-reveal'); el.style.setProperty('--lf-d', `${(k % 6) * 70}ms`); io!.observe(el) })
-    }
-    return () => { window.removeEventListener('pointermove', move); window.removeEventListener('scroll', scroll); io?.disconnect() }
+    return () => { window.removeEventListener('pointermove', move); window.removeEventListener('scroll', scroll) }
   }, [])
   return <><div className="lf-progress" ref={bar} aria-hidden="true" /><div className="lf-glow" ref={glow} aria-hidden="true" /></>
 }

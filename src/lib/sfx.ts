@@ -8,6 +8,7 @@ const BASE = ((import.meta as unknown as { env?: Record<string, string> }).env?.
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
 let enabled = true
+let packMul = 1, packVol = 1
 const missing = new Set<string>()
 const cache = new Map<string, HTMLAudioElement>()
 
@@ -25,6 +26,7 @@ const noiseBuf = (c: AudioContext, sec: number) => { const b = c.createBuffer(1,
 function tone(freq: number, start: number, dur: number, type: OscillatorType = 'sine', vol = .2, slideTo?: number) {
   const c = ac(); if (!c || !master) return
   const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + start
+  freq *= packMul; if (slideTo) slideTo *= packMul; vol *= packVol
   o.type = type; o.frequency.setValueAtTime(freq, t); if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur)
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
   o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .05)
@@ -50,6 +52,8 @@ const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)]
 
 export const sfx = {
   setEnabled(v: boolean) { enabled = v },
+  /** each occasion has its own sound colour: Birthday bright, Anniversary warm, Love letter soft, Special sparkly */
+  setPack(occasion: string) { const p: Record<string, [number, number]> = { Birthday: [1, 1], Anniversary: [.89, 1], 'Love letter': [.8, .75], 'Special surprise': [1.15, .95] }; [packMul, packVol] = p[occasion] || [1, 1] },
   unlock() { ac() },
   /** soft whoosh of breath → flame flutter */
   blow() { play('blow', () => { noise(0, 1.1, .5, 'bandpass', 700, 2400, .7); noise(.05, .9, .25, 'highpass', 3000); for (let i = 0; i < 5; i++) tone(180 - i * 12, i * .09, .08, 'triangle', .05) }) },
@@ -73,5 +77,19 @@ export const sfx = {
     if (kind === 'stars') return play('tap-boom', () => { [1568, 2093, 2637].forEach((f, i) => tone(f, i * .06, .4, 'sine', .08)); noise(0, .4, .06, 'highpass', 7000) })
     play('tap-boom', () => { tone(95, 0, .5, 'sine', .5, 38); noise(0, .45, .55, 'lowpass', 1800, 120); noise(.12, .7, .1, 'highpass', 4500) })
   },
+  /** drum roll that builds while the gift shakes */
+  drumroll() { play('drumroll', () => { for (let i = 0; i < 22; i++) { const t = i * .035; noise(t, .05, .12 + i * .015, 'bandpass', 220 + i * 14, undefined, 1.2); tone(110 + i * 3, t, .05, 'triangle', .05 + i * .004) } }, .7) },
+  /** quick rising whoosh */
+  whoosh() { play('whoosh', () => { noise(0, .5, .3, 'bandpass', 300, 4200, .8); tone(220, 0, .45, 'sine', .08, 880) }, .6) },
+  /** lid pops off with a spring */
+  lid() { play('lid', () => { tone(180, 0, .16, 'triangle', .3, 520); noise(0, .1, .35, 'highpass', 2500); tone(900, .1, .3, 'sine', .08) }) },
+  /** bright magical chime, rising */
+  chime() { play('chime', () => { [1047, 1319, 1568, 2093].forEach((f, i) => { tone(f, i * .08, 1, 'sine', .1); tone(f * 2, i * .08 + .02, .6, 'triangle', .03) }) }, .7) },
+  /** happy fanfare */
+  fanfare() { play('fanfare', () => { [[523, 0], [659, .12], [784, .24], [1047, .4], [784, .6], [1047, .72]].forEach(([f, t]) => { tone(f, t, .3, 'square', .06); tone(f / 2, t, .3, 'triangle', .09) }); noise(.4, .8, .08, 'highpass', 5000) }) },
+  /** tiny sparkle for hovers and taps */
+  sparkle() { play('sparkle', () => { [2400, 3100, 3800].forEach((f, i) => tone(f + Math.random() * 200, i * .04, .18, 'sine', .05)) }, .5) },
+  /** soft whoosh + page turn between scenes */
+  next() { play('next', () => { noise(0, .22, .18, 'bandpass', 800, 2600, 1); tone(660, .05, .16, 'sine', .06, 990) }, .5) },
   any() { return pick(['firework', 'crackers', 'confetti', 'love', 'stars'] as const) },
 }

@@ -112,11 +112,21 @@ const fontOcc: Partial<Record<Occasion, string>> = { 'Love letter': 'parisian', 
  */
 export const flowFor = (o: Occasion, r: Relation): Experience['scenes'] => {
   const s: Experience['scenes'] = ['heart', 'intro']
-  if (o === 'Anniversary') s.push('counter')
-  s.push('balloons')
-  if (o === 'Birthday' || (o === 'Anniversary' && r === 'Partner') || (o === 'Special surprise' && (r === 'Brother' || r === 'Sister' || r === 'Friend'))) s.push('cake')
-  s.push(o === 'Anniversary' ? 'timeline' : 'memories', 'moments')
-  if (r === 'Friend' || (o === 'Birthday' && r === 'Sister') || (o === 'Anniversary' && (r === 'Mom' || r === 'Dad'))) s.push('wishjar')
+  if (o === 'Birthday') {
+    s.push('balloons', 'cake', 'spinwheel', 'memories', 'moments')
+    if (r === 'Friend' || r === 'Sister') s.push('wishjar')
+  } else if (o === 'Anniversary') {
+    s.push('counter', 'starsky', 'timeline', 'moments', 'vows')
+    if (r === 'Partner') s.push('cake')
+    if (r === 'Mom' || r === 'Dad') s.push('wishjar')
+  } else if (o === 'Love letter') {
+    s.push('waxseal', 'lanterns', 'memories')
+  } else {
+    s.push('mystery', 'balloons')
+    if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('cake')
+    s.push('scratch', 'memories', 'moments')
+    if (r === 'Friend') s.push('wishjar')
+  }
   s.push('video', 'letter', 'finale')
   return s
 }
