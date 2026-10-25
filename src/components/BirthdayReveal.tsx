@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 
@@ -54,7 +54,7 @@ export default function BirthdayReveal({ kicker = 'MADE JUST FOR YOU', title, na
         <div style={{ filter: `drop-shadow(0 0 26px ${accent}aa)` }}>
           <motion.div initial={{ opacity: 0, filter: 'blur(14px)', scale: 1.25 }} animate={{ opacity: out ? 0 : 1, filter: out ? 'blur(6px)' : 'blur(0px)', scale: out ? 1.1 : 1 }} transition={{ duration: out ? .6 : 1.1, delay: out ? 0 : .15, ease: 'easeOut' }}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.02 }}>
-            {words.map((w, i) => <strong key={i} style={{ fontFamily: display, fontWeight: 700, letterSpacing: '.06em', fontSize: `clamp(${words.length > 1 ? 40 : 34}px,${words.length > 1 ? 15 : 11}vw,${words.length > 1 ? 96 : 80}px)`, background: 'linear-gradient(90deg,#fff0f7,#f5a7d1,#ffe8ad)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', WebkitTextFillColor: 'transparent' }}>{w}</strong>)}
+            <FitTitle words={words} display={display} max={words.length > 1 ? 96 : 80} />
           </motion.div>
         </div>
         <motion.em initial={{ opacity: 0, y: 18 }} animate={{ opacity: out ? 0 : 1, y: out ? -6 : 0 }} transition={{ duration: .7, delay: out ? 0 : .9 }}
@@ -63,4 +63,23 @@ export default function BirthdayReveal({ kicker = 'MADE JUST FOR YOU', title, na
     </div>,
     document.body,
   )
+}
+
+/** Sizes every word of the title to the real screen width, so long words and wide script fonts are never cropped on a phone. */
+function FitTitle({ words, display, max }: { words: string[]; display?: string; max: number }) {
+  const refs = useRef<(HTMLElement | null)[]>([])
+  const [size, setSize] = useState(34)
+  useLayoutEffect(() => {
+    const fit = () => {
+      let widest = 1
+      refs.current.forEach(el => { if (el) { el.style.fontSize = '100px'; widest = Math.max(widest, el.scrollWidth) } })
+      const avail = Math.min(window.innerWidth * .9, 900)
+      setSize(Math.max(22, Math.min(max, Math.floor(100 * avail / widest))))
+    }
+    fit()
+    void document.fonts?.ready.then(fit)
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [words, display, max])
+  return <>{words.map((w, i) => <strong key={i} ref={el => { refs.current[i] = el }} style={{ fontFamily: display, fontWeight: 700, letterSpacing: '.04em', fontSize: size, whiteSpace: 'nowrap', display: 'inline-block', padding: '0 .12em', background: 'linear-gradient(90deg,#fff0f7,#f5a7d1,#ffe8ad)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', WebkitTextFillColor: 'transparent' }}>{w}</strong>)}</>
 }

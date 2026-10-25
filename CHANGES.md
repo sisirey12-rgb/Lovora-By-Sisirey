@@ -45,3 +45,12 @@
 - Anniversary wording is now written separately for brother, sister, mom, dad and friend (`occasionContent.ts`).
 - Editor: 6 short steps (Who, Words, Look, Moments, Preview, Share). Optional things sit in closed sections. The scene-flow step is gone; the story is chosen by occasion + person.
 - Preview fix: the waiting screen timers restarted on every editor re-render, so the preview never opened. The waiting screen is removed and preview opens directly.
+
+## Round 2
+- New PNG logo (cat-ear heart) used for the header, footer, favicon, app icons, manifest and share picture. "@sisirey" removed; "Sisirey" is yellow everywhere.
+- Landing page: phone demo that plays link → gift → balloons → cake → letter → finale, "everything inside" cards, three-step guide.
+- Every create button leads to the occasion + person picker; the editor no longer asks for them again.
+- Preview now opens after the "saving your draft" animation. The quick sheet leads with a "Customise it" button.
+- Story order fixed (balloons, cake, photos, moments, video, letter, finale); balloon pop in every occasion and person; coupon book removed.
+- Balloon wishes, greetings and message lines are written per person and occasion, with tap-to-use suggestions.
+- Reveal title now measures the screen and fits it, so it is no longer cropped on Android. The developer credit no longer floats over the finale buttons.

@@ -26,14 +26,13 @@ import { audio } from '../lib/audioManager'
 import WorldAmbient from './WorldAmbient'
 import RelationOpener from './scenes/RelationOpener'
 import { glyphFor, isPartnerWorld } from '../lib/worlds'
-import { occasionKey } from '../lib/occasionContent'
+import { occasionKey, flowFor } from '../lib/occasionContent'
 import BouquetArtwork from './BouquetArtwork'
 import BowScene from './scenes/BowScene'
 import CakeAssembly from './scenes/CakeAssembly'
 import BalloonTree from './scenes/BalloonTree'
 import EnvelopeLetter from './scenes/EnvelopeLetter'
 import CatVideoScene from './scenes/CatVideoScene'
-import CouponBook from './scenes/CouponBook'
 import VoiceNote from './VoiceNote'
 
 type Props = { experience: Experience; onClose: () => void; preview?: boolean }
@@ -42,7 +41,13 @@ const defaultWishes = suggestions.wishes.slice(0, 5)
 const hapticsAllowed = () => { try { return localStorage.getItem('lovora-haptics') !== 'off' } catch { return true } }
 
 export default function ScenePlayer({ experience, onClose, preview = false }: Props) {
-  const scenes = useMemo(() => { const s = normalizeScenes(experience.scenes, experience.v).filter(x => known.includes(x)).filter(x => x === 'counter' ? !!experience.togetherSince : x === 'moments' ? (experience.moments || []).some(t => t.trim()) : true); return s.length ? s : (['heart'] as SceneId[]) }, [experience.scenes, experience.v, experience.togetherSince, experience.moments])
+  const photoCount = experience.memories.length
+  const scenes = useMemo(() => {
+    // the story order is set by occasion + person (older surprises are brought into line); no coupon book any more
+    const base = experience.relation ? flowFor(occasionKey(experience.occasion), experience.relation) : normalizeScenes(experience.scenes, experience.v)
+    const s = base.filter(x => known.includes(x) && x !== 'coupons').filter(x => x === 'counter' ? !!experience.togetherSince : x === 'moments' ? (experience.moments || []).some(t => t.trim()) : (x === 'memories' || x === 'timeline') ? photoCount > 0 : true)
+    return s.length ? s : (['heart'] as SceneId[])
+  }, [experience.scenes, experience.v, experience.occasion, experience.relation, experience.togetherSince, experience.moments, photoCount])
   const [index, setIndex] = useState(0)
   const [opened, setOpened] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -183,7 +188,6 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
           : <div className="empty-memory"><span>♡</span><p>Some memories are kept in the heart.</p><small>Add photos or videos in the creator to make this part yours.</small></div>}<button className="primary-btn" onClick={next}>One last thing <ArrowRight size={17} /></button></div>}
 
         {scene === 'timeline' && <div className="scene-content wide"><p className="eyebrow">THE STORY SO FAR</p><h1>Our little <em>timeline.</em></h1>{experience.memories.length ? <Timeline memories={experience.memories} buzz={buzz} onDone={next} /> : <p className="muted">Add photos with dates to build your timeline.</p>}</div>}
-        {scene === 'coupons' && <div className="scene-content"><CouponBook coupons={experience.coupons} colors={palette.balloons} buzz={buzz} onDone={next} /></div>}
         {scene === 'counter' && <CounterScene since={experience.togetherSince || ''} onDone={next} />}
         {scene === 'moments' && <MomentsScene title={momentsTitle(experience.relation)} items={experience.moments || []} onDone={next} buzz={buzz} />}
         {scene === 'wishjar' && <div className="scene-content"><p className="eyebrow">MADE WITH LOVE BY YOUR PEOPLE</p><h1>Your <em>wish jar.</em></h1><WishJar colors={palette.balloons} wishes={[...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes].length ? [...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes] : (experience.balloonWishes || []).filter(Boolean).map(text => ({ name: '', text }))} /></div>}
@@ -198,11 +202,11 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
           <div className="final-actions"><button className="primary-btn" onClick={replay}><RotateCcw size={16} /> Replay</button><button className="secondary-btn" onClick={share}><Share2 size={16} /> Share</button></div>
           <button className="primary-btn thanks-btn" onClick={() => setThanksOpen(true)}>Send a thank-you 💌</button>
           <button className="secondary-btn" onClick={() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); const pad = (n: number) => String(n).padStart(2, '0'); addReminder(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `💌 Make a new surprise for ${experience.recipient || 'someone you love'}`, window.location.origin) }}>🔔 Remind me next year</button>
+          <DevCredit />
           {thanksOpen && <ThankYou sender={experience.sender} recipient={experience.recipient} occasion={experience.occasion} whatsapp={experience.replyWhatsApp} instagram={experience.replyInstagram} url={experience.published ? `${window.location.origin}/s/${experience.id}` : undefined} onClose={() => setThanksOpen(false)} />}</div>}
       </motion.section>
     </AnimatePresence>
     <div className="player-bottom"><button className="text-btn" onClick={previous} disabled={index === 0}><ArrowLeft size={16} /> Back</button><span>{index + 1} / {scenes.length} · {sceneLabels[scene]}</span>{index < scenes.length - 1 ? <button className="text-btn" onClick={next}>Next <ArrowRight size={16} /></button> : <button className="text-btn" onClick={onClose}>Finish <Heart size={16} /></button>}</div>
-    <DevCredit compact />
     <button className="haptics-toggle" style={{ right: "auto", left: 12 }} onClick={() => { const on = document.documentElement.classList.toggle("big-text"); try { localStorage.setItem("lovora-bigtext", on ? "on" : "off") } catch { /* ignore */ } }} title="Larger text">Aa</button>
     <button className="haptics-toggle" onClick={() => { const v = !hapticsOn; setHapticsOn(v); try { localStorage.setItem('lovora-haptics', v ? 'on' : 'off') } catch { /* ignore */ } }} title="Toggle optional vibration">Haptics: {hapticsOn ? 'on' : 'off'}</button>
   </div>

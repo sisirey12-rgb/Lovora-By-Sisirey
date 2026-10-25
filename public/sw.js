@@ -1,5 +1,5 @@
 // Offline support: app shell and media are cached as they are used. API and share pages always go to the network first.
-const V = 'lovora-v1', SHELL = ['/', '/favicon.svg', '/icon-512.png']
+const V = 'lovora-v2', SHELL = ['/', '/logo.png', '/icon-512.png']
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())) })
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== V).map(x => caches.delete(x)))).then(() => self.clients.claim())) })
 self.addEventListener('fetch', e => {

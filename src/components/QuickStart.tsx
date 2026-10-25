@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Copy, Eye, ImagePlus, X } from 'lucide-react'
+import { Check, Copy, Eye, ImagePlus, Palette, X } from 'lucide-react'
+import SavingOverlay from './SavingOverlay'
 import PayWall from './PayWall'
 import { getPrice } from '../services/payments'
 import { fromTemplate, type Template } from '../lib/templates'
@@ -14,6 +15,7 @@ export default function QuickStart({ template, form, setForm, onClose, onFull, o
   const setTo = (v: string) => setForm({ ...form, to: v }), setFrom = (v: string) => setForm({ ...form, from: v }), setPhoto = (v: string) => setForm({ ...form, photo: v })
   const [amount, setAmount] = useState(99), [pay, setPay] = useState(false)
   useEffect(() => { void getPrice().then(p => setAmount(p.amount)) }, [])
+  const [saving, setSaving] = useState<Experience | null>(null)
   const [busy, setBusy] = useState(''), [err, setErr] = useState(''), [done, setDone] = useState<Experience | null>(null), [copied, setCopied] = useState(false)
   const file = useRef<HTMLInputElement>(null)
   const build = (): Experience => {
@@ -42,16 +44,18 @@ export default function QuickStart({ template, form, setForm, onClose, onFull, o
       <button className="icon-btn quick-x" onClick={onClose} aria-label="Close" disabled={!!busy}><X size={18} /></button>
       <p className="eyebrow">QUICK MODE · {template.occasion.toUpperCase()} · {template.relation.toUpperCase()}</p>
       {!done ? <>
-        <h2>Ready in a minute {template.emoji}</h2>
-        <p className="muted">The story, theme and video are already set for this {template.occasion.toLowerCase()}. Just add the names.</p>
+        <h2>{template.emoji} {template.occasion} for your {template.relation.toLowerCase()}</h2>
+        <p className="muted">The story, look and wishes are already set. Add the names, then customise or preview.</p>
         <label>Who is it for?<input value={to} onChange={e => setTo(e.target.value)} placeholder={template.relation === 'Mom' || template.relation === 'Dad' ? template.relation : 'Their name'} maxLength={30} /></label>
         <label>Your name<input value={from} onChange={e => setFrom(e.target.value)} placeholder="Who is sending it?" maxLength={30} /></label>
         <input ref={file} type="file" accept="image/*" hidden onChange={e => { void pick(e.target.files?.[0]); e.target.value = '' }} />
         <button type="button" className="quick-photo" onClick={() => file.current?.click()}>{photo ? <img src={photo} alt="Your photo" /> : <ImagePlus size={20} />}<span>{photo ? 'Change photo' : 'Add one photo (optional)'}</span></button>
         {err && <p className="error-text" role="alert">{err}</p>}
-        <button className="primary-btn" onClick={() => { if (valid()) onPreview(build()) }} disabled={!!busy}><Eye size={16} /> Preview it (free)</button>
-        <button className="secondary-btn" onClick={() => { if (valid()) setPay(true) }} disabled={!!busy}>{busy || `Get share link · ₹${amount}`}</button>
-        <button className="text-btn" onClick={() => onFull(build())} disabled={!!busy}>Customize in the full editor instead</button>
+        <button type="button" className="customise-btn" onClick={() => onFull(build())} disabled={!!busy}><span className="customise-ico"><Palette size={20} /></span><span><strong>Customise it</strong><small>Your words, photos, look and balloon wishes</small></span><span className="customise-go">→</span></button>
+        <div className="quick-row">
+          <button className="secondary-btn" onClick={() => { if (valid()) { const e = build(); try { storage.saveDraft(e); onDone() } catch { /* the preview still opens */ } setSaving(e) } }} disabled={!!busy}><Eye size={16} /> Preview</button>
+          <button className="secondary-btn" onClick={() => { if (valid()) setPay(true) }} disabled={!!busy}>{busy || `Share link · ₹${amount}`}</button>
+        </div>
       </> : <>
         <h2>Your surprise is live ♡</h2>
         <input readOnly value={url} onFocus={e => e.currentTarget.select()} aria-label="Share link" />
@@ -63,6 +67,7 @@ export default function QuickStart({ template, form, setForm, onClose, onFull, o
         </div>
       </>}
     </div>
+    {saving && <SavingOverlay onDone={() => { const e = saving; setSaving(null); onPreview(e) }} />}
     {pay && <PayWall item={build()} onClose={() => setPay(false)} onPaid={e => void finish(e)} onPreview={() => { setPay(false); onPreview(build()) }} />}
   </div>
 }

@@ -1,6 +1,6 @@
 // EDIT THESE: your public handles. They appear in the footer and on the finale.
 // `by` and `tag` are the developer credit shown on EVERY page and inside every scene player.
-export const BRAND = { name: 'Lovora Meow', by: 'Sisirey', tag: '@sisirey' }
+export const BRAND = { name: 'Lovora Meow', by: 'Sisirey', tag: '' }
 export const LINKS = {
   instagram: 'https://instagram.com/sisirey',      // TODO: confirm your Instagram handle
   telegram: 'https://t.me/sisirey',                // TODO: confirm your Telegram username
