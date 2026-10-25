@@ -132,3 +132,8 @@ Sign in / sign up is built in and uses the Supabase project from `.env.local`. S
 - Live wishes: run `supabase/migrations/0002_wishes.sql` in Supabase once.
 - Creator stats: run `supabase/migrations/0003_stats.sql` once in Supabase.
 - Templates live in `src/lib/templates.ts`.
+
+## Google sign-in setup
+1. Google Cloud Console > APIs & Services > Credentials > Create OAuth client ID (Web). Add the authorised redirect URI shown in Supabase (Authentication > Providers > Google), like `https://<project>.supabase.co/auth/v1/callback`.
+2. Supabase > Authentication > Providers > Google: switch on, paste the Client ID and Client secret.
+3. Supabase > Authentication > URL Configuration: set Site URL to your Vercel URL and add it (and `http://localhost:5173`) to Redirect URLs.

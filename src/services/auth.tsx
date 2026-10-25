@@ -10,6 +10,8 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>
   /** Passwordless: emails a one-tap sign-in link (creates the account on first use). */
   signInWithLink: (email: string) => Promise<void>
+  /** Google sign-in: redirects to Google and comes back signed in (creates the account on first use). */
+  signInWithGoogle: () => Promise<void>
   signUp: (email: string, password: string) => Promise<{ needsConfirmation: boolean }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
@@ -41,6 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await need().auth.signInWithOtp({ email: clean(email), options: { emailRedirectTo: window.location.origin, shouldCreateUser: true } })
     if (error) throw new Error(friendlyError(error))
   }, [])
+  const signInWithGoogle = useCallback(async () => {
+    const { error } = await need().auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin, queryParams: { prompt: 'select_account' } } })
+    if (error) throw new Error(friendlyError(error))
+  }, [])
   const signUp = useCallback(async (email: string, password: string) => {
     const { data, error } = await need().auth.signUp({ email: clean(email), password, options: { emailRedirectTo: window.location.origin } })
     if (error) throw new Error(friendlyError(error))
@@ -59,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRecovering(false)
   }, [])
   const dismissRecovery = useCallback(() => setRecovering(false), [])
-  const value = useMemo<AuthState>(() => ({ user: session?.user ?? null, loading, configured: supabaseConfigured, signIn, signInWithLink, signUp, signOut, resetPassword, recovering, updatePassword, dismissRecovery }), [session, loading, signIn, signInWithLink, signUp, signOut, resetPassword, recovering, updatePassword, dismissRecovery])
+  const value = useMemo<AuthState>(() => ({ user: session?.user ?? null, loading, configured: supabaseConfigured, signIn, signInWithLink, signInWithGoogle, signUp, signOut, resetPassword, recovering, updatePassword, dismissRecovery }), [session, loading, signIn, signInWithLink, signUp, signOut, resetPassword, recovering, updatePassword, dismissRecovery])
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 export function useAuth(): AuthState {
