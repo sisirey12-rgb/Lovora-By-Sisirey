@@ -14,7 +14,7 @@ export default function TemplateGallery({ onPick, compact = false, occasion, onO
     <div className="section-kicker"><span /> START HERE</div>
     <h2>Pick the occasion, <em>then who it is for.</em></h2>
     <div className="occasion-chips" role="tablist" aria-label="Occasion">{CORE_OCCASIONS.map(o => <button type="button" role="tab" aria-selected={occ === o} key={o} className={occ === o ? 'selected' : ''} onClick={() => choose(o)}>{occasionEmoji[o]} {o}</button>)}</div>
-    <div className="template-row">{templates.filter(t => t.occasion === occ).map(t => <button type="button" key={t.id} className={`template-card world-card ${worldClass(t.occasion, t.relation)}`} style={{ background: themes.find(x => x.name === t.theme)?.colors }} onClick={() => onPick(t)}>
+    <div className="template-row">{templates.filter(t => t.occasion === occ).map(t => <button type="button" key={t.id} className={`template-card world-card ${worldClass(t.occasion, t.relation)}`} onPointerMove={e=>{const r=e.currentTarget.getBoundingClientRect();e.currentTarget.style.setProperty('--mx',`${e.clientX-r.left}px`);e.currentTarget.style.setProperty('--my',`${e.clientY-r.top}px`)}} style={{ background: themes.find(x => x.name === t.theme)?.colors }} onClick={() => onPick(t)}>
       <span className="tpl-emoji">{t.emoji}</span><strong>{RELATIONS.find(r => r.id === t.relation)?.id}</strong><small>{t.blurb}</small><em>Use this ✦</em>
     </button>)}</div>
   </section>

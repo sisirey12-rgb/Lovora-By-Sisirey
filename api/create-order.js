@@ -10,6 +10,13 @@ export default async function handler(req, res) {
   const row = (await sb(`experiences?id=eq.${id}&owner_id=eq.${user.id}&select=id,paid`)).data?.[0]
   if (!row) return res.status(404).json({ error: 'Save your surprise first, then pay.' })
   if (row.paid) return res.status(200).json({ alreadyPaid: true })
+  // Owner bypass: emails listed in OWNER_EMAILS (comma separated, set in Vercel) never pay. The server checks the signed-in email, so nobody else can use it.
+  const owners = String(process.env.OWNER_EMAILS || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean)
+  if (user.email && owners.includes(String(user.email).toLowerCase())) {
+    const now = new Date().toISOString()
+    await sb(`experiences?id=eq.${id}`, { method: 'PATCH', body: { paid: true, paid_at: now } })
+    return res.status(200).json({ alreadyPaid: true })
+  }
   const { amount } = price()   // the server decides the price, never the browser
   const key = process.env.RAZORPAY_KEY_ID, secret = process.env.RAZORPAY_KEY_SECRET
   const rz = await fetch('https://api.razorpay.com/v1/orders', {
