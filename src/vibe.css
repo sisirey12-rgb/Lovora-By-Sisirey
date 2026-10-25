@@ -135,3 +135,39 @@
 .google-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 16px 30px -12px rgba(0,0,0,.6)}.google-btn:disabled{opacity:.6}
 .auth-or{display:flex;align-items:center;gap:10px;margin:4px 0;font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6}.auth-or:before,.auth-or:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.25)}
 .gbtn-wrap{display:grid;justify-items:center;min-height:44px}.gbtn-host{width:100%;display:flex;justify-content:center;color-scheme:light}.gbtn-wait{font-size:12px;opacity:.6}
+
+/* ---- bigger text boxes in the editor ---- */
+label:has(>textarea){display:grid!important;gap:8px;width:100%}
+label>textarea,.wish-field textarea{display:block;width:100%;box-sizing:border-box;min-height:112px;padding:14px 16px;font-size:16px;line-height:1.55;border-radius:18px;resize:vertical}
+.wish-field{font-weight:700}.wish-field textarea{min-height:120px;font-weight:400}
+
+/* ---- landing redesign ---- */
+.lf-progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:2000;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,#ff8fc2,#ffd36e,#7fd6ff)}
+.lf-glow{position:fixed;top:0;left:0;width:360px;height:360px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(circle,rgba(255,143,194,.18),transparent 65%);transition:transform .25s ease-out}
+@media(pointer:coarse){.lf-glow{display:none}}
+.lf-reveal{opacity:0;transform:translateY(34px) scale(.97);filter:blur(6px);transition:opacity .8s cubic-bezier(.2,.8,.2,1) var(--lf-d,0ms),transform .8s cubic-bezier(.2,.8,.2,1) var(--lf-d,0ms),filter .8s var(--lf-d,0ms)}
+.lf-reveal.lf-in{opacity:1;transform:none;filter:none}
+.lf-rot{margin:10px 0 0;font:600 20px 'Fredoka',sans-serif;opacity:.95}
+.lf-rot-word{color:#ffd36e;border-bottom:2px dashed rgba(255,211,110,.5);padding-bottom:1px}.lf-rot-word i{display:inline-block;width:2px;height:1em;margin-left:2px;vertical-align:-2px;background:#ffd36e;animation:lfBlink 1s steps(2) infinite}
+@keyframes lfBlink{50%{opacity:0}}
+.lf-marquee{overflow:hidden;padding:16px 0;margin:8px 0;border-block:1px solid rgba(255,255,255,.1);background:linear-gradient(90deg,rgba(255,143,194,.12),rgba(140,90,255,.12));transform:rotate(-1.2deg) scale(1.03)}
+.lf-marquee>div{display:flex;width:max-content;animation:vbMarq 30s linear infinite}.lf-marquee span{display:flex}
+.lf-marquee b{display:flex;align-items:center;gap:26px;padding-right:26px;font-size:13px;letter-spacing:.16em}.lf-marquee i{font-style:normal;color:#ffd36e}
+.lf-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:12px;max-width:900px;margin:34px auto;padding:0 16px}
+.lf-stat{display:grid;justify-items:center;gap:2px;padding:18px 8px;border-radius:24px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.02));backdrop-filter:blur(10px);box-shadow:0 20px 40px -24px rgba(0,0,0,.7)}
+.lf-stat span{font-size:26px;animation:vbFloat 3.4s ease-in-out infinite}.lf-stat strong{font:700 38px 'Fredoka',sans-serif;background:linear-gradient(90deg,#ff8fc2,#ffd36e);-webkit-background-clip:text;background-clip:text;color:transparent}.lf-stat small{font-size:11px;opacity:.7;letter-spacing:.06em}
+.lf-show{padding:44px 0;max-width:1100px;margin:0 auto}.lf-show .section-kicker,.lf-show h2{padding:0 18px}.lf-show h2{margin:6px 0 20px}
+.lf-show-row{display:flex;gap:14px;overflow-x:auto;padding:8px 18px 26px;scroll-snap-type:x mandatory;scrollbar-width:none}.lf-show-row::-webkit-scrollbar{display:none}
+.lf-show-card{position:relative;flex:none;width:min(230px,64vw);height:300px;border-radius:30px;overflow:hidden;scroll-snap-align:center;border:1px solid rgba(255,255,255,.25);box-shadow:0 26px 50px -22px rgba(0,0,0,.8);transition:transform .35s}
+.lf-show-card:hover{transform:translateY(-8px) rotate(-1.5deg)}
+.lf-show-card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 0,rgba(255,255,255,.35),transparent 55%);z-index:1}
+.lf-show-sky{position:absolute;inset:0}.lf-show-sky span{position:absolute;left:var(--x);bottom:-30px;font-size:var(--s);animation:lfUp 4.5s ease-in infinite var(--d);filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))}
+@keyframes lfUp{10%{opacity:1}100%{transform:translateY(-340px) rotate(30deg);opacity:0}}
+.lf-show-body{position:absolute;left:0;right:0;bottom:0;z-index:2;display:grid;gap:3px;padding:44px 18px 18px;background:linear-gradient(transparent,rgba(0,0,0,.6))}.lf-show-body b{font:700 19px 'Fredoka',sans-serif}.lf-show-body small{opacity:.85}
+.inside-card{position:relative;overflow:hidden;border-radius:26px!important;border:1px solid rgba(255,255,255,.16)!important;transition:transform .35s,box-shadow .35s}.inside-card:hover{transform:translateY(-8px) rotate(-.8deg);box-shadow:0 28px 50px -20px rgba(255,120,190,.5)}
+.inside-card:before{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.16),transparent 50%);pointer-events:none}
+.inside-ico{display:inline-grid;place-items:center;width:56px;height:56px;border-radius:18px;font-size:28px;background:rgba(255,255,255,.18);animation:vbFloat 3.6s ease-in-out infinite}
+.lf-cta{position:relative;overflow:hidden;margin:50px 14px 30px;padding:60px 22px;text-align:center;border-radius:36px;border:1px solid rgba(255,255,255,.2);background:radial-gradient(circle at 20% 0,rgba(255,143,194,.5),transparent 55%),radial-gradient(circle at 90% 100%,rgba(140,90,255,.5),transparent 55%),linear-gradient(160deg,#2a1248,#14091f);box-shadow:0 40px 90px -30px rgba(255,100,170,.6)}
+.lf-cta h2{margin:8px 0;font-size:clamp(30px,8vw,48px)}.lf-cta h2 em{background:linear-gradient(90deg,#ff8fc2,#ffd36e);-webkit-background-clip:text;background-clip:text;color:transparent;font-style:italic}.lf-cta p{opacity:.85}.lf-cta .big-btn{margin:14px 0 10px}.lf-cta small{display:flex;justify-content:center;align-items:center;gap:5px;opacity:.7}
+.lf-cta>*:not(.lf-cta-rain){position:relative;z-index:1}.lf-cta-rain{position:absolute;inset:0;pointer-events:none}.lf-cta-rain span{position:absolute;bottom:-30px;font-size:22px;opacity:0;animation:vbRise 9s linear infinite}
+@media(prefers-reduced-motion:reduce){.lf-reveal{opacity:1;transform:none;filter:none;transition:none}.lf-marquee>div,.lf-show-sky span,.lf-cta-rain span,.lf-stat span,.inside-ico,.lf-glow{animation:none!important}}
