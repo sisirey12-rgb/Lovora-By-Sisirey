@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 export type Season = { slug: string; label: string; emoji: string; pill: string; h1a: string; h1b: string; lede: string; meta: string; rot: string[] }
 /** Landing-page variants for festivals and days people search for. Served at /for/<slug>. */
 export const SEASONS: Season[] = [
@@ -11,3 +12,14 @@ export const SEASONS: Season[] = [
   { slug: 'new-year', label: 'New Year', emoji: '🎆', pill: 'Start the year with a surprise', h1a: 'Welcome the year', h1b: 'with fireworks.', lede: 'Fireworks, a fortune cookie and a wish upon a star. Say hello to the new year with someone you love.', meta: 'Send a New Year surprise with fireworks, a fortune cookie and a wish upon a star. Preview free.', rot: ['friends', 'family', 'partner', 'team'] },
 ]
 export const seasonFromPath = (path = typeof window !== 'undefined' ? window.location.pathname : '') => SEASONS.find(s => path === `/for/${s.slug}` || path === `/for/${s.slug}/`)
+
+/** The season the owner switched on from the account panel (cached for the session so the page does not flash). */
+export function useLiveSeason(): Season | undefined {
+  const [slug, setSlug] = useState(() => { try { return sessionStorage.getItem('lovora-season') || '' } catch { return '' } })
+  useEffect(() => {
+    let dead = false
+    fetch('/api/season').then(r => r.ok ? r.json() : null).then(j => { if (dead || !j) return; setSlug(j.season || ''); try { sessionStorage.setItem('lovora-season', j.season || '') } catch { /* private mode */ } }).catch(() => { /* offline: keep what we have */ })
+    return () => { dead = true }
+  }, [])
+  return SEASONS.find(s => s.slug === slug)
+}

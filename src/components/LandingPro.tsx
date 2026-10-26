@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { ArrowRight, Check, Play, Sparkles } from 'lucide-react'
 import { PRICING } from '../config'
 import { FinalCTA, Rotator } from './LandingFX'
-import { seasonFromPath } from '../lib/seasons'
+import { seasonFromPath, useLiveSeason } from '../lib/seasons'
 
 const SCENES = ['gift', 'balloons', 'cake', 'letter', 'finale'] as const
 const CAPTION: Record<(typeof SCENES)[number], string> = { gift: 'Tap the gift', balloons: 'Pop a balloon', cake: 'Make a wish', letter: 'Read the letter', finale: 'The grand finale' }
@@ -56,7 +56,8 @@ const FAQ: [string, string][] = [
 const Section = ({ id, kicker, title, children }: { id?: string; kicker: string; title: ReactNode; children: ReactNode }) => <section id={id} className="lp-sec"><p className="lp-kicker">{kicker}</p><h2>{title}</h2>{children}</section>
 
 export default function LandingPro({ onCreate, gallery }: { onCreate: () => void; gallery: ReactNode }) {
-  const season = seasonFromPath()
+  const live = useLiveSeason()
+  const season = seasonFromPath() ?? live
   useEffect(() => {
     const old = document.title, meta = document.querySelector<HTMLMetaElement>('meta[name="description"]'), oldMeta = meta?.content
     if (season) { document.title = `${season.label} surprise: make an interactive gift | Lovora Meow`; if (meta) meta.content = season.meta }

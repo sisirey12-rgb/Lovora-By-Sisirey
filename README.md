@@ -160,3 +160,6 @@ Sign in / sign up is built in and uses the Supabase project from `.env.local`. S
 - Nickname, inside jokes, "guess who sent it" (sender hidden until the finale), and a Story order panel (move or hide scenes).
 - Seasonal landing pages at `/for/rakhi`, `/for/diwali`, `/for/eid`, `/for/valentines-day`, `/for/mothers-day`, `/for/fathers-day`, `/for/friendship-day`, `/for/new-year` (edit `src/lib/seasons.ts`; update the domain in `public/sitemap.xml` and `public/robots.txt`).
 - Creator badges and an embed button snippet in the account panel (`public/embed.js`).
+
+## Switch the home page season (one click)
+Run `supabase/migrations/0006_site_settings.sql` once. Then sign in with an `OWNER_EMAILS` account > account panel > Settings > "Home page season" and tap a festival (or Normal). Visitors see it within about a minute, no redeploy. `ACTIVE_SEASON` in Vercel is only a fallback.
