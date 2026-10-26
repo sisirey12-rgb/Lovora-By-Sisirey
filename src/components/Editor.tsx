@@ -22,7 +22,7 @@ import BouquetArtwork from './BouquetArtwork'
 import VoiceRecorder from './VoiceRecorder'
 import VideoPicker from './VideoPicker'
 
-type Props = { initial?: Experience; onExit: () => void; onSaved: () => void; onPreview: (x: Experience) => void }
+type Props = { initial?: Experience; initialStep?: number; onExit: () => void; onSaved: () => void; onPreview: (x: Experience) => void }
 const localDate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
 const occBannerLine: Record<string,string> = { Birthday: 'A party in your pocket: cake, balloons, a wheel of wishes.', Anniversary: 'Your story under the stars, with typed vows.', 'Love letter': 'A sealed letter and sky lanterns, words first.', 'Special surprise': 'Mystery boxes and a scratch-card prize.' }
 const blank = (): Experience => ({ id: crypto.randomUUID(), recipient: '', sender: '', balloonCount: 5, targetDate: localDate(new Date(Date.now()+86400000)), openingInstruction: 'When the countdown ends, touch the heart. ♡', musicUrl: hostedMusic, musicName: 'LOVORA Original Soundtrack', memories: [], published: false, updatedAt: new Date().toISOString(), ...contentFor('Birthday', 'Friend', defaultScenes) })
@@ -30,9 +30,9 @@ const steps = ['', 'Who', 'Words', 'Look', 'Moments', 'Preview', 'Share']
 const LAST = 6
 /** A closed-by-default section, so each page only shows what matters and the rest is one tap away. */
 const Fold = ({ title, hint, children, open }: { title: string; hint?: string; children: React.ReactNode; open?: boolean }) => <details className="fold" open={open}><summary><strong>{title}</strong>{hint && <small>{hint}</small>}</summary><div className="fold-body">{children}</div></details>
-export default function Editor({ initial, onExit, onSaved }: Props) {
+export default function Editor({ initial, initialStep = 1, onExit, onSaved }: Props) {
   const [item, setItem] = useState<Experience>(()=>initial ? {...initial} : blank())
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(() => Math.min(LAST, Math.max(1, initialStep)))
   const [animKey, setAnimKey] = useState(0)
   const [error, setError] = useState('')
   const [preview, setPreview] = useState(false)

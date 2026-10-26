@@ -23,14 +23,14 @@ const dot = (sw: readonly string[]) => `linear-gradient(135deg,${sw[0]} 0 42%,${
 /** Lets visitors pick a look for the whole site. A small popover of colour dots; light skins also switch the page to light mode. */
 export default function ThemePicker({ setDark, inline }: { setDark: (d: boolean) => void; inline?: boolean }) {
   const [open, setOpen] = useState(false), [skin, setSkin] = useState(savedSkin), box = useRef<HTMLDivElement>(null)
-  useEffect(() => { applySkin(skin) }, [skin])
+  useEffect(() => { applySkin(skin); const selected = SKINS.find(x => x.id === skin) || SKINS[0]; setDark(!selected.light) }, [skin])
   useEffect(() => {
     if (!open) return
     const away = (e: PointerEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false) }, esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     document.addEventListener('pointerdown', away); document.addEventListener('keydown', esc)
     return () => { document.removeEventListener('pointerdown', away); document.removeEventListener('keydown', esc) }
   }, [open])
-  const pick = (id: string) => { const s = SKINS.find(x => x.id === id)!; setSkin(id); setDark(!s.light) }
+  const pick = (id: string) => { if (SKINS.some(x => x.id === id)) setSkin(id) }
   const current = SKINS.find(x => x.id === skin) || SKINS[0]
   const group = (title: string, light: boolean) => <div className="tp-group"><span>{title}</span><div className="tp-dots" role="radiogroup" aria-label={`${title} looks`}>{SKINS.filter(s => s.light === light).map(s => <button key={s.id} type="button" role="radio" aria-checked={skin === s.id} aria-label={s.name} title={s.name} className={skin === s.id ? 'on' : ''} onClick={() => pick(s.id)} style={{ background: dot(s.sw) }}>{skin === s.id && <Check size={13} strokeWidth={3} />}</button>)}</div></div>
   const body = <>{group('Dark', false)}{group('Light', true)}<p className="tp-name"><i style={{ background: dot(current.sw) }} />{current.name}</p></>
