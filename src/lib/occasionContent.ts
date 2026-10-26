@@ -111,20 +111,34 @@ const fontOcc: Partial<Record<Occasion, string>> = { 'Love letter': 'parisian', 
  * Every occasion and person gets the balloon pop; the coupon book is gone.
  */
 export const flowFor = (o: Occasion, r: Relation): Experience['scenes'] => {
+  // Every occasion and person gets its own story, with its own mix of scenes and animations.
   const s: Experience['scenes'] = ['heart', 'intro']
   if (o === 'Birthday') {
-    s.push('balloons', 'cake', 'candles', 'spinwheel', 'polaroids', 'moments')
+    s.push('balloons')
+    if (r === 'Brother' || r === 'Friend') s.push('parcel')
+    s.push('cake', 'candles', 'spinwheel')
+    if (r === 'Sister') s.push('shootingstars')
+    if (r === 'Mom' || r === 'Partner') s.push('petalfall')
+    if (r === 'Dad') s.push('bottle')
+    s.push('polaroids', 'moments')
     if (r === 'Friend' || r === 'Sister') s.push('wishjar')
   } else if (o === 'Anniversary') {
-    s.push('counter', 'starsky', 'polaroids', 'timeline', 'moments', 'vows', 'openwhen')
+    s.push('counter', 'starsky')
+    if (r === 'Partner') s.push('petalfall')
+    if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('shootingstars')
+    s.push('polaroids', 'timeline', 'moments', 'vows')
+    if (r === 'Mom' || r === 'Dad') s.push('bottle')
+    s.push('openwhen')
     if (r === 'Partner') s.push('cake', 'candles')
     if (r === 'Mom' || r === 'Dad') s.push('wishjar')
   } else if (o === 'Love letter') {
-    s.push('waxseal', 'lanterns', 'openwhen', 'memories')
+    s.push('waxseal', 'petalfall', 'lanterns', 'bottle', 'openwhen', 'memories')
   } else {
     s.push('mystery', 'balloons')
-    if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('cake', 'candles')
-    if (r === 'Partner') s.push('openwhen')
+    if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('parcel', 'cake', 'candles')
+    if (r === 'Partner') s.push('shootingstars', 'openwhen')
+    if (r === 'Mom') s.push('petalfall')
+    if (r === 'Dad') s.push('bottle')
     s.push('scratch', 'polaroids', 'moments')
     if (r === 'Friend') s.push('wishjar')
   }

@@ -1,4 +1,4 @@
-import { price, sb, userFromReq, isUuid, configured } from './_shared.js'
+import { price, sb, userFromReq, isUuid, configured, isOwner } from './_shared.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -18,8 +18,7 @@ export default async function handler(req, res) {
   if (!row) return res.status(404).json({ error: 'We could not find this surprise on your account yet. Tap Preview once so it is saved, then try again.' })
   if (row.paid) return res.status(200).json({ alreadyPaid: true })
   // Owner bypass: emails in OWNER_EMAILS (comma separated, set in Vercel) never pay. Checked on the server from the signed-in email.
-  const owners = String(process.env.OWNER_EMAILS || '').toLowerCase().split(/[,\s;]+/).filter(Boolean)
-  if (user.email && owners.includes(String(user.email).toLowerCase())) {
+  if (isOwner(user)) {
     let w = await sb(`experiences?id=eq.${id}`, { method: 'PATCH', body: { paid: true, paid_at: new Date().toISOString() } })
     if (!w.ok) w = await sb(`experiences?id=eq.${id}`, { method: 'PATCH', body: { paid: true } })
     if (!w.ok) { console.error('owner bypass failed', w.status, w.data); return res.status(500).json({ error: 'Could not unlock your surprise. Check the server logs.' }) }

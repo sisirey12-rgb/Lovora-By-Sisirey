@@ -4,11 +4,12 @@ import type { Experience, MemoryItem } from '../types'
 import { revealDefaults, revealPresets, themes, defaultScenes, cakeStyles, bouquetStyles, introStyles, introFor, sceneLabels, extraSceneDefs, hostedMusic, loveFonts, suggestions, textAnims, fontById, revealFor, toTitleCase } from '../data'
 import { addReminder } from '../lib/reminder'
 import PayWall from './PayWall'
+import CreatingOverlay from './CreatingOverlay'
 import { emojiFor } from '../lib/templates'
 import { saveGiftCard } from '../lib/giftCard'
 import AiHelper from './AiHelper'
 import { effectiveFlow, baseFlow } from '../lib/flow'
-import { isPaid } from '../services/payments'
+import { publishShare } from '../services/payments'
 import { useAuth } from '../services/auth'
 import { compressImage, readAsDataUrl } from '../lib/media'
 import { momentsTitle, contentFor, messageFor, occasionKey, suggestFor, noteLinesFor, occasionEmoji } from '../lib/occasionContent'
@@ -36,6 +37,7 @@ export default function Editor({ initial, onExit, onSaved }: Props) {
   const [error, setError] = useState('')
   const [preview, setPreview] = useState(false)
   const [creationStage, setCreationStage] = useState(-1)
+  const [creating, setCreating] = useState(false)
   const { user } = useAuth()
   const [autoState, setAutoState] = useState<'' | 'saving' | 'cloud' | 'local' | 'failed'>('')
   const lastSaved = useRef(JSON.stringify({ ...(initial || {}), updatedAt: '' }))
@@ -77,7 +79,7 @@ export default function Editor({ initial, onExit, onSaved }: Props) {
     patch(p)
   }
   const patch = (p: Partial<Experience>) => setItem(old=>({...old,...p,updatedAt:new Date().toISOString()}))
-  const startPreview = () => save(() => setPreview(true))   // the draft is saved first (with its animation), then the preview opens
+  const startPreview = () => { try { storage.saveDraft({ ...item, published: item.published, updatedAt: new Date().toISOString() }); onSaved() } catch { /* the preview still opens */ } setCreating(true) }   // the preview opens behind the "creating your surprise" animation (Save keeps its own draft animation)
   const today = new Date(); today.setHours(0,0,0,0)
   const maxDate = new Date(today); maxDate.setMonth(maxDate.getMonth()+2)
   const monthStart = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1)
@@ -104,8 +106,11 @@ export default function Editor({ initial, onExit, onSaved }: Props) {
   const publish = async (src: Experience = item) => {
     setError('')
     if (!src.recipient.trim()) { setError('Please add the recipient’s name first.'); setStep(1); return }
-    if (!isPaid(src)) { setPaywall(true); return }
-    try { setError('Uploading your photos and videos…'); const withMedia = await storage.uploadMedia(src, (d,t)=>setError(`Uploading media ${d} of ${t}…`)); setItem(withMedia); const published = await storage.publish(withMedia); storage.saveDraft(published); setShareUrl(`${window.location.origin}/s/${published.id}`); setError('Published successfully. Your shareable link is ready below.'); onSaved() } catch(e) { setError(e instanceof Error?e.message:'Could not publish this experience.') }
+    try {
+      const r = await publishShare(src, m => setError(m))
+      if (!r.ok) { setError(''); setPaywall(true); return }   // not an owner and not paid yet: the server asked for payment
+      setItem(r.item); storage.saveDraft(r.item); setShareUrl(`${window.location.origin}/s/${r.item.id}`); setError(r.owner ? 'Published successfully (owner account, free). Your shareable link is ready below.' : 'Published successfully. Your shareable link is ready below.'); onSaved()
+    } catch(e) { setError(e instanceof Error?e.message:'Could not publish this experience.') }
   }
   const wishId = shareUrl ? shareUrl.split('/s/').pop() : (item.published ? item.id : '')
   const setWish = (i: number, t: string) => { const w = [...(item.balloonWishes||[])]; while (w.length < (item.balloonCount||5)) w.push(''); w[i] = t; patch({ balloonWishes: w }) }
@@ -177,10 +182,11 @@ export default function Editor({ initial, onExit, onSaved }: Props) {
       {step===5 && <section><p className="eyebrow">STEP 5 OF {LAST} · THE BIG REVEAL</p><h1>Preview your surprise.</h1><p className="muted">Play the full interactive story. Your changes show up here straight away.</p><div className={`preview-card ${worldClass(occ, rel)}`} style={{background:themes.find(t=>t.name===item.theme)?.colors}}><span>✦ LOVORA ✦</span><h2>{item.recipient ? `For ${item.recipient}` : 'Your favourite human'}</h2><p>{item.title}</p><button onClick={startPreview}>Play full preview <ArrowRight size={16}/></button></div></section>}
       {step===6 && <section><p className="eyebrow">STEP 6 OF {LAST} · SEND A LITTLE MAGIC</p><h1>Make it shareable.</h1><p className="muted">Previewing is always free. Pay once to get a link you can send to anyone.</p>
         <div className="fold-stack"><Fold title="Add a lock question" hint="optional"><label>Question<input value={item.unlockQuestion||''} onChange={e=>patch({unlockQuestion:e.target.value})} placeholder="Where did we first meet?"/></label><label>Answer<input value={item.unlockAnswer||''} onChange={e=>patch({unlockAnswer:e.target.value})} placeholder="Only they would know"/></label><small>A light lock to keep casual openers out. It is not secure storage.</small></Fold></div>
-        <button className="primary-btn" onClick={()=>{if(!isPaid(item)&&!seen){if(!item.recipient.trim()){setError('Please add the recipient\'s name first.');setStep(1);return}setPreview(true);return}void publish()}}><Sparkles size={17}/> {isPaid(item)?'Publish experience':seen?'Get my share link':'Preview your surprise first'}</button>{shareUrl&&<div className="share-link-ready"><strong>Your surprise link is ready</strong><input readOnly value={shareUrl}/><div className="share-actions"><button type="button" className="secondary-btn" onClick={()=>void saveGiftCard(shareUrl,item.recipient,item.sender,item.occasion)}>Printable QR card</button><a className="secondary-btn" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${item.title||'A little surprise'} 💌 ${shareUrl}`)}`}>Send on WhatsApp</a><a className="secondary-btn" href={`mailto:?subject=${encodeURIComponent(item.title||'A little surprise for you')}&body=${encodeURIComponent(`Open your surprise: ${shareUrl}`)}`}>Send by email</a><label className="remind-send">Remind me to send on<input type="date" min={localDate(new Date())} onChange={e=>{if(e.target.value)addReminder(e.target.value,`💌 Send the surprise for ${item.recipient||'someone you love'}`,shareUrl)}}/></label></div><button className="secondary-btn" onClick={()=>{void navigator.clipboard.writeText(shareUrl).then(()=>setError('Link copied to clipboard.')).catch(()=>setError(shareUrl))}}><Check size={15}/> Copy shareable link</button></div>}<button className="secondary-btn" onClick={()=>{save();setError('Draft saved on this device. It is not publicly accessible.')}}><Save size={16}/> Save private local draft</button><div className="note-card">Published surprises are public to anyone with the link. Please do not upload private content.</div></section>}
+        <button className="primary-btn" onClick={()=>void publish()}><Sparkles size={17}/> {shareUrl?'Update my share link':'Get my share link'}</button>{!seen&&!shareUrl&&<button className="secondary-btn" onClick={()=>setPreview(true)}>Preview it first (free)</button>}{shareUrl&&<div className="share-link-ready"><strong>Your surprise link is ready</strong><input readOnly value={shareUrl}/><div className="share-actions"><button type="button" className="secondary-btn" onClick={()=>void saveGiftCard(shareUrl,item.recipient,item.sender,item.occasion)}>Printable QR card</button><a className="secondary-btn" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${item.title||'A little surprise'} 💌 ${shareUrl}`)}`}>Send on WhatsApp</a><a className="secondary-btn" href={`mailto:?subject=${encodeURIComponent(item.title||'A little surprise for you')}&body=${encodeURIComponent(`Open your surprise: ${shareUrl}`)}`}>Send by email</a><label className="remind-send">Remind me to send on<input type="date" min={localDate(new Date())} onChange={e=>{if(e.target.value)addReminder(e.target.value,`💌 Send the surprise for ${item.recipient||'someone you love'}`,shareUrl)}}/></label></div><button className="secondary-btn" onClick={()=>{void navigator.clipboard.writeText(shareUrl).then(()=>setError('Link copied to clipboard.')).catch(()=>setError(shareUrl))}}><Check size={15}/> Copy shareable link</button></div>}<button className="secondary-btn" onClick={()=>{save();setError('Draft saved on this device. It is not publicly accessible.')}}><Save size={16}/> Save private local draft</button><div className="note-card">Published surprises are public to anyone with the link. Please do not upload private content.</div></section>}
       {error && <p className={error.startsWith('Published')||error.startsWith('Draft saved')||error.startsWith('Link copied')?'success-text':'error-text'} role="status">{error}</p>}
       <div className="editor-nav"><button className="secondary-btn" onClick={()=>{setError('');if(step<=1)onExit();else setStep(s=>s-1)}}><ArrowLeft size={16}/> {step<=1?'Exit':'Back'}</button><span>{step} of {LAST}</span>{step<LAST&&<button className="primary-btn" onClick={next}>Continue <ArrowRight size={16}/></button>}</div><DevCredit/>
     </main>
+    {creating&&<CreatingOverlay occasion={item.occasion} relation={item.relation} name={item.recipient} onDone={()=>{setCreating(false);setPreview(true)}}/>}
     {preview&&<ScenePlayer experience={{...item, targetDate: undefined}} preview onClose={()=>setPreview(false)} onFinish={()=>{setPreview(false);setSeen(true);setStep(LAST);window.scrollTo({top:0})}} previewActions={{onEdit:()=>{setPreview(false);setStep(2);window.scrollTo({top:0})},onShare:()=>{setPreview(false);setSeen(true);setStep(LAST);window.scrollTo({top:0})}}}/>}
     {paywall&&<PayWall item={item} onClose={()=>setPaywall(false)} onPaid={e=>{setPaywall(false);setItem(e);void publish(e)}} onPreview={()=>{setPaywall(false);setPreview(true)}}/>}
     {autoState&&<div className={`autosave-pill ${autoState}`} role="status" aria-live="polite">{autoState==='saving'?'Saving…':autoState==='cloud'?'Saved to your account ✓':autoState==='local'?'Saved on this device ✓':'Not saved to your account yet'}</div>}

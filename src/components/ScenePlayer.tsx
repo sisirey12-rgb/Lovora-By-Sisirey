@@ -12,6 +12,7 @@ import IntroStage from './IntroStage'
 import { introFor } from '../data'
 import { WishStar, CalendarFlip, SnowGlobe, Postcard, Fortune, LyricReveal, InviteCard } from './scenes/MoreScenes'
 import { effectiveFlow } from '../lib/flow'
+import { PetalFall, ShootingStars, Parcel, Bottle } from './scenes/NewScenes'
 import { Candles, OpenWhen, Polaroids, SpinWheel, StarSky, Vows, Lanterns, WaxSeal, MysteryBoxes, ScratchCard } from './scenes/OccasionScenes'
 import OccasionDeco from './OccasionDeco'
 import BirthdayReveal from './BirthdayReveal'
@@ -45,6 +46,15 @@ type Props = { experience: Experience; onClose: () => void; preview?: boolean; o
 const known = Object.keys(sceneLabels) as SceneId[]
 const defaultWishes = suggestions.wishes.slice(0, 5)
 const hapticsAllowed = () => true   // haptics are always on
+/** Each scene arrives with its own motion, so the story never feels like the same slide repeating. */
+const TRANS = [
+  { initial: { opacity: 0, y: 26, scale: .98 }, exit: { opacity: 0, y: -16, scale: .99 } },
+  { initial: { opacity: 0, x: 60 }, exit: { opacity: 0, x: -60 } },
+  { initial: { opacity: 0, scale: .86 }, exit: { opacity: 0, scale: 1.08 } },
+  { initial: { opacity: 0, rotate: -3, y: 24 }, exit: { opacity: 0, rotate: 3, y: -18 } },
+  { initial: { opacity: 0, filter: 'blur(14px)', scale: 1.04 }, exit: { opacity: 0, filter: 'blur(10px)' } },
+  { initial: { opacity: 0, x: -60 }, exit: { opacity: 0, x: 60 } },
+]
 
 export default function ScenePlayer({ experience: rawExperience, onClose, preview = false, onFinish, previewActions }: Props) {
   const [senderOut, setSenderOut] = useState(false)   // "guess who sent it": the sender stays secret until the finale
@@ -174,7 +184,7 @@ export default function ScenePlayer({ experience: rawExperience, onClose, previe
     </div>
     <WorldAmbient occasion={occasionKey(experience.occasion)} relation={experience.relation} colors={palette.balloons} />
     <AnimatePresence mode="wait">
-      <motion.section key={scene} className={`scene scene-${scene}`} initial={{ opacity: 0, y: 18, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12, scale: .99 }} transition={{ duration: .28, ease: 'easeOut' }} aria-live="polite">
+      <motion.section key={scene} className={`scene scene-${scene}`} initial={TRANS[index % TRANS.length].initial} animate={{ opacity: 1, x: 0, y: 0, scale: 1, rotate: 0, filter: 'blur(0px)' }} exit={TRANS[index % TRANS.length].exit} transition={{ duration: .38, ease: 'easeOut' }} aria-live="polite">
         {scene === 'heart' && <div className="scene-content cupid-scene">
           {(!heartOpen || (revealPlaying && !heartCovered)) && (useBow ? <BowScene onHit={onHit} buzz={buzz} onGesture={unlockAudio} /> : <RelationOpener relation={experience.relation} occasion={occasionKey(experience.occasion)} onHit={onHit} buzz={buzz} onGesture={unlockAudio} colors={palette.balloons} />)}
           {heartOpen && !revealPlaying && <><p className="eyebrow">MADE JUST FOR YOU</p><h1>{toTitleCase(revealTitle)}</h1><h2>{experience.recipient || 'Beautiful human'} <span>{glyph}</span></h2></>}
@@ -221,6 +231,10 @@ export default function ScenePlayer({ experience: rawExperience, onClose, previe
         {scene === 'waxseal' && <WaxSeal exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'mystery' && <MysteryBoxes exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'scratch' && <ScratchCard exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'petalfall' && <PetalFall exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'shootingstars' && <ShootingStars exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'parcel' && <Parcel exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'bottle' && <Bottle exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'counter' && <CounterScene since={experience.togetherSince || ''} onDone={next} />}
         {scene === 'moments' && <MomentsScene title={momentsTitle(experience.relation)} items={experience.moments || []} onDone={next} buzz={buzz} />}
         {scene === 'wishjar' && <div className="scene-content"><p className="eyebrow">MADE WITH LOVE BY YOUR PEOPLE</p><h1>Your <em>wish jar.</em></h1><WishJar colors={palette.balloons} wishes={[...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes].length ? [...(experience.jarWishes || []).filter(w => w.text.trim()), ...liveWishes] : (experience.balloonWishes || []).filter(Boolean).map(text => ({ name: '', text }))} /></div>}

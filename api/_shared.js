@@ -35,3 +35,7 @@ export async function markPaid(orderId, paymentId) {
   const e = await sb(`experiences?id=eq.${expId}`, { method: 'PATCH', body: { paid: true, paid_at: now } })
   return e.ok
 }
+
+/** Owner accounts (comma, space or semicolon separated emails in OWNER_EMAILS). Never pay for share links; see the website settings. */
+export const ownerEmails = () => String(process.env.OWNER_EMAILS || process.env.VITE_OWNER_EMAILS || '').toLowerCase().split(/[,\s;]+/).filter(Boolean)
+export const isOwner = user => !!user?.email && ownerEmails().includes(String(user.email).trim().toLowerCase())

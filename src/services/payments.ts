@@ -56,3 +56,23 @@ export async function payForShare(item: Experience, onStatus?: (s: string) => vo
     rz.open()
   })
 }
+
+export type ShareResult = { ok: true; item: Experience; owner: boolean } | { ok: false; needsPayment: true }
+/**
+ * Creates the public share link. The surprise is saved privately first, then the SERVER decides:
+ * owner accounts get the link free, everyone else needs a paid surprise (otherwise `needsPayment` comes back and the pay window opens).
+ */
+export async function publishShare(item: Experience, onStatus?: (s: string) => void): Promise<ShareResult> {
+  onStatus?.('Saving your surprise…')
+  const withMedia = await storage.uploadMedia(item, (d, t) => onStatus?.(`Uploading media ${d} of ${t}…`))
+  try { await storage.saveCloud(withMedia, !!item.published) } catch { await storage.saveCloud(withMedia, false) }   // a live surprise stays live while it is edited
+  onStatus?.('Creating your link…')
+  const { data } = await supabase!.auth.getSession()
+  const token = data.session?.access_token
+  if (!token) throw new Error('Please sign in again.')
+  const r = await fetch('/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ experienceId: item.id }) })
+  const j = await r.json().catch(() => ({}))
+  if (r.status === 402 || j.needsPayment) return { ok: false, needsPayment: true }
+  if (!r.ok) throw new Error(j.error || 'Could not create the link. Please try again.')
+  return { ok: true, owner: !!j.owner, item: { ...withMedia, published: true, paid: true, updatedAt: new Date().toISOString() } }
+}

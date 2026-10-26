@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Check, Copy, Eye, ImagePlus, Palette, Pencil, Sparkles, X } from 'lucide-react'
-import SavingOverlay from './SavingOverlay'
+import CreatingOverlay from './CreatingOverlay'
 import PayWall from './PayWall'
-import { getPrice } from '../services/payments'
+import { getPrice, publishShare } from '../services/payments'
 import { PRICING } from '../config'
 import { fromTemplate, templates } from '../lib/templates'
 import { RELATIONS } from '../lib/occasionContent'
@@ -67,7 +67,7 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
     catch (x) { setErr(x instanceof Error ? x.message : 'Something went wrong.') } finally { setBusy('') }
   }
   const pick = async (f?: File) => { if (!f) return; if (!f.type.startsWith('image/')) { setErr('Choose a photo.'); return } try { setPhoto(await compressImage(f)); setErr('') } catch (x) { setErr(x instanceof Error ? x.message : 'That photo could not be read.') } }
-  const finish = async (paid: Experience) => { setPay(false); setBusy('Creating your link…'); try { const published = await storage.publish(paid); storage.saveDraft(published); onDone(); setDone(published) } catch (x) { setErr(x instanceof Error ? x.message : 'Could not create the link. Please try again.') } finally { setBusy('') } }
+  const finish = async (paid: Experience) => { setPay(false); setBusy('Creating your link…'); try { const r = await publishShare(paid, m => setBusy(m)); if (!r.ok) { setPay(true); return } storage.saveDraft(r.item); onDone(); setDone(r.item) } catch (x) { setErr(x instanceof Error ? x.message : 'Could not create the link. Please try again.') } finally { setBusy('') } }
   const url = done ? `${window.location.origin}/s/${done.id}` : ''
   return <div className="quick-backdrop" role="dialog" aria-modal="true" aria-label="Start a surprise" onClick={e => { if (e.target === e.currentTarget && !busy) onClose() }}>
     <div className="quick-sheet start-sheet" data-lenis-prevent>
@@ -103,7 +103,7 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
         <button type="button" className="customise-btn" onClick={() => onFull(last)}><span className="customise-ico"><Palette size={20} /></span><span><strong>Customise it</strong><small>Words, photos, look, scenes and balloon wishes</small></span><span className="customise-go">→</span></button>
         <div className="ss-price"><b>₹{amount}</b><s>₹{PRICING.regular}</s><span>launch price, one time</span></div>
         {err && <p className="error-text" role="alert">{err}</p>}
-        <button className="primary-btn big-btn" onClick={() => setPay(true)} disabled={!!busy}>{busy || 'Get the share link'}</button>
+        <button className="primary-btn big-btn" onClick={() => last && void finish(last)} disabled={!!busy}>{busy || 'Get the share link'}</button>
         <div className="quick-row"><button className="secondary-btn" onClick={() => onPreview(last)}><Eye size={15} /> Watch again</button></div>
         <button className="text-btn" onClick={() => { setPreviewed(false); setStep(2) }}><Pencil size={13} /> Change these details</button>
       </>}
@@ -118,7 +118,7 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
         </div>
       </>}
     </div>
-    {saving && <SavingOverlay onDone={() => { const e = saving; setSaving(null); setPreviewed(true); onPreview(e) }} />}
+    {saving && <CreatingOverlay occasion={saving.occasion} relation={saving.relation} name={saving.recipient} onDone={() => { const e = saving; setSaving(null); setPreviewed(true); onPreview(e) }} />}
     {pay && last && <PayWall item={last} onClose={() => setPay(false)} onPaid={e => void finish(e)} onPreview={() => { setPay(false); onPreview(last) }} />}
   </div>
 }

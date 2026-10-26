@@ -1,0 +1,50 @@
+/* New scenes: rose petals, shooting stars, parcel, message in a bottle */
+.ns-rosewrap{position:relative;width:100%;max-width:340px;height:260px;margin:4px auto;display:grid;place-items:center}
+.ns-rose{position:relative;width:150px;height:190px;border:0;background:none;padding:0;cursor:pointer;filter:drop-shadow(0 14px 24px rgba(0,0,0,.3));animation:nsSway 4s ease-in-out infinite;transform-origin:50% 100%}
+.ns-rosewrap.on .ns-rose{animation:nsShake .6s ease both}
+@keyframes nsSway{50%{transform:rotate(3deg)}}@keyframes nsShake{30%{transform:rotate(-6deg) scale(1.05)}60%{transform:rotate(5deg)}}
+.ns-pulse{position:absolute;left:50%;top:26%;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;border:2px solid rgba(255,255,255,.7);animation:nsRing 1.8s ease-out infinite}
+@keyframes nsRing{from{transform:scale(.6);opacity:.9}to{transform:scale(1.7);opacity:0}}
+.ns-petals{position:absolute;inset:-40px -30px;pointer-events:none;overflow:visible}
+.ns-petals i{position:absolute;top:20%;border-radius:80% 0 80% 0;opacity:0;animation:nsFall 4.2s ease-in both}
+@keyframes nsFall{0%{opacity:0;transform:translate(0,-10px) rotate(0)}10%{opacity:.95}100%{opacity:0;transform:translate(var(--sw),320px) rotate(520deg)}}
+.ns-line{animation:nsRise .6s ease both}@keyframes nsRise{from{opacity:0;transform:translateY(12px)}}
+
+.ns-sky{position:relative;width:100%;max-width:420px;height:230px;border-radius:26px;overflow:hidden;background:linear-gradient(180deg,#070a26,#241454 75%,#4a2a72);box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.ns-sky b{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;animation:nsTw 3s ease-in-out infinite}
+@keyframes nsTw{50%{opacity:.2;transform:scale(.6)}}
+.ns-shoot{position:absolute;left:-40px;width:74px;height:74px;border:0;background:none;padding:0;cursor:pointer;animation-name:nsStreak;animation-timing-function:linear;animation-iteration-count:infinite}
+.ns-shoot span{position:absolute;left:30px;top:30px;width:14px;height:14px;border-radius:50%;background:var(--c,#ffd36e);box-shadow:0 0 18px 6px var(--c,#ffd36e),-60px -18px 24px 2px rgba(255,255,255,.35);}
+@keyframes nsStreak{0%{transform:translate(0,0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translate(520px,70px);opacity:0}}
+.ns-count{margin:0;font-size:13px}
+
+.ns-pwrap{position:relative;width:220px;height:220px;display:grid;place-items:center;margin:4px auto}
+.ns-pkg{position:relative;width:170px;height:170px;border:0;border-radius:18px;background:repeating-linear-gradient(45deg,var(--w),var(--w) 14px,color-mix(in srgb,var(--w) 80%,#fff) 14px,color-mix(in srgb,var(--w) 80%,#fff) 28px);transform:scale(var(--s,1));box-shadow:0 16px 34px rgba(0,0,0,.3);cursor:pointer;animation:nsPop .5s cubic-bezier(.2,1.4,.4,1) both,nsWob 2.4s 0.6s ease-in-out infinite}
+.ns-pkg.tear{animation:nsTear .45s ease both}
+.ns-ribbon{position:absolute;left:50%;top:0;bottom:0;width:20px;margin-left:-10px;background:rgba(255,255,255,.82)}.ns-ribbon.h{left:0;right:0;top:50%;bottom:auto;height:20px;width:auto;margin:-10px 0 0}
+.ns-pkg b{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px;border-radius:50%;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.25)}
+@keyframes nsPop{from{transform:scale(calc(var(--s,1)*.4)) rotate(-8deg);opacity:0}}@keyframes nsWob{50%{transform:scale(var(--s,1)) rotate(2deg)}}
+@keyframes nsTear{to{transform:scale(1.25) rotate(8deg);opacity:0}}
+.ns-open{font-size:96px;animation:nsPop .6s ease both}
+.ns-scraps{position:absolute;inset:0;pointer-events:none}.ns-scraps u{position:absolute;left:50%;top:50%;width:16px;height:10px;border-radius:2px;animation:nsScrap .6s ease-out both}
+@keyframes nsScrap{to{transform:rotate(var(--a)) translateY(-110px) rotate(200deg);opacity:0}}
+.ns-notes{display:grid;gap:8px;width:100%;max-width:360px}
+.ns-notes p{margin:0;display:flex;gap:10px;align-items:flex-start;text-align:left;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--border);font-size:15px;line-height:1.4;animation:nsRise .5s ease both}
+.ns-notes p.latest{border-color:var(--accent)}.ns-notes span{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#2a1208;font-size:11px;font-weight:800}
+
+.ns-sea{position:relative;width:100%;max-width:420px;height:250px;border-radius:26px;overflow:hidden;background:linear-gradient(180deg,#ffd9a8,#ff9f7a 45%,#6fc6d8 46%,#1d6f95);box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.ns-sun{position:absolute;left:50%;top:20%;width:70px;height:70px;margin-left:-35px;border-radius:50%;background:#fff3c4;box-shadow:0 0 50px 18px rgba(255,236,170,.7)}
+.ns-bottle-btn{position:absolute;left:50%;bottom:54px;width:78px;height:146px;margin-left:-39px;border:0;background:none;padding:0;cursor:pointer;animation:nsBob 3.6s ease-in-out infinite;transform-origin:50% 90%}
+.ns-sea.open .ns-bottle-btn{animation-play-state:paused}
+@keyframes nsBob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-10px) rotate(8deg)}}
+.ns-cork{animation:nsCork .6s ease both}@keyframes nsCork{to{transform:translateY(-34px) rotate(40deg);opacity:0}}
+.ns-waves{position:absolute;left:0;right:0;bottom:0;width:200%;height:80px}
+.ns-waves .w1{fill:rgba(255,255,255,.28);animation:nsWave 7s linear infinite}.ns-waves .w2{fill:rgba(15,80,115,.7);animation:nsWave 5s linear infinite reverse}
+.ns-waves path{transform-box:fill-box}
+@keyframes nsWave{from{transform:translateX(0)}to{transform:translateX(-25%)}}
+.ns-scroll{max-width:380px;padding:18px 20px;border-radius:6px 18px 6px 18px;background:#fff3d6;color:#4a2a12;text-align:left;box-shadow:0 14px 30px rgba(0,0,0,.25);animation:nsUnroll .8s cubic-bezier(.2,1,.3,1) both;transform-origin:top}
+.ns-scroll small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-bottom:6px}.ns-scroll p{margin:0 0 8px;font-size:17px;line-height:1.5}.ns-scroll em{font-size:14px;opacity:.8}
+@keyframes nsUnroll{from{transform:scaleY(.1);opacity:0}}
+@media(prefers-reduced-motion:reduce){.ns-rose,.ns-bottle-btn,.ns-pkg,.ns-waves path{animation:none}}
+
+/* scene-to-scene transitions get their own flavour */

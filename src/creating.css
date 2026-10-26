@@ -1,0 +1,40 @@
+/* "Creating your surprise" preview animation */
+.cr-ov{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;background:radial-gradient(ellipse at 50% 30%,#3b1d12,#150d0a 70%);color:#fff4e8;animation:crIn .35s ease both;overflow:hidden}
+@keyframes crIn{from{opacity:0}to{opacity:1}}
+.cr-glow{position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(255,122,89,.35),rgba(255,200,87,.12) 45%,transparent 70%);animation:crPulse 2.4s ease-in-out infinite}
+@keyframes crPulse{50%{transform:scale(1.15);opacity:.75}}
+.cr-stage{position:relative;width:220px;height:200px;display:grid;place-items:center;margin-bottom:6px}
+.cr-gift{position:relative;width:110px;height:110px}
+.cr-box,.cr-lid{position:absolute;left:50%;display:block;background:linear-gradient(135deg,#ff7a59,#e0452c);border-radius:10px}
+.cr-box{bottom:0;width:100px;height:68px;margin-left:-50px;animation:crRise .7s cubic-bezier(.2,1.3,.4,1) both}
+.cr-lid{bottom:62px;width:112px;height:26px;margin-left:-56px;background:linear-gradient(135deg,#ff9a6b,#ee5a3b);animation:crDrop .8s .55s cubic-bezier(.2,1.4,.4,1) both;transform-origin:left bottom}
+.cr-box b,.cr-lid b{position:absolute;left:50%;top:0;bottom:0;width:16px;margin-left:-8px;background:#ffc857}
+.cr-lid b::before,.cr-lid b::after{content:"";position:absolute;top:-17px;width:26px;height:20px;border:5px solid #ffc857;border-radius:50% 50% 0 50%}
+.cr-lid b::before{left:-22px;transform:rotate(-10deg)}.cr-lid b::after{right:-22px;transform:scaleX(-1) rotate(-10deg)}
+@keyframes crRise{from{transform:translateY(40px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+@keyframes crDrop{from{transform:translateY(-60px) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
+.cr-gift.open .cr-lid{animation:crPop .7s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes crPop{to{transform:translate(-34px,-70px) rotate(-28deg);opacity:.0}}
+.cr-gift.open{animation:crJump .5s ease both}
+@keyframes crJump{40%{transform:translateY(-12px) scale(1.06)}}
+.cr-burst{position:absolute;left:50%;top:10px}
+.cr-burst u{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffc857;animation:crShoot .9s var(--d) ease-out both;transform:rotate(var(--a))}
+.cr-burst u:nth-child(3n){background:#ff7a59}.cr-burst u:nth-child(3n+1){background:#7be0c8}
+@keyframes crShoot{from{transform:rotate(var(--a)) translateY(0);opacity:1}to{transform:rotate(var(--a)) translateY(-96px);opacity:0}}
+.cr-orbit{position:absolute;inset:0;pointer-events:none}
+.cr-orbit span{position:absolute;left:50%;top:50%;font-size:26px;opacity:.18;filter:grayscale(1);transform:rotate(calc(var(--k)*72deg)) translateY(-92px) rotate(calc(var(--k)*-72deg));transition:opacity .4s,filter .4s,transform .5s}
+.cr-orbit span.on{opacity:1;filter:none;animation:crBob 2.2s calc(var(--k)*.2s) ease-in-out infinite}
+@keyframes crBob{50%{margin-top:-6px}}
+.cr-eyebrow{position:relative;margin:6px 0 0;font-size:11px;letter-spacing:.22em;font-weight:800;color:#ffc857}
+.cr-title{position:relative;margin:0;font-size:clamp(26px,6vw,40px);line-height:1.1;letter-spacing:-.03em;animation:crTitle .5s ease both}
+@keyframes crTitle{from{transform:translateY(10px);opacity:0}}
+.cr-now{position:relative;margin:0;font-size:17px;font-weight:700;color:#ffd9c7;min-height:24px}
+.cr-bar{position:relative;width:min(340px,80vw);height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:6px}
+.cr-bar span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ff7a59,#ffc857);transition:width .5s ease}
+.cr-list{position:relative;list-style:none;margin:10px 0 0;padding:0;display:grid;gap:7px;font-size:13px;color:rgba(255,244,232,.5);text-align:left}
+.cr-list li{display:flex;align-items:center;gap:10px;transition:color .3s}
+.cr-list li span{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;border:1px solid rgba(255,255,255,.22)}
+.cr-list li.now{color:#fff4e8}.cr-list li.now span{border-color:#ffc857;color:#ffc857;animation:crBlink 1s infinite}
+.cr-list li.done{color:#ffd9c7}.cr-list li.done span{background:#ffc857;border-color:#ffc857;color:#2a1208}
+@keyframes crBlink{50%{box-shadow:0 0 0 5px rgba(255,200,87,.2)}}
+@media(prefers-reduced-motion:reduce){.cr-glow,.cr-orbit span.on{animation:none}}

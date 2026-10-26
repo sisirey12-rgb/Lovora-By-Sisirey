@@ -1,0 +1,31 @@
+/* New palette: Mango Cream. Warm paper, tomato and mango, with a teal spark. Applies unless the visitor picked their own skin. */
+:root,:root[data-theme="dark"]{--bg:#15100d;--panel:#211a15;--panel2:#2e251e;--text:#fff3e6;--muted:#c9b5a2;--border:rgba(255,243,230,.13);--line:rgba(255,243,230,.12);--accent:#ff7a59;--accent2:#ffc857;--teal:#2dd4bf;--bg-2:#1d1712;--shadow:0 24px 80px rgba(0,0,0,.35)}
+:root[data-theme="light"]{--bg:#fff8ee;--panel:#ffffff;--panel2:#ffefd9;--text:#2b1a12;--muted:#7b6454;--border:rgba(43,26,18,.13);--line:rgba(43,26,18,.12);--accent:#ff5a3c;--accent2:#ffb703;--teal:#0fb5a4;--bg-2:#fffdf8;--shadow:0 24px 70px rgba(120,60,20,.14)}
+html:not([data-skin]) .app-shell,html[data-skin="classic"] .app-shell{background:var(--bg)}
+.site-nav{background:color-mix(in srgb,var(--bg) 86%,transparent)}
+.site-nav .primary-btn,.nl .primary-btn,.editor-head .primary-btn,.editor-main .primary-btn,.quick-sheet .primary-btn,.dashboard-page .primary-btn,.site-footer .primary-btn,.paywall .primary-btn,.acc2 .primary-btn,.unlock-card .primary-btn,.preview-end .primary-btn{background:linear-gradient(110deg,var(--accent),var(--accent2));color:#2a1208;box-shadow:0 8px 24px color-mix(in srgb,var(--accent) 35%,transparent)}
+.site-nav .primary-btn:hover,.editor-main .primary-btn:hover,.quick-sheet .primary-btn:hover{box-shadow:0 12px 30px color-mix(in srgb,var(--accent) 45%,transparent)}
+.editor-main .eyebrow,.editor-head .eyebrow,.quick-sheet .eyebrow,.eyebrow{color:var(--accent)}
+.step-track button.current span{background:linear-gradient(120deg,var(--accent),var(--accent2));color:#2a1208}
+.step-track button.current small,.step-track button.done{color:var(--accent)}
+.brand strong i,.section-kicker,.lp-kicker{color:var(--accent)}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:var(--accent)}
+::selection{background:var(--accent2);color:#2a1208}
+.player{overflow-x:hidden}
+/* payment window: big, impossible to miss */
+.paywall{gap:12px;text-align:center}
+.pw-banner{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px;padding:14px 16px;border-radius:18px;background:linear-gradient(110deg,var(--accent),var(--accent2));color:#2a1208;font-size:clamp(18px,5vw,24px)}
+.pw-banner b{letter-spacing:.06em;font-weight:900}.pw-banner span{font-weight:700;font-size:.8em}
+.pw-title{margin:4px 0 0;font-size:clamp(26px,7vw,36px);line-height:1.1;letter-spacing:-.03em}
+.pw-big{margin:0;font-size:clamp(16px,4.4vw,19px);line-height:1.5;font-weight:600;color:var(--text)}
+.pw-price{display:flex;align-items:baseline;justify-content:center;gap:14px}.pw-price b{font-size:clamp(56px,16vw,84px);line-height:1;letter-spacing:-.05em;color:var(--accent)}.pw-price s{font-size:28px;color:var(--muted)}
+.pw-sub{margin:0;font-size:16px;font-weight:700;color:var(--muted)}
+.paywall .paywall-list{text-align:left;display:grid;gap:8px;font-size:16px;font-weight:600;padding:0;list-style:none;margin:6px 0}.paywall-list li{display:flex;gap:10px;align-items:center}.paywall-list svg{color:var(--teal);flex:none}
+.pw-pay{padding:18px 22px;font-size:19px!important;font-weight:900}
+.pw-error{margin:0;padding:14px 16px;border-radius:14px;background:rgba(220,50,50,.14);border:2px solid rgba(220,50,50,.45);color:#ff8f8f;font-size:17px;font-weight:700;line-height:1.4}
+:root[data-theme="light"] .pw-error{color:#b42318}
+.pw-secure{font-size:13px}
+.pw-done{padding:36px 22px;align-items:center;justify-items:center}.pw-tick{color:var(--teal);animation:pwPop .6s cubic-bezier(.2,1.5,.4,1) both}.pw-huge{margin:0;font-size:clamp(34px,10vw,52px);letter-spacing:-.04em;line-height:1.05}
+@keyframes pwPop{from{transform:scale(.3);opacity:0}}
+/* account: owner crown */
+.acc-plan.owner{border-color:var(--accent2)}

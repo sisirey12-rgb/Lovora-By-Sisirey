@@ -1,3 +1,19 @@
+# Round 4
+
+**Share link and owner fix**
+- New `api/publish.js`: the SERVER creates the share link. Owner accounts (emails in `OWNER_EMAILS`) get it free; everyone else needs a paid surprise (otherwise the pay window opens). The pay window no longer opens for owners.
+- `api/account.js` now reports the owner email and whether `OWNER_EMAILS` / `SUPABASE_SERVICE_ROLE_KEY` are set, so the account panel can say why an account is not recognised.
+- Account panel: **Website settings** (embed code, home-page season, site theme, owner email) are visible to the owner only.
+- Payment window rewritten with big text: "PAYMENT NEEDED", a huge price, a big error box and a big "Payment received" screen.
+
+**AI writer** now uses Groq (`GROQ_API_KEY`, optional `GROQ_MODEL`). Remove `ANTHROPIC_API_KEY`.
+
+**Landing page and palette** redesigned (`LandingNew.tsx`, `landing2.css`, new palette in `fresh.css`: warm cream, tomato, mango, teal; light is the default).
+
+**Preview vs draft animation**: Preview / "Create and preview" now plays a new "Creating your surprise" animation (`CreatingOverlay.tsx`). Save still plays the original "Saving your draft" animation.
+
+**New scenes** (`scenes/NewScenes.tsx`): Rose petals, Shooting stars, Pass the parcel, Message in a bottle. Every occasion and person has a different flow (`flowFor` in `lib/occasionContent.ts`), and every scene now arrives with its own transition.
+
 # LOVORA MEOW upgrade — what changed
 
 **Status: NOT built, NOT run, NOT tested.** Only a TypeScript *syntax* scan was done (no errors). Run `npm install && npm run build` first and fix anything it reports.

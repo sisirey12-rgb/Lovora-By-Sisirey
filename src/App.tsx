@@ -11,14 +11,14 @@ const AuthModal = lazy(() => import('./components/AuthModal'))
 import DevCredit from './components/DevCredit'
 import StartSheet from './components/StartSheet'
 import PayWall from './components/PayWall'
-import { isPaid } from './services/payments'
+import { publishShare } from './services/payments'
 const WishPage = lazy(() => import('./components/WishPage'))
 const StatsModal = lazy(() => import('./components/StatsModal'))
 import TemplateGallery from './components/TemplateGallery'
 import SmoothScroll from './components/SmoothScroll'
 import ThemePicker from './components/ThemePicker'
 import { LandingChrome } from './components/LandingFX'
-import LandingPro from './components/LandingPro'
+import LandingNew from './components/LandingNew'
 import { type Template } from './lib/templates'
 import { themes } from './data'
 const AccountModal=lazy(()=>import('./components/AccountModal'))
@@ -31,7 +31,7 @@ type Page = 'home' | 'dashboard' | 'editor'
 declare global { interface Window { __lovoraAfterAuth?: () => void } }
 export default function App() {
   const [page,setPage] = useState<Page>('home')
-  const [dark,setDark] = useState(()=>localStorage.getItem('lovora-theme')!=='light')
+  const [dark,setDark] = useState(()=>localStorage.getItem('lovora-theme')==='dark')
   const [menu,setMenu] = useState(false)
   const [drafts,setDrafts] = useState<Experience[]>([])
   const [editing,setEditing] = useState<Experience|undefined>()
@@ -66,7 +66,7 @@ export default function App() {
   const openFull=(e:Experience)=>{setStart(null);setEditing(e);setPage('editor');window.history.pushState({},'', '/create')}
   const exitEditor=()=>{setPage('home');setEditing(undefined);window.history.pushState({},'','/')}
   const onSaved=()=>{refresh();setToast('Saved on this device');window.setTimeout(()=>setToast(''),2200)}
-  const copyLink=(x:Experience)=>gate(async()=>{if(!isPaid(x)){setPayExp(x);return}setToast('Preparing your share link…');try{const published=await storage.publish(x);storage.saveDraft(published);refresh();const url=`${window.location.origin}/s/${published.id}`;try{await navigator.clipboard.writeText(url);setToast('Share link copied ♡ anyone can open it')}catch{setToast(url)}}catch(err){setToast(err instanceof Error?err.message:'Could not create the link.')}window.setTimeout(()=>setToast(''),4000)})
+  const copyLink=(x:Experience)=>gate(async()=>{setToast('Creating your share link…');try{const r=await publishShare(x,m=>setToast(m));if(!r.ok){setToast('');setPayExp(x);return}storage.saveDraft(r.item);refresh();const url=`${window.location.origin}/s/${r.item.id}`;try{await navigator.clipboard.writeText(url);setToast(r.owner?'Share link copied ♡ (owner: free)':'Share link copied ♡ anyone can open it')}catch{setToast(url)}}catch(err){setToast(err instanceof Error?err.message:'Could not create the link.')}window.setTimeout(()=>setToast(''),4500)})
   const remove=(x:Experience)=>{if(confirm(`Delete “${x.title}” from this device?`)){storage.removeLocal(x.id);refresh()}}
   const duplicate=(x:Experience)=>{storage.duplicate(x);refresh();setToast('Draft duplicated');window.setTimeout(()=>setToast(''),2200)}
   if(wishId) return <Suspense fallback={fb}><WishPage id={decodeURIComponent(wishId)}/></Suspense>
@@ -81,7 +81,7 @@ export default function App() {
     <header className="site-nav"><Brand/><nav className={menu?'nav-open':''}><button onClick={()=>{setPage('home');setMenu(false);window.history.pushState({},'','/')}}>Discover</button><button onClick={()=>{setPage('dashboard');setMenu(false);refresh();window.history.pushState({},'','/dashboard')}}>My creations</button><a href="#how-it-works" onClick={()=>setMenu(false)}>How it works</a></nav><div className="nav-actions"><button className="theme-toggle" onClick={()=>setDark(v=>!v)} aria-label="Toggle theme">{dark?<Sun size={17}/>:<Moon size={17}/>}</button><ThemePicker setDark={setDark}/>{user?<button className="ghost-btn nav-user" onClick={()=>setAccountOpen(true)} title={`Account: ${user.email}`}><UserRound size={15}/><span>{user.email?.split('@')[0]}</span></button>:!authLoading&&<button className="ghost-btn nav-user" onClick={()=>{setPendingCreate(false);setAuthOpen(true)}}><UserRound size={15}/> Sign in</button>}<button className="primary-btn nav-create" onClick={newExperience}><Plus size={16}/> Create yours</button><button className="menu-toggle" onClick={()=>setMenu(v=>!v)} aria-label="Toggle menu">{menu?<X/>:<Menu/>}</button></div></header>
     {remoteMessage && <div className="route-message"><span>{remoteMessage}</span><button onClick={()=>setRemoteMessage('')} aria-label="Dismiss"><X size={15}/></button></div>}
     {page!=='editor'&&installBtn}{page==='editor'?<Suspense fallback={fb}><Editor initial={editing} onExit={exitEditor} onSaved={onSaved} onPreview={x=>{setEditing(x);setPlayer({...x,targetDate:undefined});setPlayerIsPreview(true)}}/></Suspense>:page==='dashboard'?<main className="dashboard-page"><div className="section-kicker"><span/> YOUR LITTLE UNIVERSES</div><div className="dashboard-heading"><div><h1>My creations<span>.</span></h1><p>Every little world you’ve made, all in one place.</p></div><button className="primary-btn" onClick={newExperience}><Plus size={17}/> New surprise</button></div>{drafts.length===0?<div className="empty-dashboard"><div className="empty-icon"><Cat size={38}/></div><h2>Your story starts here.</h2><p>You haven’t made a surprise yet. Let’s change that.</p><button className="primary-btn" onClick={newExperience}>Create your first surprise <ArrowRight size={16}/></button></div>:<div className="draft-grid">{drafts.map(x=><article className="draft-card" key={x.id}><div className="draft-art" style={{background:themes.find(t=>t.name===x.theme)?.colors}}><span>✦ {x.occasion}</span><Heart fill="currentColor" size={36}/></div><div className="draft-info"><div className="draft-status"><span className="status-dot"/>{x.published?'Published':'Private draft'}</div><h3>{x.title}</h3><p>For {x.recipient||'someone special'}</p><small><Clock3 size={13}/> Updated {new Date(x.updatedAt).toLocaleDateString()}</small><div className="draft-actions"><button onClick={()=>editExperience(x)}>Edit</button><button onClick={()=>{setPlayer({...x,targetDate:undefined});setPlayerIsPreview(true)}}><CirclePlay size={14}/> Preview</button>{x.published&&<button onClick={()=>setStatsFor(x)} title="Who opened it"><BarChart3 size={14}/> Stats</button>}<button onClick={()=>copyLink(x)} title="Create a share link"><Link2 size={14}/> Share link</button><button onClick={()=>duplicate(x)} title="Duplicate"><Copy size={14}/></button><button onClick={()=>remove(x)} title="Delete">Delete</button></div></div></article>)}</div>}<TemplateGallery compact onPick={startTemplate}/>{statsFor&&<Suspense fallback={null}><StatsModal exp={statsFor} onClose={()=>setStatsFor(undefined)}/></Suspense>}</main>:<><main>
-      <SmoothScroll/><LandingChrome/><LandingPro onStart={startOccasion}/>
+      <SmoothScroll/><LandingChrome/><LandingNew onStart={startOccasion}/>
     </main><footer className="site-footer"><Brand small/><p>Made for the people who make life feel like something.</p><span>© {new Date().getFullYear()} LOVORA MEOW <i>·</i> LITTLE WORLDS, BIG FEELINGS</span><DevCredit/></footer></>}
     {accountOpen&&user&&<Suspense fallback={null}><AccountModal items={drafts} setDark={setDark} onClose={()=>setAccountOpen(false)} onSignedOut={()=>{setAccountOpen(false);setToast('Signed out')}}/></Suspense>}
     {authOpen&&<Suspense fallback={null}><AuthModal recovery={recovering} reason={pendingCreate?'Sign in with your email to start creating — your surprises are saved to your account.':undefined} onClose={()=>{setAuthOpen(false);setPendingCreate(false);window.__lovoraAfterAuth=undefined;if(recovering)dismissRecovery()}} onDone={()=>setToast('Signed in ♡')}/></Suspense>}

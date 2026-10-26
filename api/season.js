@@ -1,4 +1,4 @@
-import { userFromReq, sb } from './_shared.js'
+import { userFromReq, sb, isOwner } from './_shared.js'
 
 const SLUGS = ['rakhi', 'diwali', 'eid', 'valentines-day', 'mothers-day', 'fathers-day', 'friendship-day', 'new-year']
 
@@ -12,8 +12,7 @@ export default async function handler(req, res) {
   }
   if (req.method !== 'POST') return res.status(405).json({ error: 'GET or POST only' })
   const user = await userFromReq(req)
-  const owners = String(process.env.OWNER_EMAILS || '').toLowerCase().split(/[,\s;]+/).filter(Boolean)
-  if (!user?.email || !owners.includes(String(user.email).toLowerCase())) return res.status(403).json({ error: 'Only the owner can change the landing season.' })
+  if (!isOwner(user)) return res.status(403).json({ error: 'Only the owner can change the landing season.' })
   const season = String(req.body?.season || '')
   if (season && !SLUGS.includes(season)) return res.status(400).json({ error: 'Unknown season.' })
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY is missing in Vercel (Settings → Environment Variables). Add it, then redeploy.' })
