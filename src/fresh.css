@@ -29,3 +29,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 @keyframes pwPop{from{transform:scale(.3);opacity:0}}
 /* account: owner crown */
 .acc-plan.owner{border-color:var(--accent2)}
+
+/* ===== AI sheet: fixed header and footer, nothing cropped, calm spacing ===== */
+.quick-sheet.ai-sheet2{display:flex;flex-direction:column;padding:0;gap:0;max-height:min(92dvh,92svh);overflow:hidden;width:min(520px,100%)}
+.ai2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 20px 10px;border-bottom:1px solid var(--border)}
+.ai2-head h2{margin:4px 0 0;font-size:22px;letter-spacing:-.02em}
+.ai2-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px 20px 8px;display:grid;gap:16px;align-content:start}
+.ai2-steps{list-style:none;margin:0;padding:12px 14px;display:grid;gap:8px;border-radius:16px;background:var(--panel2);border:1px solid var(--border);font-size:14px;font-weight:700}
+.ai2-steps li{display:flex;align-items:center;gap:10px}.ai2-steps b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#2a1208;font-size:12px;flex:none}
+.ai2-field{display:grid;gap:7px}.ai2-field>span{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px}
+.ai2-field textarea,.ai2-field input{width:100%;box-sizing:border-box;padding:12px 14px;font-size:16px;line-height:1.45;border-radius:14px;border:1px solid var(--border);background:var(--panel2);color:var(--text);resize:vertical;min-height:0}
+.ai2-field small{color:var(--muted);font-size:12px;line-height:1.4}
+.ai2-langs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}.ai2-langs::-webkit-scrollbar{display:none}
+.ai2-langs button{flex:none;padding:9px 14px;border-radius:99px;border:1.5px solid var(--border);background:var(--panel2);color:var(--text);font-weight:800;font-size:14px}
+.ai2-langs button.on{background:var(--accent);border-color:var(--accent);color:#2a1208}
+.ai2-more{border:1px solid var(--border);border-radius:14px;padding:12px 14px;display:grid;gap:12px}.ai2-more summary{cursor:pointer;font-weight:800;font-size:14px}.ai2-more[open] summary{margin-bottom:12px}
+.ai2-foot{padding:12px 20px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--bg-2,var(--panel));display:grid;gap:10px}
+.ai2-foot .primary-btn{width:100%;padding:15px;font-size:16px}

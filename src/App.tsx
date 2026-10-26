@@ -63,7 +63,7 @@ export default function App() {
   const [start,setStart]=useState<{occasion:Occasion;relation?:Relation}|null>(null)
   const [payExp,setPayExp]=useState<Experience|null>(null)
   const startTemplate=(t:Template)=>gate(()=>setStart({occasion:t.occasion,relation:t.relation}))
-  const startOccasion=(o:Occasion)=>gate(()=>setStart({occasion:o}))
+  const startOccasion=(o:Occasion,r?:Relation)=>gate(()=>setStart({occasion:o,relation:r}))
   const openFull=(e:Experience)=>{setStart(null);setEditing(e);setEditorStartStep(1);setPage('editor');window.history.pushState({},'', '/create')}
   const exitEditor=()=>{setPage('home');setEditing(undefined);window.history.pushState({},'','/')}
   const onSaved=()=>{refresh();setToast('Saved on this device');window.setTimeout(()=>setToast(''),2200)}

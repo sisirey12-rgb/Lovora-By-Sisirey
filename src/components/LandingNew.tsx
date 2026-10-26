@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { ArrowRight, CalendarClock, Check, Gift, Images, Link2, Play, QrCode, ShieldCheck, Smartphone, Sparkles, Volume2, Wand2, Zap } from 'lucide-react'
 import { PRICING } from '../config'
-import OccasionCards from './OccasionCards'
 import { Rotator } from './LandingFX'
 import { seasonFromPath, useLiveSeason } from '../lib/seasons'
 import type { Occasion, Relation, SceneId } from '../types'
@@ -68,20 +67,31 @@ const LANG_SAMPLES: { l: string; t: string }[] = [
   { l: 'Nepali + English', t: 'Dai, you are the best thing that ever happened to this family, sachchai!' },
 ]
 
-/** Pick an occasion and a person and watch their own story build up, scene by scene. */
-function StoryBuilder({ onStart }: { onStart: (o: Occasion) => void }) {
+const OCC_INFO: Record<Occasion, { e: string; d: string; c: string }> = {
+  Birthday: { e: '🎂', d: 'A party in their pocket', c: '#ffb703' }, Anniversary: { e: '💞', d: 'Your story, under the stars', c: '#ff5a6e' },
+  'Love letter': { e: '💌', d: 'Words first, always', c: '#7b5cff' }, 'Special surprise': { e: '✨', d: 'Just because they exist', c: '#0fb5a4' },
+}
+const PERSON_E: Record<Relation, string> = { Partner: '💞', Mom: '🌸', Dad: '🧢', Brother: '🎮', Sister: '🎀', Friend: '🤝' }
+
+/** The ONE place to start: pick the occasion, pick the person, see their story, begin. */
+function Creator({ onStart }: { onStart: (o: Occasion, r?: Relation) => void }) {
   const [occ, setOcc] = useState<Occasion>('Birthday'), [rel, setRel] = useState<Relation>('Friend')
   const people = occ === 'Love letter' ? (['Partner'] as Relation[]) : PEOPLE
-  const r = occ === 'Love letter' ? 'Partner' : rel
+  const r: Relation = occ === 'Love letter' ? 'Partner' : rel
   const flow = flowFor(occ, r).filter(x => x !== 'heart')
-  return <section className="nl-sec nl-story">
-    <header className="nl-head nl-rv"><p>YOUR STORY, YOUR WAY</p><h2>Every person gets a <em>different</em> surprise.</h2><span>Choose who it is for and see the scenes we line up for them. You can reorder, hide and rewrite every one.</span></header>
-    <div className="nl-pickers nl-rv">
-      <div className="nl-chips" role="radiogroup" aria-label="Occasion">{OCCS.map(x => <button key={x.o} type="button" role="radio" aria-checked={occ === x.o} className={occ === x.o ? 'on' : ''} onClick={() => setOcc(x.o)}>{x.e} {x.o}</button>)}</div>
-      <div className="nl-chips alt" role="radiogroup" aria-label="Person">{people.map(p => <button key={p} type="button" role="radio" aria-checked={r === p} className={r === p ? 'on' : ''} onClick={() => setRel(p)}>{p}</button>)}</div>
+  const info = OCC_INFO[occ]
+  return <section id="templates" className="nl-sec nl-make" style={{ ['--oc' as string]: info.c } as CSSProperties}>
+    <header className="nl-head nl-rv"><p>START HERE</p><h2>Make one for <em>someone you love.</em></h2><span>Two taps and we line up the right scenes for them.</span></header>
+    <div className="nl-card nl-rv">
+      <div className="nl-step"><b>1</b><span>What are we celebrating?</span></div>
+      <div className="nl-occs" role="radiogroup" aria-label="Occasion">{(Object.keys(OCC_INFO) as Occasion[]).map(o => <button key={o} type="button" role="radio" aria-checked={occ === o} className={occ === o ? 'on' : ''} style={{ ['--c' as string]: OCC_INFO[o].c } as CSSProperties} onClick={() => setOcc(o)}><span className="e">{OCC_INFO[o].e}</span><b>{o}</b><small>{OCC_INFO[o].d}</small></button>)}</div>
+      <div className="nl-step"><b>2</b><span>Who is it for?</span></div>
+      <div className="nl-people" role="radiogroup" aria-label="Person">{people.map(p => <button key={p} type="button" role="radio" aria-checked={r === p} className={r === p ? 'on' : ''} onClick={() => setRel(p)}><span>{PERSON_E[p]}</span>{p}</button>)}</div>
+      <div className="nl-step"><b>3</b><span>Their story, {flow.length} scenes</span></div>
+      <ol className="nl-path" key={`${occ}-${r}`}>{flow.map((id, i) => <li key={id + i} style={{ ['--i' as string]: i } as CSSProperties}><span>{SCENE_EMOJI[id] || '✦'}</span><b>{sceneLabels[id]}</b></li>)}</ol>
+      <button className="nl-btn nl-go" onClick={() => onStart(occ, r)}>Start the {occ.toLowerCase()} for your {r.toLowerCase()} <ArrowRight size={18} /></button>
+      <small className="nl-fine">Free to preview. You can change every scene, word and photo.</small>
     </div>
-    <ol className="nl-path nl-rv" key={`${occ}-${r}`}>{flow.map((id, i) => <li key={id + i} style={{ ['--i' as string]: i } as CSSProperties}><span>{SCENE_EMOJI[id] || '✦'}</span><b>{sceneLabels[id]}</b></li>)}</ol>
-    <div className="nl-story-cta nl-rv"><button className="nl-btn" onClick={() => onStart(occ)}>Build this {occ.toLowerCase()} surprise <ArrowRight size={18} /></button></div>
   </section>
 }
 
@@ -130,7 +140,7 @@ const FAQ: [string, string][] = [
   ['Can the reveal wait for the right day?', 'Yes. Pick a date and the link unlocks at midnight on that day.'],
 ]
 
-export default function LandingNew({ onStart }: { onStart: (o: Occasion) => void }) {
+export default function LandingNew({ onStart }: { onStart: (o: Occasion, r?: Relation) => void }) {
   const live = useLiveSeason()
   const season = seasonFromPath() ?? live
   const root = useReveal()
@@ -155,9 +165,7 @@ export default function LandingNew({ onStart }: { onStart: (o: Occasion) => void
 
     <div className="nl-ribbon" aria-hidden="true"><div>{[0, 1].map(k => <span key={k}>{['BIRTHDAYS', 'ANNIVERSARIES', 'LOVE LETTERS', 'JUST BECAUSE', 'BALLOONS', 'ROSE PETALS', 'SHOOTING STARS', 'MESSAGES IN BOTTLES'].map(t => <b key={t}>{t}<i>✦</i></b>)}</span>)}</div></div>
 
-    <div id="templates" className="nl-pick nl-rv"><OccasionCards onStart={onStart} /></div>
-
-    <StoryBuilder onStart={onStart} />
+    <Creator onStart={onStart} />
 
     <section id="nl-library" className="nl-sec">
       <header className="nl-head nl-rv"><p>THE SCENE LIBRARY</p><h2>Every surprise is a little <em>story.</em></h2><span>Each person and occasion gets its own mix of scenes, with its own animation.</span></header>

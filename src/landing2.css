@@ -151,3 +151,28 @@
 .nl-bubble p{margin:0;font-size:clamp(18px,2.6vw,22px);font-weight:800;line-height:1.4}.nl-bubble i{position:absolute;right:14px;bottom:10px;font-style:normal;font-size:24px;animation:nlBob 3s ease-in-out infinite}
 @keyframes nlBub{from{opacity:0;transform:translateY(10px) scale(.94)}}
 @media(prefers-reduced-motion:reduce){.nl-confetti i,.nl-phone::before,.nl-copy h1 em,.nl-path li{animation:none!important}}
+
+/* ===== single creator card ===== */
+.nl-make{padding-top:30px}
+.nl-card{max-width:860px;margin:0 auto;padding:26px 20px 24px;border-radius:32px;border:2px solid var(--text);background:var(--panel);box-shadow:9px 9px 0 var(--oc,var(--accent));transition:box-shadow .3s;display:grid;gap:14px}
+@media(min-width:700px){.nl-card{padding:34px 34px 30px}}
+.nl-step{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px;margin-top:6px}.nl-step:first-child{margin-top:0}
+.nl-step b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--text);color:var(--bg);font-size:14px}
+.nl-occs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}@media(min-width:700px){.nl-occs{grid-template-columns:repeat(4,1fr)}}
+.nl-occs button{position:relative;display:grid;gap:2px;justify-items:start;text-align:left;padding:16px 14px;border-radius:22px;border:2px solid var(--border);background:color-mix(in srgb,var(--c) 10%,var(--panel));color:var(--text);cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s,background .18s}
+.nl-occs button:hover{transform:translateY(-3px)}
+.nl-occs button .e{font-size:34px;line-height:1;margin-bottom:6px;display:inline-block;transition:transform .3s}
+.nl-occs button b{font-size:16px;font-weight:900}.nl-occs button small{font-size:12px;color:var(--muted);line-height:1.35}
+.nl-occs button.on{border-color:var(--text);background:color-mix(in srgb,var(--c) 30%,var(--panel));box-shadow:4px 4px 0 var(--c);transform:translateY(-3px)}
+.nl-occs button.on .e{transform:scale(1.2) rotate(-6deg);animation:nlWig 1.6s ease-in-out infinite}
+.nl-occs button.on::after{content:"✓";position:absolute;right:12px;top:12px;width:22px;height:22px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center;font-size:12px;font-weight:900}
+@keyframes nlWig{50%{transform:scale(1.2) rotate(6deg)}}
+.nl-people{display:flex;flex-wrap:wrap;gap:10px}
+.nl-people button{display:flex;align-items:center;gap:8px;padding:9px 16px 9px 10px;border-radius:99px;border:2px solid var(--border);background:var(--panel2);color:var(--text);font-weight:800;font-size:15px;cursor:pointer;transition:transform .15s,background .15s}
+.nl-people button span{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--panel);font-size:17px}
+.nl-people button:hover{transform:translateY(-2px)}.nl-people button.on{border-color:var(--text);background:var(--accent2);color:#2a1208;box-shadow:3px 3px 0 var(--text)}
+.nl-card .nl-path{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;padding:4px 2px 12px;margin:0;max-width:none;gap:10px}
+.nl-card .nl-path li{flex:none;scroll-snap-align:start}
+.nl-go{width:100%;margin-top:6px;font-size:17px;padding:18px 22px;background:var(--oc,var(--accent));color:#2a1208}
+.nl-fine{text-align:center;color:var(--muted);font-weight:700}
+@media(max-width:520px){.nl-go{font-size:15px;padding:16px 14px}}

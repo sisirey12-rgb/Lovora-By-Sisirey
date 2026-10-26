@@ -1,3 +1,9 @@
+# Round 7
+
+- Landing: ONE creator card (occasion, person, story preview, start) replaces the two separate selectors. Starting it opens the quick-start sheet with the person already chosen.
+- Fixed the story path that stayed invisible after changing the occasion.
+- AI sheet rebuilt: fixed header and footer (nothing cropped), 3 clear steps, fewer fields on screen (words and tone under "More options"), and a **reveal date** (Today, Tomorrow, In a week, or pick a date) that is applied with the draft.
+
 # Round 6
 
 **AI writer**: up to 3 free prompts (about them, a memory, what to say), plus "words to include". Languages: English, Hinglish, Hindi, Nepali, Roman Nepali, Nepali + English. The draft now also fills the new scenes (petals, stars, parcel, bottle, award, recipe, meter, reasons).
