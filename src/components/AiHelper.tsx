@@ -14,7 +14,8 @@ export default function AiHelper({ item, onApply }: { item: Experience; onApply:
   const run = async () => {
     setErr(''); setBusy(true)
     try {
-      const { data } = await supabase!.auth.getSession(); const token = data.session?.access_token
+      if (!supabase) throw new Error('Sign-in is not configured yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel, then redeploy.');
+      const { data } = await supabase.auth.getSession(); const token = data.session?.access_token
       if (!token) throw new Error('Please sign in to use the AI helper.')
       const r = await fetch('/api/ai-draft', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ occasion: item.occasion, relation: item.relation, recipient: item.recipient, sender: item.sender, facts, language: lang, tone }) })
       const j = await r.json().catch(() => ({}))

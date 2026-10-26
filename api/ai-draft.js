@@ -13,7 +13,8 @@ export default async function handler(req, res) {
   if (!key) return res.status(503).json({ error: 'The AI helper is not set up yet. Add GROQ_API_KEY in Vercel (Settings > Environment Variables) and redeploy.' })
 
   const owner = isOwner(user)
-  const limit = owner ? 200 : Number(process.env.AI_HOURLY_LIMIT || 10), now = Date.now()
+  const configuredLimit = Number(process.env.AI_HOURLY_LIMIT || 10)
+  const limit = owner ? 200 : (Number.isInteger(configuredLimit) && configuredLimit > 0 ? configuredLimit : 10), now = Date.now()
   const recent = (hits.get(user.id) || []).filter(t => now - t < 3600e3)
   if (recent.length >= limit) return res.status(429).json({ error: 'You have used the AI helper a lot this hour. Please try again a little later.' })
   hits.set(user.id, [...recent, now])
@@ -36,7 +37,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', temperature: 0.8, max_tokens: 1600, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] }),
     })
     const j = await r.json().catch(() => ({}))
-    if (!r.ok) { console.error('groq error', r.status, j); return res.status(r.status === 429 ? 429 : 502).json({ error: r.status === 429 ? 'The AI helper is busy right now. Please try again in a minute.' : 'The AI helper is not available right now. Please try again in a moment.' }) }
+    if (!r.ok) { console.error('groq error', r.status, j?.error?.message || j?.error || 'unknown'); const message = r.status === 429 ? 'Groq is rate-limiting requests right now. Please wait a minute and try again.' : r.status === 401 || r.status === 403 ? 'Groq rejected the API key. Check GROQ_API_KEY in Vercel Environment Variables, then redeploy.' : r.status === 404 ? 'The configured Groq model is unavailable. Check GROQ_MODEL in Vercel and choose a model currently enabled for your account.' : 'The AI provider is temporarily unavailable. Check the Vercel Function Logs for the Groq error, then try again.'; return res.status(r.status === 429 ? 429 : 502).json({ error: message }) }
     const text = String(j.choices?.[0]?.message?.content || '').replace(/^```(?:json)?|```$/g, '').trim()
     const data = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
     res.setHeader('Cache-Control', 'no-store')

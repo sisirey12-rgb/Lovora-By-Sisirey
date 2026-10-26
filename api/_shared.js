@@ -18,9 +18,12 @@ export async function sb(path, { method = 'GET', body, prefer } = {}) {
 /** Checks the creator's Supabase access token and returns the user, or null. */
 export async function userFromReq(req) {
   const token = String(req.headers.authorization || '').replace(/^Bearer /i, '')
-  if (!token) return null
-  const r = await fetch(`${SB()}/auth/v1/user`, { headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } })
-  return r.ok ? r.json() : null
+  const url = SB(), anon = process.env.VITE_SUPABASE_ANON_KEY
+  if (!token || !url || !anon) return null
+  try {
+    const r = await fetch(`${url}/auth/v1/user`, { headers: { apikey: anon, Authorization: `Bearer ${token}` } })
+    return r.ok ? r.json() : null
+  } catch (e) { console.error('Supabase auth verification failed', e); return null }
 }
 export const isUuid = s => /^[0-9a-f-]{36}$/i.test(String(s || ''))
 export const hmac = (secret, data) => crypto.createHmac('sha256', secret).update(data).digest('hex')

@@ -10,5 +10,5 @@ export async function draftWithAI(input: DraftInput): Promise<Draft> {
   const r = await fetch('/api/ai-draft', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(input) })
   const j = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(j.error || 'The AI helper could not write this right now.')
-  return j.draft as Draft
+  return (j.draft || j) as Draft
 }
