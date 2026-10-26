@@ -1,5 +1,5 @@
 /* Global site theme bridge: loaded last so every page follows the selected palette. */
-html[data-skin="classic"]{--bg:#160e20;--panel:#24172f;--panel2:#30203e;--text:#fff2fa;--muted:#c8b1ce;--border:rgba(255,242,250,.15);--line:rgba(255,242,250,.13);--accent:#f7a7ca;--accent2:#ffd36e;--g1:#f7a7ca;--g2:#ffd36e;--surface:#24172f;--surface-2:#30203e;}
+html[data-skin="classic"]{--bg:#fff8ee;--panel:#ffffff;--panel2:#ffefd9;--text:#2b1a12;--muted:#7b6454;--border:rgba(43,26,18,.13);--line:rgba(43,26,18,.12);--accent:#ff5a3c;--accent2:#ffb703;--g1:#ff5a3c;--g2:#ffb703;--teal:#0fb5a4;--bg-2:#fffdf8;--surface:#ffffff;--surface-2:#ffefd9;}
 html[data-skin="midnight"]{--bg:#0a1224;--panel:#111b36;--panel2:#18254a;--text:#eaf2ff;--muted:#9db0d6;--border:rgba(234,242,255,.15);--line:rgba(234,242,255,.13);--accent:#6fb7ff;--accent2:#a9a4ff;--g1:#6fb7ff;--g2:#a9a4ff;--surface:#111b36;--surface-2:#18254a;}
 html[data-skin="sunset"]{--bg:#240f12;--panel:#33171b;--panel2:#42201f;--text:#fff0e8;--muted:#d6aa9c;--border:rgba(255,240,232,.15);--line:rgba(255,240,232,.13);--accent:#ff9a62;--accent2:#ff5e8a;--g1:#ff9a62;--g2:#ff5e8a;--surface:#33171b;--surface-2:#42201f;}
 html[data-skin="forest"]{--bg:#0c1a16;--panel:#13271f;--panel2:#1a3329;--text:#eafff4;--muted:#9bc7b2;--border:rgba(234,255,244,.15);--line:rgba(234,255,244,.13);--accent:#7be0b0;--accent2:#e8e08a;--g1:#7be0b0;--g2:#e8e08a;--surface:#13271f;--surface-2:#1a3329;}
@@ -26,4 +26,4 @@ html[data-skin] .tp-option{grid-template-columns:1fr auto;grid-template-rows:aut
 html[data-skin] .tp-option-name{font-size:12px;}
 html[data-skin] .tp-pop{background:var(--panel);color:var(--text);border-color:var(--border);box-shadow:0 20px 60px #0003;}
 html[data-skin="sakura"],html[data-skin="cream"],html[data-skin="peach"],html[data-skin="cotton"],html[data-skin="lilac"],html[data-skin="matcha"]{color-scheme:light;}
-html[data-skin="classic"],html[data-skin="midnight"],html[data-skin="sunset"],html[data-skin="forest"],html[data-skin="mocha"],html[data-skin="boba"],html[data-skin="honey"]{color-scheme:dark;}
+html[data-skin="midnight"],html[data-skin="sunset"],html[data-skin="forest"],html[data-skin="mocha"],html[data-skin="boba"],html[data-skin="honey"]{color-scheme:dark;}

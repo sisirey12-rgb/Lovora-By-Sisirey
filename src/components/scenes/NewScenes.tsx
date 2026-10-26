@@ -31,7 +31,7 @@ export function PetalFall({ exp, colors, onDone, buzz }: P) {
 
 /* ---- SHOOTING STARS: catch the streaks, each one carries a wish ---- */
 export function ShootingStars({ exp, colors, onDone, buzz }: P) {
-  const wishes = useMemo(() => pick(exp.moments?.length ? exp.moments : exp.balloonWishes, ['You light up every room.', 'You deserve every good thing.', 'You are loved, always.'], 3), [exp.moments, exp.balloonWishes])
+  const wishes = useMemo(() => pick(exp.extras?.starWishes?.some(x => x.trim()) ? exp.extras.starWishes : exp.moments?.length ? exp.moments : exp.balloonWishes, ['You light up every room.', 'You deserve every good thing.', 'You are loved, always.'], 3), [exp.extras?.starWishes, exp.moments, exp.balloonWishes])
   const [caught, setCaught] = useState<number[]>([]), [shown, setShown] = useState('')
   const catchStar = (i: number) => { if (caught.includes(i)) return; sfx.unlock(); setCaught(c => [...c, i]); setShown(wishes[i % wishes.length]); buzz([20, 25, 20]); sfx.chime() }
   const done = caught.length >= wishes.length
@@ -51,7 +51,7 @@ export function ShootingStars({ exp, colors, onDone, buzz }: P) {
 
 /* ---- PASS THE PARCEL: unwrap the layers, each one hides a note ---- */
 export function Parcel({ exp, colors, onDone, buzz }: P) {
-  const notes = useMemo(() => pick(exp.balloonWishes, ['Layer one: you are my favourite.', 'Layer two: keep going, there is more.', 'Last layer: this is all for you.'], 3), [exp.balloonWishes])
+  const notes = useMemo(() => pick(exp.extras?.parcelNotes?.some(x => x.trim()) ? exp.extras.parcelNotes : exp.balloonWishes, ['Layer one: you are my favourite.', 'Layer two: keep going, there is more.', 'Last layer: this is all for you.'], 3), [exp.extras?.parcelNotes, exp.balloonWishes])
   const [layer, setLayer] = useState(0), [flash, setFlash] = useState(false)
   const total = notes.length
   const peel = () => { if (layer >= total) return; sfx.unlock(); setFlash(true); window.setTimeout(() => setFlash(false), 450); setLayer(l => l + 1); buzz([18, 22, 18]); layer + 1 >= total ? (sfx.chime(), sfx.boom('confetti')) : sfx.pop(layer) }
@@ -72,7 +72,7 @@ export function Parcel({ exp, colors, onDone, buzz }: P) {
 /* ---- MESSAGE IN A BOTTLE: it drifts in on the waves, pull the cork ---- */
 export function Bottle({ exp, onDone, buzz }: P) {
   const [corked, setCorked] = useState(true)
-  const text = useRef(firstSentence(exp.message, 220) || 'I wanted you to find this. You mean a lot to me.').current
+  const text = useRef(exp.extras?.bottleNote?.trim() || firstSentence(exp.message, 220) || 'I wanted you to find this. You mean a lot to me.').current
   const pull = () => { if (!corked) return; sfx.unlock(); setCorked(false); buzz([30, 40, 80]); sfx.lid(); window.setTimeout(() => sfx.chime(), 500) }
   return <div className="scene-content occ-scene ns-bottle">
     <p className="eyebrow">WASHED UP JUST FOR YOU</p><h1>A message in a <em>bottle.</em></h1>

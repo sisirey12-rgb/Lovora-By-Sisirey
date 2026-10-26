@@ -4,7 +4,9 @@ import { PRICING } from '../config'
 import OccasionCards from './OccasionCards'
 import { Rotator } from './LandingFX'
 import { seasonFromPath, useLiveSeason } from '../lib/seasons'
-import type { Occasion } from '../types'
+import type { Occasion, Relation, SceneId } from '../types'
+import { flowFor } from '../lib/occasionContent'
+import { sceneLabels } from '../data'
 
 const toStart = () => document.getElementById('templates')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
@@ -55,6 +57,48 @@ function ReelPhone() {
   </div>
 }
 
+const SCENE_EMOJI: Partial<Record<SceneId, string>> = { heart: '💘', intro: '🎆', balloons: '🎈', cake: '🎂', candles: '🕯️', spinwheel: '🎡', polaroids: '📸', moments: '✨', wishjar: '🫙', counter: '⏳', starsky: '🌌', timeline: '🧭', vows: '💍', openwhen: '💌', waxseal: '✉️', lanterns: '🏮', memories: '🖼️', mystery: '🎁', scratch: '🎟️', video: '🎬', letter: '📜', finale: '🎉', petalfall: '🌹', shootingstars: '🌠', parcel: '📦', bottle: '🍾', trophy: '🏆', recipe: '🍲', meter: '📊', reasons: '💗' }
+const OCCS: { o: Occasion; e: string }[] = [{ o: 'Birthday', e: '🎂' }, { o: 'Anniversary', e: '💞' }, { o: 'Love letter', e: '💌' }, { o: 'Special surprise', e: '✨' }]
+const PEOPLE: Relation[] = ['Partner', 'Mom', 'Dad', 'Brother', 'Sister', 'Friend']
+const LANG_SAMPLES: { l: string; t: string }[] = [
+  { l: 'English', t: 'You make ordinary days feel like a small celebration.' },
+  { l: 'Hinglish', t: 'Yaar, tere bina toh meri chai bhi adhoori lagti hai.' },
+  { l: 'Roman Nepali', t: 'Timi sanga bitaeko har pal mero lagi khas chha.' },
+  { l: 'Nepali', t: 'तिमी साथमा हुँदा हरेक दिन चाड जस्तै लाग्छ।' },
+  { l: 'Nepali + English', t: 'Dai, you are the best thing that ever happened to this family, sachchai!' },
+]
+
+/** Pick an occasion and a person and watch their own story build up, scene by scene. */
+function StoryBuilder({ onStart }: { onStart: (o: Occasion) => void }) {
+  const [occ, setOcc] = useState<Occasion>('Birthday'), [rel, setRel] = useState<Relation>('Friend')
+  const people = occ === 'Love letter' ? (['Partner'] as Relation[]) : PEOPLE
+  const r = occ === 'Love letter' ? 'Partner' : rel
+  const flow = flowFor(occ, r).filter(x => x !== 'heart')
+  return <section className="nl-sec nl-story">
+    <header className="nl-head nl-rv"><p>YOUR STORY, YOUR WAY</p><h2>Every person gets a <em>different</em> surprise.</h2><span>Choose who it is for and see the scenes we line up for them. You can reorder, hide and rewrite every one.</span></header>
+    <div className="nl-pickers nl-rv">
+      <div className="nl-chips" role="radiogroup" aria-label="Occasion">{OCCS.map(x => <button key={x.o} type="button" role="radio" aria-checked={occ === x.o} className={occ === x.o ? 'on' : ''} onClick={() => setOcc(x.o)}>{x.e} {x.o}</button>)}</div>
+      <div className="nl-chips alt" role="radiogroup" aria-label="Person">{people.map(p => <button key={p} type="button" role="radio" aria-checked={r === p} className={r === p ? 'on' : ''} onClick={() => setRel(p)}>{p}</button>)}</div>
+    </div>
+    <ol className="nl-path nl-rv" key={`${occ}-${r}`}>{flow.map((id, i) => <li key={id + i} style={{ ['--i' as string]: i } as CSSProperties}><span>{SCENE_EMOJI[id] || '✦'}</span><b>{sceneLabels[id]}</b></li>)}</ol>
+    <div className="nl-story-cta nl-rv"><button className="nl-btn" onClick={() => onStart(occ)}>Build this {occ.toLowerCase()} surprise <ArrowRight size={18} /></button></div>
+  </section>
+}
+
+/** Shows the AI writer speaking the languages people actually use. */
+function Languages() {
+  const [i, setI] = useState(0)
+  useEffect(() => { const t = window.setInterval(() => setI(v => (v + 1) % LANG_SAMPLES.length), 3200); return () => window.clearInterval(t) }, [])
+  const cur = LANG_SAMPLES[i]
+  return <section className="nl-sec nl-lang">
+    <div className="nl-lang-card nl-rv">
+      <div><p className="nl-k">WRITE IT WITH AI</p><h2>Say it in the <em>language of your heart.</em></h2><p className="nl-lead">Give two or three prompts, pick a language and add the words you love. English, Hinglish, Hindi, Nepali, Roman Nepali, or a mix of both.</p>
+        <div className="nl-langchips">{LANG_SAMPLES.map((x, k) => <button key={x.l} type="button" className={k === i ? 'on' : ''} onClick={() => setI(k)}>{x.l}</button>)}</div></div>
+      <div className="nl-bubble" key={cur.l}><small>{cur.l}</small><p>{cur.t}</p><i aria-hidden="true">✍️</i></div>
+    </div>
+  </section>
+}
+
 const LIB: { e: string; t: string; d: string; c: string; a: string }[] = [
   { e: '🎈', t: 'Wish tree', d: 'Pop a balloon, read a wish.', c: '#ffb703', a: 'float' },
   { e: '🎂', t: 'Cake and candles', d: 'Build the cake, blow into the mic.', c: '#ff5a3c', a: 'flick' },
@@ -64,6 +108,10 @@ const LIB: { e: string; t: string; d: string; c: string; a: string }[] = [
   { e: '🍾', t: 'Message in a bottle', d: 'Pull the cork, unroll the note.', c: '#2a9cc8', a: 'bob' },
   { e: '✉️', t: 'Wax-seal letter', d: 'Break the seal, read it aloud.', c: '#c2410c', a: 'wob' },
   { e: '🏮', t: 'Sky lanterns', d: 'Release a lantern for each line.', c: '#f59e0b', a: 'float' },
+  { e: '🏆', t: 'Award ceremony', d: 'Polish the trophy, hear why they won.', c: '#d4a017', a: 'wob' },
+  { e: '🍲', t: 'Recipe for happiness', d: 'Add each ingredient, stir, serve.', c: '#e76f51', a: 'bob' },
+  { e: '📊', t: 'Love-o-meter', d: 'Bars rise and go off the charts.', c: '#2a9d8f', a: 'float' },
+  { e: '💗', t: 'Reasons card flip', d: 'Flip each heart to read a reason.', c: '#e5446d', a: 'flick' },
 ]
 const STEPS: [string, string, string][] = [
   ['1', 'Pick who it is for', 'Choose the occasion and the person. Each combination gets its own story, scenes and entrance.'],
@@ -93,7 +141,7 @@ export default function LandingNew({ onStart }: { onStart: (o: Occasion) => void
   }, [season])
   return <div className="nl" ref={root}>
     <section className="nl-hero">
-      <div className="nl-blob b1" aria-hidden="true" /><div className="nl-blob b2" aria-hidden="true" />
+      <div className="nl-blob b1" aria-hidden="true" /><div className="nl-blob b2" aria-hidden="true" /><div className="nl-confetti" aria-hidden="true">{Array.from({ length: 18 }, (_, k) => <i key={k} style={{ ['--k' as string]: k, left: `${(k * 53) % 100}%` } as CSSProperties} />)}</div>
       <div className="nl-copy">
         <span className="nl-badge">{season ? <span aria-hidden="true">{season.emoji}</span> : <Sparkles size={14} />} {season ? season.pill : 'Interactive surprises in minutes'}</span>
         <h1>{season ? <>{season.h1a} <em>{season.h1b}</em></> : <>Gifts that <em>open</em><br />like a story.</>}</h1>
@@ -109,10 +157,14 @@ export default function LandingNew({ onStart }: { onStart: (o: Occasion) => void
 
     <div id="templates" className="nl-pick nl-rv"><OccasionCards onStart={onStart} /></div>
 
+    <StoryBuilder onStart={onStart} />
+
     <section id="nl-library" className="nl-sec">
       <header className="nl-head nl-rv"><p>THE SCENE LIBRARY</p><h2>Every surprise is a little <em>story.</em></h2><span>Each person and occasion gets its own mix of scenes, with its own animation.</span></header>
       <div className="nl-lib nl-rv">{LIB.map((l, k) => <article key={l.t} style={{ ['--c' as string]: l.c, ['--k' as string]: k } as CSSProperties}><span className={`nl-emo ${l.a}`}>{l.e}</span><h3>{l.t}</h3><p>{l.d}</p></article>)}</div>
     </section>
+
+    <Languages />
 
     <section className="nl-sec nl-how">
       <header className="nl-head nl-rv"><p>HOW IT WORKS</p><h2>From idea to <em>goosebumps</em> in three steps.</h2></header>

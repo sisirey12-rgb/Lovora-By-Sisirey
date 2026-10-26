@@ -111,12 +111,17 @@ const fontOcc: Partial<Record<Occasion, string>> = { 'Love letter': 'parisian', 
  * Every occasion and person gets the balloon pop; the coupon book is gone.
  */
 export const flowFor = (o: Occasion, r: Relation): Experience['scenes'] => {
-  // Every occasion and person gets its own story, with its own mix of scenes and animations.
+  // Every occasion and person gets its own story: a different mix of scenes, effects and animations.
   const s: Experience['scenes'] = ['heart', 'intro']
   if (o === 'Birthday') {
     s.push('balloons')
     if (r === 'Brother' || r === 'Friend') s.push('parcel')
-    s.push('cake', 'candles', 'spinwheel')
+    s.push('cake', 'candles')
+    if (r === 'Brother' || r === 'Dad') s.push('trophy')
+    if (r === 'Sister' || r === 'Friend') s.push('meter')
+    if (r === 'Mom') s.push('recipe')
+    if (r === 'Partner') s.push('reasons')
+    if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('spinwheel')
     if (r === 'Sister') s.push('shootingstars')
     if (r === 'Mom' || r === 'Partner') s.push('petalfall')
     if (r === 'Dad') s.push('bottle')
@@ -124,21 +129,23 @@ export const flowFor = (o: Occasion, r: Relation): Experience['scenes'] => {
     if (r === 'Friend' || r === 'Sister') s.push('wishjar')
   } else if (o === 'Anniversary') {
     s.push('counter', 'starsky')
-    if (r === 'Partner') s.push('petalfall')
-    if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('shootingstars')
+    if (r === 'Partner') s.push('petalfall', 'reasons')
+    if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('shootingstars', 'meter')
+    if (r === 'Mom') s.push('recipe')
+    if (r === 'Dad') s.push('trophy')
     s.push('polaroids', 'timeline', 'moments', 'vows')
     if (r === 'Mom' || r === 'Dad') s.push('bottle')
     s.push('openwhen')
     if (r === 'Partner') s.push('cake', 'candles')
     if (r === 'Mom' || r === 'Dad') s.push('wishjar')
   } else if (o === 'Love letter') {
-    s.push('waxseal', 'petalfall', 'lanterns', 'bottle', 'openwhen', 'memories')
+    s.push('waxseal', 'petalfall', 'reasons', 'lanterns', 'bottle', 'openwhen', 'memories')
   } else {
     s.push('mystery', 'balloons')
-    if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('parcel', 'cake', 'candles')
-    if (r === 'Partner') s.push('shootingstars', 'openwhen')
-    if (r === 'Mom') s.push('petalfall')
-    if (r === 'Dad') s.push('bottle')
+    if (r === 'Brother' || r === 'Sister' || r === 'Friend') s.push('parcel', 'meter', 'cake', 'candles')
+    if (r === 'Partner') s.push('shootingstars', 'reasons', 'openwhen')
+    if (r === 'Mom') s.push('recipe', 'petalfall')
+    if (r === 'Dad') s.push('trophy', 'bottle')
     s.push('scratch', 'polaroids', 'moments')
     if (r === 'Friend') s.push('wishjar')
   }

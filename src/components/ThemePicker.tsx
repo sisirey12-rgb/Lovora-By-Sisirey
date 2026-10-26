@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Palette, Check, X } from 'lucide-react'
 
 export const SKINS = [
-  { id: 'classic', name: 'Plum Night', light: false, sw: ['#160e20', '#f7a7ca', '#ffd36e'] },
+  { id: 'classic', name: 'Mango Cream', light: true, sw: ['#fff8ee', '#ff5a3c', '#ffb703'] },
   { id: 'midnight', name: 'Midnight Blue', light: false, sw: ['#0a1224', '#6fb7ff', '#a9a4ff'] },
   { id: 'sunset', name: 'Sunset Ember', light: false, sw: ['#240f12', '#ff9a62', '#ff5e8a'] },
   { id: 'forest', name: 'Forest Mint', light: false, sw: ['#0c1a16', '#7be0b0', '#e8e08a'] },

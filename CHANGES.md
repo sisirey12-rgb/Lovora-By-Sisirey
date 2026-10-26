@@ -1,3 +1,13 @@
+# Round 6
+
+**AI writer**: up to 3 free prompts (about them, a memory, what to say), plus "words to include". Languages: English, Hinglish, Hindi, Nepali, Roman Nepali, Nepali + English. The draft now also fills the new scenes (petals, stars, parcel, bottle, award, recipe, meter, reasons).
+
+**Scenes**: new Award ceremony, Recipe for happiness, Love-o-meter and Reasons card flip, each with editor fields (step 4) and sensible defaults per person. `flowFor` gives every occasion and person its own mix. Shared effects for all scenes (staggered entrances, shimmer, glitter layer) are in `src/scenefx.css`.
+
+**Cropping fix**: the bow stage, cake and wish effects no longer clip their animations (`scenefx.css`).
+
+**Landing**: confetti and glowing phone, interactive "your story, your way" builder, languages showcase, 12-scene library.
+
 # Round 4
 
 **Share link and owner fix**

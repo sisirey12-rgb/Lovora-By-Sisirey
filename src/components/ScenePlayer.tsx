@@ -13,6 +13,7 @@ import { introFor } from '../data'
 import { WishStar, CalendarFlip, SnowGlobe, Postcard, Fortune, LyricReveal, InviteCard } from './scenes/MoreScenes'
 import { effectiveFlow } from '../lib/flow'
 import { PetalFall, ShootingStars, Parcel, Bottle } from './scenes/NewScenes'
+import { Trophy, Recipe, Meter, Reasons } from './scenes/PersonScenes'
 import { Candles, OpenWhen, Polaroids, SpinWheel, StarSky, Vows, Lanterns, WaxSeal, MysteryBoxes, ScratchCard } from './scenes/OccasionScenes'
 import OccasionDeco from './OccasionDeco'
 import BirthdayReveal from './BirthdayReveal'
@@ -234,6 +235,10 @@ export default function ScenePlayer({ experience: rawExperience, onClose, previe
         {scene === 'petalfall' && <PetalFall exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'shootingstars' && <ShootingStars exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'parcel' && <Parcel exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'trophy' && <Trophy exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'recipe' && <Recipe exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'meter' && <Meter exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'reasons' && <Reasons exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'bottle' && <Bottle exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'counter' && <CounterScene since={experience.togetherSince || ''} onDone={next} />}
         {scene === 'moments' && <MomentsScene title={momentsTitle(experience.relation)} items={experience.moments || []} onDone={next} buzz={buzz} />}

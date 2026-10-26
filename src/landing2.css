@@ -116,3 +116,38 @@
 .nl-final p{margin:0 0 26px;font-size:18px;font-weight:700}
 @media(prefers-reduced-motion:reduce){.nl-phone,.nl-sticker,.nl-ribbon>div,.nl-emo,.rs *{animation:none!important}.nl-rv{opacity:1;transform:none}}
 .nl-copy h1{isolation:isolate}
+
+/* ===== landing, round 6: more motion, story builder, languages ===== */
+.nl-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.nl-confetti i{position:absolute;top:-24px;width:10px;height:16px;border-radius:3px;background:var(--accent);opacity:.75;animation:nlConf calc(7s + (var(--k)*.37s)) calc(var(--k)*-1.1s) linear infinite}
+.nl-confetti i:nth-child(3n){background:var(--accent2)}.nl-confetti i:nth-child(3n+1){background:var(--teal)}.nl-confetti i:nth-child(5n){border-radius:50%;width:10px;height:10px}
+@keyframes nlConf{to{transform:translateY(105vh) rotate(540deg) translateX(calc((var(--k) - 9)*6px))}}
+.nl-hero::after{content:"";position:absolute;inset:auto 0 0 0;height:90px;background:linear-gradient(transparent,var(--bg));pointer-events:none}
+.nl-copy h1 em{background:linear-gradient(100deg,var(--accent),var(--accent2),var(--accent));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:nlShim 5s linear infinite}
+@keyframes nlShim{to{background-position:200% 0}}
+.nl-phone::before{content:"";position:absolute;inset:-26px;border-radius:60px;background:conic-gradient(from 0deg,var(--accent),var(--accent2),var(--teal),var(--accent));filter:blur(34px);opacity:.38;z-index:-1;animation:nlSpin 10s linear infinite}
+@keyframes nlSpin{to{transform:rotate(360deg)}}
+.nl-k{margin:0 0 10px;font-size:12px;letter-spacing:.2em;font-weight:900;color:var(--accent)}
+/* story builder */
+.nl-pickers{display:grid;gap:12px;justify-items:center;margin-bottom:26px}
+.nl-chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.nl-chips button{padding:11px 18px;border-radius:99px;border:2px solid var(--text);background:var(--panel);color:var(--text);font-weight:800;font-size:15px;cursor:pointer;transition:transform .15s,background .15s,box-shadow .15s}
+.nl-chips button:hover{transform:translateY(-2px)}.nl-chips button.on{background:var(--accent);color:#fff;box-shadow:3px 3px 0 var(--text)}
+.nl-chips.alt button{border-color:var(--border);font-size:14px}.nl-chips.alt button.on{border-color:var(--text);background:var(--accent2);color:#2a1208}
+.nl-path{list-style:none;margin:0 auto;padding:6px 0 0;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:980px;position:relative}
+.nl-path li{display:flex;align-items:center;gap:9px;padding:10px 16px 10px 10px;border-radius:99px;border:2px solid var(--border);background:var(--panel);font-size:14px;font-weight:800;animation:nlPop .5s calc(var(--i)*.05s) cubic-bezier(.2,1.4,.4,1) both}
+.nl-path li span{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--accent2) 35%,var(--panel));font-size:18px}
+.nl-path li:nth-child(3n) span{background:color-mix(in srgb,var(--teal) 30%,var(--panel))}.nl-path li:nth-child(3n+1) span{background:color-mix(in srgb,var(--accent) 25%,var(--panel))}
+@keyframes nlPop{from{opacity:0;transform:translateY(14px) scale(.8)}}
+.nl-story-cta{display:flex;justify-content:center;margin-top:30px}
+/* languages */
+.nl-lang-card{display:grid;gap:28px;align-items:center;padding:34px 26px;border-radius:32px;border:2px solid var(--text);background:linear-gradient(135deg,color-mix(in srgb,var(--teal) 18%,var(--panel)),var(--panel) 60%);box-shadow:8px 8px 0 var(--teal)}
+@media(min-width:860px){.nl-lang-card{grid-template-columns:1.2fr .8fr;padding:44px}}
+.nl-lang-card h2{margin:0 0 12px;font-size:clamp(28px,4.6vw,46px);line-height:1.08;letter-spacing:-.04em;font-weight:900}
+.nl-lead{margin:0 0 18px;color:var(--muted);line-height:1.65;font-size:16px}
+.nl-langchips{display:flex;flex-wrap:wrap;gap:8px}.nl-langchips button{padding:8px 14px;border-radius:99px;border:2px solid var(--border);background:var(--panel);color:var(--text);font-weight:800;font-size:13px;cursor:pointer}.nl-langchips button.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.nl-bubble{position:relative;padding:24px 22px;border-radius:26px 26px 26px 6px;background:var(--accent2);color:#2a1208;box-shadow:5px 5px 0 var(--text);border:2px solid var(--text);animation:nlBub .5s cubic-bezier(.2,1.3,.4,1) both;min-height:150px}
+.nl-bubble small{display:inline-block;padding:3px 10px;border-radius:99px;background:#2a1208;color:#fff3e6;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.nl-bubble p{margin:0;font-size:clamp(18px,2.6vw,22px);font-weight:800;line-height:1.4}.nl-bubble i{position:absolute;right:14px;bottom:10px;font-style:normal;font-size:24px;animation:nlBob 3s ease-in-out infinite}
+@keyframes nlBub{from{opacity:0;transform:translateY(10px) scale(.94)}}
+@media(prefers-reduced-motion:reduce){.nl-confetti i,.nl-phone::before,.nl-copy h1 em,.nl-path li{animation:none!important}}
