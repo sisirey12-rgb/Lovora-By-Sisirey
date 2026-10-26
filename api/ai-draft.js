@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   try {
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST', headers: { 'content-type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', temperature: 0.8, max_tokens: 1600, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: process.env.GROQ_MODEL || 'openai/gpt-oss-20b', temperature: 0.8, max_tokens: 1600, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] }),
     })
     const j = await r.json().catch(() => ({}))
     if (!r.ok) { console.error('groq error', r.status, j?.error?.message || j?.error || 'unknown'); const message = r.status === 429 ? 'Groq is rate-limiting requests right now. Please wait a minute and try again.' : r.status === 401 || r.status === 403 ? 'Groq rejected the API key. Check GROQ_API_KEY in Vercel Environment Variables, then redeploy.' : r.status === 404 ? 'The configured Groq model is unavailable. Check GROQ_MODEL in Vercel and choose a model currently enabled for your account.' : 'The AI provider is temporarily unavailable. Check the Vercel Function Logs for the Groq error, then try again.'; return res.status(r.status === 429 ? 429 : 502).json({ error: message }) }
