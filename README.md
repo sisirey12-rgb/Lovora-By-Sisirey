@@ -149,3 +149,14 @@ Sign in / sign up is built in and uses the Supabase project from `.env.local`. S
 - Site themes: the palette button in the top bar (7 looks, saved per visitor).
 - Account centre: profile, all surprises with status, plan and security, settings. `/api/account` tells the app if the signed-in email is in `OWNER_EMAILS`.
 - Run `npm install` once (adds `lenis`).
+
+## AI helper, candles and open-when letters
+- AI helper: add `ANTHROPIC_API_KEY` in Vercel (server-only) and redeploy. Creators tap "Write it with AI" on the Words step. Limit: `AI_HOURLY_LIMIT` per user (default 10, owners 200). Optional `ANTHROPIC_MODEL`.
+- Blow the candles: Birthday, partner anniversary and some Special surprise flows. Uses the microphone with a tap fallback.
+- Open-when envelopes: Anniversary, Love letter and partner Special surprise. Notes come from the editor or the AI helper.
+
+## More scenes and growth features
+- Optional scenes (Editor > Add more scenes): wish upon a star, calendar flip, snow globe, postcard, fortune cookie, song line, invitation + RSVP.
+- Nickname, inside jokes, "guess who sent it" (sender hidden until the finale), and a Story order panel (move or hide scenes).
+- Seasonal landing pages at `/for/rakhi`, `/for/diwali`, `/for/eid`, `/for/valentines-day`, `/for/mothers-day`, `/for/fathers-day`, `/for/friendship-day`, `/for/new-year` (edit `src/lib/seasons.ts`; update the domain in `public/sitemap.xml` and `public/robots.txt`).
+- Creator badges and an embed button snippet in the account panel (`public/embed.js`).

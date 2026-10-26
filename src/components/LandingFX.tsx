@@ -4,18 +4,18 @@ import { bouquetStyles, cakeStyles, introStyles } from '../data'
 
 const WORDS = ['birthday', 'anniversary', 'love letter', 'best friend', 'mom', 'dad', 'little brother', 'big sister']
 /** Cycles through who the surprise could be for, letter by letter. */
-export function Rotator() {
+export function Rotator({ words = WORDS }: { words?: string[] }) {
   const [i, setI] = useState(0), [n, setN] = useState(0), [del, setDel] = useState(false)
   useEffect(() => {
-    const w = WORDS[i], t = window.setTimeout(() => {
+    const w = words[i % words.length], t = window.setTimeout(() => {
       if (!del && n < w.length) setN(n + 1)
       else if (!del) setDel(true)
       else if (n > 0) setN(n - 1)
-      else { setDel(false); setI((i + 1) % WORDS.length) }
+      else { setDel(false); setI((i + 1) % words.length) }
     }, !del && n === w.length ? 1300 : del ? 40 : 85)
     return () => window.clearTimeout(t)
-  }, [i, n, del])
-  return <span className="lf-rot-word">{WORDS[i].slice(0, n)}<i /></span>
+  }, [i, n, del, words])
+  return <span className="lf-rot-word">{words[i % words.length].slice(0, n)}<i /></span>
 }
 
 /** Scroll progress bar, a soft glow that follows the pointer, and reveal-on-scroll for cards and headings. */

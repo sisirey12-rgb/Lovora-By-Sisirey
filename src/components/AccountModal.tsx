@@ -9,6 +9,14 @@ import type { Experience } from '../types'
 
 type Tab = 'profile' | 'surprises' | 'plan' | 'settings'
 type Meta = { full_name?: string; phone?: string; city?: string; about?: string; avatar?: string }
+const BADGES: { id: string; e: string; t: string; how: string; test: (l: Experience[]) => boolean }[] = [
+  { id: 'first', e: '🌱', t: 'First surprise', how: 'Create one', test: l => l.length >= 1 },
+  { id: 'live', e: '🚀', t: 'Sent with love', how: 'Share a live link', test: l => l.some(i => i.published) },
+  { id: 'five', e: '📚', t: 'Storyteller', how: 'Create 5', test: l => l.length >= 5 },
+  { id: 'all4', e: '🎭', t: 'All-rounder', how: 'Try all 4 occasions', test: l => new Set(l.map(i => i.occasion)).size >= 4 },
+  { id: 'photo', e: '📸', t: 'Photographer', how: 'Add 3+ photos', test: l => l.some(i => i.memories.filter(m => m.kind === 'image').length >= 3) },
+  { id: 'word', e: '✍️', t: 'Wordsmith', how: 'Write a long letter', test: l => l.some(i => (i.message || '').length >= 300) },
+]
 const AVATARS = ['#ff8fc2', '#ffd36e', '#7fd6ff', '#b79bff', '#7be0b0', '#ff9a62']
 const fmt = (d?: string, time = false) => d ? new Date(d).toLocaleString(undefined, time ? { dateStyle: 'medium', timeStyle: 'short' } : { year: 'numeric', month: 'short', day: 'numeric' }) : '-'
 
@@ -58,6 +66,7 @@ export default function AccountModal({ items, setDark, onClose, onSignedOut }: {
       </div>}
 
       {tab === 'surprises' && <div className="acc-pane">
+        <div className="acc-badges">{BADGES.map(b => { const on = b.test(items); return <span key={b.id} className={on ? 'on' : ''} title={b.how}><i>{b.e}</i><b>{b.t}</b><small>{on ? 'Earned' : b.how}</small></span> })}</div>
         {!!Object.keys(stats.by).length && <div className="acc-chips">{Object.entries(stats.by).map(([o, n]) => <span key={o}>{emojiFor(o)} {o} · {n}</span>)}</div>}
         {!items.length && <p className="muted">No surprises yet. Create your first one from the home page.</p>}
         <ul className="acc-list">{[...items].sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')).map(i => <li key={i.id}><span className="acc-li-emoji">{emojiFor(i.occasion)}</span><div><strong>{i.recipient || 'Untitled'}</strong><small>{i.occasion}{i.relation ? ` · ${i.relation}` : ''} · edited {fmt(i.updatedAt)}</small></div><em className={i.published ? 'live' : i.paid ? 'paid' : ''}>{i.published ? 'Live' : i.paid ? 'Paid' : 'Draft'}</em>{i.published && <button className="icon-btn" aria-label="Copy share link" onClick={() => copy(`${window.location.origin}/s/${i.id}`, 'Share link copied.')}><Copy size={14} /></button>}</li>)}</ul>
@@ -72,6 +81,9 @@ export default function AccountModal({ items, setDark, onClose, onSignedOut }: {
       </div>}
 
       {tab === 'settings' && <div className="acc-pane">
+        <p className="acc-line"><Link2 size={15} /> Add a "Make a surprise" button to your own website</p>
+        <code className="acc-code">{`<script src="${window.location.origin}/embed.js" async></script>`}</code>
+        <button className="secondary-btn" onClick={() => copy(`<script src="${window.location.origin}/embed.js" async></script>`, 'Embed code copied.')}><Copy size={15} /> Copy embed code</button>
         <p className="acc-line"><Palette size={15} /> Site theme</p><ThemePicker setDark={setDark} inline />
         <button className="secondary-btn danger" onClick={() => { if (window.confirm('Remove surprises saved on this device? Surprises saved to your account stay safe.')) { Object.keys(localStorage).filter(k => k.startsWith('lovora') && k !== 'lovora-theme' && k !== 'lovora-skin').forEach(k => localStorage.removeItem(k)); setMsg('Local copies cleared. Reload to refresh.') } }}><Trash2 size={15} /> Clear data stored on this device</button>
       </div>}

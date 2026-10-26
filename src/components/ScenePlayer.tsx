@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Heart, Volume2, VolumeX, RotateCcw, Download, Share2, Sparkles, X } from 'lucide-react'
 import type { Experience, SceneId } from '../types'
-import { sceneLabels, bouquetStyles, themePalettes, normalizeScenes, fontById, suggestions, revealFor, toTitleCase, videoFor } from '../data'
+import { sceneLabels, bouquetStyles, themePalettes, fontById, suggestions, revealFor, toTitleCase, videoFor } from '../data'
 import { sfx } from '../lib/sfx'
 import TapFX from './TapFX'
 import MemoryGallery from './MemoryGallery'
@@ -10,7 +10,9 @@ import GiftIntro from './GiftIntro'
 import Timeline from './Timeline'
 import BirthdayIntro from './BirthdayIntro'
 import { introFor } from '../data'
-import { Polaroids, SpinWheel, StarSky, Vows, Lanterns, WaxSeal, MysteryBoxes, ScratchCard } from './scenes/OccasionScenes'
+import { WishStar, CalendarFlip, SnowGlobe, Postcard, Fortune, LyricReveal, InviteCard } from './scenes/MoreScenes'
+import { effectiveFlow } from '../lib/flow'
+import { Candles, OpenWhen, Polaroids, SpinWheel, StarSky, Vows, Lanterns, WaxSeal, MysteryBoxes, ScratchCard } from './scenes/OccasionScenes'
 import OccasionDeco from './OccasionDeco'
 import BirthdayReveal from './BirthdayReveal'
 import WishJar from './WishJar'
@@ -30,7 +32,7 @@ import { audio } from '../lib/audioManager'
 import WorldAmbient from './WorldAmbient'
 import RelationOpener from './scenes/RelationOpener'
 import { glyphFor, isPartnerWorld } from '../lib/worlds'
-import { occasionKey, flowFor } from '../lib/occasionContent'
+import { occasionKey } from '../lib/occasionContent'
 import BouquetArtwork from './BouquetArtwork'
 import BowScene from './scenes/BowScene'
 import CakeAssembly from './scenes/CakeAssembly'
@@ -44,14 +46,21 @@ const known = Object.keys(sceneLabels) as SceneId[]
 const defaultWishes = suggestions.wishes.slice(0, 5)
 const hapticsAllowed = () => true   // haptics are always on
 
-export default function ScenePlayer({ experience, onClose, preview = false }: Props) {
+export default function ScenePlayer({ experience: rawExperience, onClose, preview = false }: Props) {
+  const [senderOut, setSenderOut] = useState(false)   // "guess who sent it": the sender stays secret until the finale
+  const experience = useMemo(() => {
+    let e = rawExperience
+    if (e.extras?.nickname?.trim()) e = { ...e, recipient: e.extras.nickname.trim() }
+    if (e.extras?.anonymous && !senderOut) e = { ...e, sender: 'someone who adores you' }
+    return e
+  }, [rawExperience, senderOut])
   const photoCount = experience.memories.length
   const scenes = useMemo(() => {
     // the story order is set by occasion + person (older surprises are brought into line); no coupon book any more
-    const base = experience.relation ? flowFor(occasionKey(experience.occasion), experience.relation) : normalizeScenes(experience.scenes, experience.v)
-    const s = base.filter(x => known.includes(x) && x !== 'coupons').filter(x => x === 'counter' ? !!experience.togetherSince : x === 'moments' ? (experience.moments || []).some(t => t.trim()) : (x === 'memories' || x === 'timeline' || x === 'polaroids') ? photoCount > 0 : true)
+    const base = effectiveFlow(experience)
+    const s = base.filter(x => known.includes(x) && x !== 'coupons').filter(x => x === 'counter' ? !!experience.togetherSince : x === 'moments' ? (experience.moments || []).some(t => t.trim()) : x === 'openwhen' ? (experience.openWhen || []).some(o => o.note.trim()) : (x === 'memories' || x === 'timeline' || x === 'polaroids') ? photoCount > 0 : true)
     return s.length ? s : (['heart'] as SceneId[])
-  }, [experience.scenes, experience.v, experience.occasion, experience.relation, experience.togetherSince, experience.moments, photoCount])
+  }, [experience.scenes, experience.v, experience.occasion, experience.relation, experience.togetherSince, experience.moments, experience.openWhen, experience.extraScenes, experience.sceneOrder, photoCount])
   const [index, setIndex] = useState(0)
   const [opened, setOpened] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -96,6 +105,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
   const [bouquetOpen, setBouquetOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const scene = scenes[Math.min(index, scenes.length - 1)]
+  useEffect(() => { if (scene === 'finale') setSenderOut(true) }, [scene])
   const palette = themePalettes[experience.theme] || themePalettes['Rose Romance']
   const unlockAt = experience.targetDate ? new Date(`${experience.targetDate}T00:00:00`).getTime() : 0
   const locked = Boolean(!preview && experience.published && unlockAt && now < unlockAt)
@@ -194,6 +204,15 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
           : <div className="empty-memory"><span>♡</span><p>Some memories are kept in the heart.</p><small>Add photos or videos in the creator to make this part yours.</small></div>}<button className="primary-btn" onClick={next}>One last thing <ArrowRight size={17} /></button></div>}
 
         {scene === 'timeline' && <div className="scene-content wide"><p className="eyebrow">THE STORY SO FAR</p><h1>Our little <em>timeline.</em></h1>{experience.memories.length ? <Timeline memories={experience.memories} buzz={buzz} onDone={next} /> : <p className="muted">Add photos with dates to build your timeline.</p>}</div>}
+        {scene === 'wishstar' && <WishStar exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'calendar' && <CalendarFlip exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'snowglobe' && <SnowGlobe exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'postcard' && <Postcard exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'fortune' && <Fortune exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'lyric' && <LyricReveal exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'invite' && <InviteCard exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'candles' && <Candles exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
+        {scene === 'openwhen' && <OpenWhen exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'polaroids' && <Polaroids exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'spinwheel' && <SpinWheel exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
         {scene === 'starsky' && <StarSky exp={experience} colors={palette.balloons} onDone={next} buzz={buzz} />}
@@ -211,6 +230,7 @@ export default function ScenePlayer({ experience, onClose, preview = false }: Pr
             <article className="scrap-letter"><span className="tape" /><small>{greeting}</small><p>{(letterText.length > 150 ? letterText.slice(0, 147).trimEnd() + '…' : letterText)}</p><em>{experience.closing || 'With love,'} {experience.sender}</em></article>
             <div className="scrap-wishes">{Array.from({ length: Math.min(3, balloonCount) }, (_, i) => <span key={i} className={`sticker st-${i}`}>{experience.balloonWishes?.[i] || defaultWishes[i % defaultWishes.length]}</span>)}</div>
           </div><h1>{revealTitle}</h1><h2>{experience.recipient || 'Beautiful human'} <span>{glyph}</span></h2><p className="scene-copy">{experience.message || 'May life keep surprising you with beautiful reasons to smile.'}</p>
+          {(experience.extras?.jokes || []).filter(j => j.trim()).length > 0 && <div className="joke-row">{(experience.extras?.jokes || []).filter(j => j.trim()).slice(0, 4).map((j, i) => <span key={i}>{j}</span>)}</div>}
           <div className={`bouquet-reveal phase-${bouquetPhase} ${bouquetOpen ? 'opened' : ''}`}><button className={`bouquet-button bouquet-button-${experience.bouquetStyle || 'roses'}`} onClick={openBouquet} aria-label="Reveal your flower bouquet"><span className="bq-rays" aria-hidden="true" /><BouquetArtwork style={experience.bouquetStyle || 'roses'} opened={bouquetOpen} label={`${bouquetTitle || 'Flower'} bouquet`} />{bouquetPhase > 0 && <span className="bq-petal-rain" aria-hidden="true">{Array.from({ length: 18 }, (_, k) => <i key={k} style={{ ['--x' as string]: `${(k * 37) % 100}%`, ['--d' as string]: `${(k % 7) * .18}s`, ['--c' as string]: palette.balloons[k % palette.balloons.length] } as React.CSSProperties} />)}</span>}<small>{bouquetPhase === 2 ? `${bouquetTitle || 'A little bouquet'} — picked just for you ♡` : bouquetPhase === 1 ? 'Unwrapping…' : 'Tap to unwrap your flowers'}</small></button></div>
           <p className="tapfx-hint no-tapfx">✨ Tap anywhere else for fireworks, firecrackers, hearts &amp; confetti</p>
           <div className="final-actions"><button className="primary-btn" onClick={replay}><RotateCcw size={16} /> Replay</button><button className="secondary-btn" onClick={share}><Share2 size={16} /> Share</button></div>

@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { ArrowRight, Check, Play, Sparkles } from 'lucide-react'
 import { PRICING } from '../config'
 import { FinalCTA, Rotator } from './LandingFX'
+import { seasonFromPath } from '../lib/seasons'
 
 const SCENES = ['gift', 'balloons', 'cake', 'letter', 'finale'] as const
 const CAPTION: Record<(typeof SCENES)[number], string> = { gift: 'Tap the gift', balloons: 'Pop a balloon', cake: 'Make a wish', letter: 'Read the letter', finale: 'The grand finale' }
@@ -55,14 +56,20 @@ const FAQ: [string, string][] = [
 const Section = ({ id, kicker, title, children }: { id?: string; kicker: string; title: ReactNode; children: ReactNode }) => <section id={id} className="lp-sec"><p className="lp-kicker">{kicker}</p><h2>{title}</h2>{children}</section>
 
 export default function LandingPro({ onCreate, gallery }: { onCreate: () => void; gallery: ReactNode }) {
+  const season = seasonFromPath()
+  useEffect(() => {
+    const old = document.title, meta = document.querySelector<HTMLMetaElement>('meta[name="description"]'), oldMeta = meta?.content
+    if (season) { document.title = `${season.label} surprise: make an interactive gift | Lovora Meow`; if (meta) meta.content = season.meta }
+    return () => { document.title = old; if (meta && oldMeta !== undefined) meta.content = oldMeta }
+  }, [season])
   return <div className="lp">
     <section className="lp-hero">
       <div className="lp-bg" aria-hidden="true"><i /><i /><i /><u /></div>
       <div className="lp-hero-copy">
-        <span className="lp-pill"><Sparkles size={14} /> Nine cinematic entrances, one link</span>
-        <h1>Send a feeling,<br /><em>not just a link.</em></h1>
-        <p className="lp-lede">Turn a birthday, an anniversary or a few kind words into a little interactive world. They open one link and the surprise begins.</p>
-        <p className="lp-for">For your <Rotator /></p>
+        <span className="lp-pill">{season ? <span aria-hidden="true">{season.emoji}</span> : <Sparkles size={14} />} {season ? season.pill : 'Nine cinematic entrances, one link'}</span>
+        <h1>{season ? <>{season.h1a}<br /><em>{season.h1b}</em></> : <>Send a feeling,<br /><em>not just a link.</em></>}</h1>
+        <p className="lp-lede">{season ? season.lede : 'Turn a birthday, an anniversary or a few kind words into a little interactive world. They open one link and the surprise begins.'}</p>
+        <p className="lp-for">For your <Rotator words={season?.rot} /></p>
         <div className="lp-cta"><button className="primary-btn big-btn" onClick={onCreate}>Create a surprise <ArrowRight size={18} /></button><button className="lp-ghost" onClick={() => document.getElementById('lp-how')?.scrollIntoView({ behavior: 'smooth' })}><Play size={15} /> See how it feels</button></div>
         <ul className="lp-trust"><li><Check size={14} /> No app needed</li><li><Check size={14} /> Free to preview</li><li><Check size={14} /> Ready in minutes</li></ul>
       </div>

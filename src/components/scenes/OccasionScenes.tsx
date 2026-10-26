@@ -176,3 +176,59 @@ export function Polaroids({ exp, onDone, buzz }: P) {
     <Next onClick={onDone} label={seen.length < photos.length ? 'Skip' : 'Continue'} />
   </div>
 }
+
+/* ---------------- BIRTHDAY: blow out the candles (microphone, or tap) ---------------- */
+export function Candles({ exp, onDone, buzz }: P) {
+  const n = Math.min(9, Math.max(3, exp.age || 5))
+  const [out, setOut] = useState<boolean[]>(() => Array(n).fill(false)), [mic, setMic] = useState<'idle' | 'on' | 'denied'>('idle'), [level, setLevel] = useState(0), [wish, setWish] = useState(false)
+  const outRef = useRef(out); outRef.current = out
+  const done = out.every(Boolean)
+  const snuff = (i?: number) => setOut(o => { const k = i ?? o.findIndex(x => !x); if (k < 0 || o[k]) return o; const c = [...o]; c[k] = true; sfx.pop(k); buzz(16); return c })
+  useEffect(() => {
+    if (mic !== 'on') return
+    let raf = 0, stream: MediaStream | undefined, ctx: AudioContext | undefined, dead = false
+    void (async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+        if (dead) { stream.getTracks().forEach(t => t.stop()); return }
+        ctx = new AudioContext(); const an = ctx.createAnalyser(); an.fftSize = 512; ctx.createMediaStreamSource(stream).connect(an)
+        const buf = new Uint8Array(an.fftSize); let last = 0, hold = 0
+        const loop = (t: number) => {
+          an.getByteTimeDomainData(buf); let sum = 0; for (const v of buf) { const x = (v - 128) / 128; sum += x * x }
+          const rms = Math.sqrt(sum / buf.length); setLevel(l => l * .6 + Math.min(1, rms * 5) * .4)
+          if (rms > .09) { hold += 1; if (hold > 4 && t - last > 320) { last = t; snuff() } } else hold = 0
+          raf = requestAnimationFrame(loop)
+        }
+        raf = requestAnimationFrame(loop)
+      } catch { setMic('denied') }
+    })()
+    return () => { dead = true; cancelAnimationFrame(raf); stream?.getTracks().forEach(t => t.stop()); void ctx?.close() }
+  }, [mic])
+  useEffect(() => { if (done && !wish) { const t = window.setTimeout(() => { setWish(true); sfx.chime(); sfx.boom('confetti'); buzz([40, 30, 100]) }, 700); return () => window.clearTimeout(t) } }, [done, wish, buzz])
+  return <div className="scene-content occ-scene candle-scene">
+    <p className="eyebrow">{exp.age ? `${exp.age} CANDLES` : 'MAKE A WISH'}</p><h1>Blow out the <em>candles.</em></h1>
+    <div className="cn-cake" style={{ ['--lean' as string]: level } as CSSProperties}>
+      <div className="cn-row">{out.map((o, i) => <button key={i} className={`cn ${o ? 'out' : ''}`} onClick={() => snuff(i)} aria-label={o ? 'Candle out' : 'Blow out this candle'} style={{ ['--i' as string]: i } as CSSProperties}><span className="wick" /><i className="flame" /><i className="smoke" /><b /></button>)}</div>
+      <div className="cn-tier t2" /><div className="cn-tier t1" /><div className="cn-plate" />
+    </div>
+    {!done && (mic === 'on' ? <div className="cn-meter" aria-label="Blow strength"><i style={{ transform: `scaleX(${level})` }} /></div> : <button className="primary-btn occ-next" onClick={() => { sfx.unlock(); setMic('on') }}>🎤 Blow into the mic</button>)}
+    {!done && <small className="muted">{mic === 'denied' ? 'No microphone, so just tap each candle.' : mic === 'on' ? 'Take a deep breath and blow towards the phone' : 'Or tap a candle to blow it out'}</small>}
+    {wish && <div className="occ-result"><small>Close your eyes</small><strong>Make a wish…</strong></div>}
+    {wish && <Next onClick={onDone} />}
+  </div>
+}
+
+/* ---------------- LOVE LETTER / ANNIVERSARY: open-when envelopes ---------------- */
+export function OpenWhen({ exp, colors, onDone, buzz }: P) {
+  const items = useMemo(() => (exp.openWhen || []).filter(o => o.note.trim()).slice(0, 6), [exp.openWhen])
+  const [cur, setCur] = useState<number | null>(null), [seen, setSeen] = useState<number[]>([])
+  const pick = (i: number) => { sfx.unlock(); sfx.lid(); sfx.sparkle(); buzz([20, 30, 40]); setCur(i); setSeen(s => s.includes(i) ? s : [...s, i]) }
+  return <div className="scene-content occ-scene ow-scene">
+    <p className="eyebrow">FOR THE RIGHT MOMENT</p><h1>Open <em>when…</em></h1>
+    <div className="ow-grid">{items.map((o, i) => <button key={i} className={`ow ${seen.includes(i) ? 'read' : ''}`} onClick={() => pick(i)} style={{ ['--c' as string]: colors[i % colors.length] || '#ff8fc2', ['--r' as string]: `${(i % 3 - 1) * 3}deg`, ['--d' as string]: `${i * .2}s` } as CSSProperties}>
+      <span className="ow-flap" /><span className="ow-seal">{seen.includes(i) ? '✓' : '♥'}</span><small>open when</small><strong>{o.label}</strong></button>)}</div>
+    {cur !== null && items[cur] && <div className="ow-modal" onClick={() => setCur(null)} role="dialog" aria-label="Letter"><article className="ow-letter" onClick={e => e.stopPropagation()}><small>Open when {items[cur].label}</small><p>{items[cur].note}</p><em>{exp.sender ? `— ${exp.sender}` : '♥'}</em><button className="secondary-btn" onClick={() => setCur(null)}>Close</button></article></div>}
+    <small className="muted">{seen.length} of {items.length} opened</small>
+    {seen.length > 0 && <Next onClick={onDone} />}
+  </div>
+}

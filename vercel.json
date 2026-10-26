@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/for/:slug",
+      "destination": "/"
+    },
+    {
       "source": "/s/:id",
       "destination": "/api/share?id=:id"
     },

@@ -25,7 +25,7 @@ export const themes: { name: ThemeName; colors: string; description: string }[] 
   { name: 'Mocha Cream', colors: 'linear-gradient(135deg,#e8c9a8,#7a4a38)', description: 'Cosy coffee and cream' },
 ]
 export const defaultScenes: SceneId[] = ['heart','intro','cake','balloons','letter','video','memories','timeline','wishjar','finale']
-export const sceneLabels: Record<SceneId, string> = { heart: 'Opening scene', intro: 'Magical intro', cake: 'Surprise cake', balloons: 'Pop the balloons', letter: 'Personal letter', video: 'Video surprise', memories: 'Photo memories', timeline: 'Memory timeline', wishjar: 'Wish jar', coupons: 'Coupon book', counter: 'Together-since counter', moments: 'Special moments', polaroids: 'Polaroid gallery', spinwheel: 'Wheel of wishes', starsky: 'Star constellation', vows: 'Typed vows', lanterns: 'Sky lanterns', waxseal: 'Wax-seal letter', mystery: 'Mystery boxes', scratch: 'Scratch card', finale: 'Grand finale' }
+export const sceneLabels: Record<SceneId, string> = { heart: 'Opening scene', intro: 'Magical intro', cake: 'Surprise cake', balloons: 'Pop the balloons', letter: 'Personal letter', video: 'Video surprise', memories: 'Photo memories', timeline: 'Memory timeline', wishjar: 'Wish jar', coupons: 'Coupon book', counter: 'Together-since counter', moments: 'Special moments', wishstar: 'Wish upon a star', calendar: 'Calendar flip', snowglobe: 'Snow globe', postcard: 'Postcard', fortune: 'Fortune cookie', lyric: 'Song line', invite: 'Invitation', candles: 'Blow the candles', openwhen: 'Open-when letters', polaroids: 'Polaroid gallery', spinwheel: 'Wheel of wishes', starsky: 'Star constellation', vows: 'Typed vows', lanterns: 'Sky lanterns', waxseal: 'Wax-seal letter', mystery: 'Mystery boxes', scratch: 'Scratch card', finale: 'Grand finale' }
 
 
 export const messageTemplates = [
@@ -186,3 +186,14 @@ export const introFor = (e: { introStyle?: string; occasion?: string; relation?:
   if (e.occasion === 'Love letter') return 'petals'
   return introByRelation[e.relation || ''] ?? 'confetti'
 }
+
+/** Optional scenes a creator can add to any surprise. */
+export const extraSceneDefs = [
+  { id: 'wishstar', title: 'Wish upon a star', emoji: '⭐', desc: 'They drag a falling star to send a wish' },
+  { id: 'calendar', title: 'Calendar flip', emoji: '🗓️', desc: 'Pages flip back to a day that matters' },
+  { id: 'snowglobe', title: 'Snow globe', emoji: '🔮', desc: 'They shake it and a message appears' },
+  { id: 'postcard', title: 'Postcard', emoji: '💌', desc: 'A postcard flips to your handwriting' },
+  { id: 'fortune', title: 'Fortune cookie', emoji: '🥠', desc: 'Crack it for a fortune you wrote' },
+  { id: 'lyric', title: 'Song line', emoji: '🎵', desc: 'A lyric types out: this one is us' },
+  { id: 'invite', title: 'Invitation + RSVP', emoji: '🎟️', desc: 'Time, place, and a reply button' },
+] as const
