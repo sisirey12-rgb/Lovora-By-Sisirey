@@ -9,6 +9,12 @@ export const SKINS = [
   { id: 'mocha', name: 'Mocha Gold', light: false, sw: ['#1c1411', '#e3b27a', '#f3d9a8'] },
   { id: 'sakura', name: 'Sakura Day', light: true, sw: ['#fff3f8', '#e0679a', '#a97cf0'] },
   { id: 'cream', name: 'Cream Latte', light: true, sw: ['#fbf4ea', '#c9805a', '#e0a64f'] },
+  { id: 'peach', name: 'Peach Blush', light: true, sw: ['#fff1ea', '#ff8a6b', '#ffc36b'] },
+  { id: 'cotton', name: 'Cotton Candy', light: true, sw: ['#fff0f8', '#ff7eb6', '#7fc4ff'] },
+  { id: 'lilac', name: 'Lilac Milk', light: true, sw: ['#f6f0ff', '#9b7bea', '#ff9ccc'] },
+  { id: 'matcha', name: 'Matcha Cream', light: true, sw: ['#f2f7ea', '#6fae6f', '#e8c86a'] },
+  { id: 'boba', name: 'Berry Boba', light: false, sw: ['#2a1020', '#ff7aa8', '#ffcf8a'] },
+  { id: 'honey', name: 'Honey Butter', light: false, sw: ['#2a2010', '#ffc247', '#ff9a6b'] },
 ] as const
 export const applySkin = (id: string) => { document.documentElement.dataset.skin = id; try { localStorage.setItem('lovora-skin', id) } catch { /* private mode */ } }
 export const savedSkin = () => { try { return localStorage.getItem('lovora-skin') || 'classic' } catch { return 'classic' } }

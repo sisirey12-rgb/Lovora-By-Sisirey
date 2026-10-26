@@ -1,6 +1,8 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { ArrowRight, Check, Play, Sparkles } from 'lucide-react'
 import { PRICING } from '../config'
+import OccasionCards from './OccasionCards'
+import type { Occasion } from '../types'
 import { FinalCTA, Rotator } from './LandingFX'
 import { seasonFromPath, useLiveSeason } from '../lib/seasons'
 
@@ -32,12 +34,6 @@ function HeroPhone() {
   </div>
 }
 
-const OCC = [
-  { e: '🎂', t: 'Birthday', c: 'o1', s: ['Balloon wishes', 'Cake and candles', 'Wheel of wishes', 'Polaroid gallery'], d: 'A party in their pocket.' },
-  { e: '💞', t: 'Anniversary', c: 'o2', s: ['Our counter', 'Star constellation', 'Polaroid gallery', 'Typed vows'], d: 'Your story, under the stars.' },
-  { e: '💌', t: 'Love letter', c: 'o3', s: ['Wax-seal letter', 'Sky lanterns', 'Read aloud'], d: 'Words first, always.' },
-  { e: '✨', t: 'Special surprise', c: 'o4', s: ['Mystery boxes', 'Scratch card', 'Balloons'], d: 'Just because they exist.' },
-]
 const BENTO: { k: string; t: string; d: string; e: string; w?: boolean }[] = [
   { k: 'b1', t: 'Nine cinematic entrances', d: 'Fireworks, galaxy, falling petals, butterflies. Every person starts with a fitting one, and you can change it.', e: '🎆', w: true },
   { k: 'b2', t: 'Cakes and bouquets', d: 'Twenty-three cakes and sixteen hand-tied bouquets.', e: '🎂' },
@@ -55,7 +51,8 @@ const FAQ: [string, string][] = [
 ]
 const Section = ({ id, kicker, title, children }: { id?: string; kicker: string; title: ReactNode; children: ReactNode }) => <section id={id} className="lp-sec"><p className="lp-kicker">{kicker}</p><h2>{title}</h2>{children}</section>
 
-export default function LandingPro({ onCreate, gallery }: { onCreate: () => void; gallery: ReactNode }) {
+export default function LandingPro({ onStart }: { onStart: (o: Occasion) => void }) {
+  const onCreate = toStart
   const live = useLiveSeason()
   const season = seasonFromPath() ?? live
   useEffect(() => {
@@ -77,21 +74,17 @@ export default function LandingPro({ onCreate, gallery }: { onCreate: () => void
       <HeroPhone />
     </section>
 
+    <OccasionCards onStart={onStart} />
+
     <Section id="lp-how" kicker="HOW IT WORKS" title={<>From idea to <em>goosebumps</em> in three steps.</>}>
       <ol className="lp-steps">
         {[['1', '🎯', 'Pick who it is for', 'Choose the occasion and the person. Each one gets its own scenes, colours, sounds and entrance.'], ['2', '✍️', 'Add your words', 'Names, a message, wishes and photos. The editor shows exactly what will happen.'], ['3', '🚀', 'Preview, then send', 'Watch it for free. When it feels right, unlock the link and share it.']].map(([n, e, t, d]) => <li key={n}><span className="n">{n}</span><i aria-hidden="true">{e}</i><h3>{t}</h3><p>{d}</p></li>)}
       </ol>
     </Section>
 
-    <Section kicker="FOUR OCCASIONS" title={<>Every occasion is <em>its own experience.</em></>}>
-      <div className="lp-occ">{OCC.map(o => <button key={o.t} className={`lp-occ-card ${o.c}`} onClick={toStart}><span className="e">{o.e}</span><h3>{o.t}</h3><p>{o.d}</p><ul>{o.s.map(x => <li key={x}>{x}</li>)}</ul><b>Start this one <ArrowRight size={15} /></b></button>)}</div>
-    </Section>
-
     <Section kicker="INSIDE EVERY SURPRISE" title={<>Small details that make it <em>feel real.</em></>}>
       <div className="lp-bento">{BENTO.map(b => <article key={b.k} className={`lp-tile ${b.k} ${b.w ? 'wide' : ''}`}><span className="e" aria-hidden="true">{b.e}</span><h3>{b.t}</h3><p>{b.d}</p></article>)}</div>
     </Section>
-
-    <div id="start" className="lp-start">{gallery}</div>
 
     <Section kicker="SIMPLE PRICING" title={<>Preview free. <em>Pay only to share.</em></>}>
       <div className="lp-price"><div className="lp-price-card"><span className="lp-tag">Launch price</span><div className="amt"><b>₹{PRICING.amount}</b><s>₹{PRICING.regular}</s></div><p>per surprise, one time</p>

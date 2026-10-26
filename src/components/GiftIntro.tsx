@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { Cat } from 'lucide-react'
 import { sfx } from '../lib/sfx'
+import { Shape, type FloatKind } from './Floaties'
 
 /** First thing the recipient sees: a glowing gift that floats, shakes with a drum roll, then the lid flies off in a burst of light and confetti. Tap the cat 5 times for a secret. */
 export default function GiftIntro({ recipient, colors, secret, onOpen }: { recipient: string; colors: string[]; secret?: string; onOpen: () => void }) {
@@ -30,7 +31,7 @@ export default function GiftIntro({ recipient, colors, secret, onOpen }: { recip
         <div className="gx-burst" aria-hidden="true">{Array.from({ length: 12 }, (_, i) => <i key={i} style={{ ['--a' as string]: `${i * 30}deg` } as CSSProperties} />)}</div>
         <div className="gx-lid" aria-hidden="true"><i className="gx-lid-ribbon" /><span className="gx-bow"><b /><b /><u /></span></div>
         <div className="gx-body" aria-hidden="true"><i className="gx-ribbon-v" /><i className="gx-shine" /></div>
-        <div className="gx-pop" aria-hidden="true">{['💖', '🎈', '✨', '🎂', '💌'].map((e, i) => <span key={i} style={{ ['--i' as string]: i } as CSSProperties}>{e}</span>)}</div>
+        <div className="gx-pop" aria-hidden="true">{(['heart', 'balloon', 'star', 'flower', 'sparkle'] as FloatKind[]).map((k, i) => <span key={i} style={{ ['--i' as string]: i } as CSSProperties}><Shape kind={k} color={c(i)} size={36} /></span>)}</div>
       </div>
       <div className="gx-shadow" aria-hidden="true" />
     </div>

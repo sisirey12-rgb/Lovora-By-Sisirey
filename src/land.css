@@ -91,3 +91,25 @@
 .lp-faq summary{cursor:pointer;list-style:none;padding:18px 0;font:600 17px 'Fredoka',sans-serif;display:flex;justify-content:space-between;gap:12px;align-items:center}.lp-faq summary::-webkit-details-marker{display:none}.lp-faq summary:after{content:"+";font-size:24px;color:var(--lp-a);transition:transform .25s}.lp-faq details[open] summary:after{transform:rotate(45deg)}
 .lp-faq p{margin:0 0 18px;color:var(--lp-muted);line-height:1.6}
 @media(prefers-reduced-motion:reduce){.lp-phone,.lp-chip,.lp-orbit i,.lp-bg i,.lp .m-bals i,.lp-occ-card .e,.lp-tile .e,.lp em{animation:none!important}}
+
+/* ---------- occasion cards (main selector) ---------- */
+.oc-sec{padding-top:56px}.oc-lead{margin:-14px 0 28px;max-width:52ch;color:var(--lp-muted);font-size:16px;line-height:1.6}
+.oc-grid{display:grid;gap:16px;grid-template-columns:1fr;perspective:1200px}@media(min-width:680px){.oc-grid{grid-template-columns:repeat(2,1fr)}}@media(min-width:1040px){.oc-grid{grid-template-columns:repeat(4,1fr)}}
+.oc-card{--rx:0deg;--ry:0deg;--mx:50%;--my:0%;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:430px;padding:24px 22px 22px;text-align:left;color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:34px;overflow:hidden;
+  transform:rotateX(var(--rx)) rotateY(var(--ry));transform-style:preserve-3d;transition:transform .25s ease-out,box-shadow .35s;box-shadow:0 30px 60px -28px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.4);animation:ocIn .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*90ms)}
+@keyframes ocIn{from{opacity:0;transform:translateY(40px) scale(.96)}}
+.oc-card:hover{box-shadow:0 40px 70px -26px rgba(255,100,170,.6),inset 0 1px 0 rgba(255,255,255,.5)}
+.oc-card.o1{background:linear-gradient(160deg,#ffa36b 0%,#ff6a9a 60%,#ff3d8b)}.oc-card.o2{background:linear-gradient(160deg,#c0206a 0%,#7a1366 55%,#4a1068)}.oc-card.o3{background:linear-gradient(160deg,#ffb0cf 0%,#d58ad8 55%,#a45bd9)}.oc-card.o4{background:linear-gradient(160deg,#5b8cff 0%,#4a6fe0 45%,#19b89a)}
+.oc-card:before{content:"";position:absolute;inset:0;background:radial-gradient(420px circle at var(--mx) var(--my),rgba(255,255,255,.3),transparent 55%),repeating-linear-gradient(120deg,transparent 0 24px,rgba(255,255,255,.05) 24px 26px);pointer-events:none}
+.oc-card:after{content:"";position:absolute;left:-30%;top:-60%;width:60%;height:220%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);transform:rotate(18deg) translateX(-140%);transition:transform .9s;pointer-events:none}.oc-card:hover:after{transform:rotate(18deg) translateX(520%)}
+.oc-card>*{position:relative;z-index:1}.oc-fl{z-index:0!important}
+.oc-art{display:block;width:96px;height:96px;margin-bottom:6px;filter:drop-shadow(0 14px 14px rgba(0,0,0,.3));transform:translateZ(40px);animation:vbFloat 4s ease-in-out infinite}.oc-art svg{width:100%;height:100%;overflow:visible}
+.oc-art .flm{transform-box:fill-box;transform-origin:50% 100%;animation:mFlame .35s ease-in-out infinite alternate}.oc-art .tw{animation:twk 2.6s ease-in-out infinite}.oc-art .hb{transform-box:fill-box;transform-origin:50% 60%;animation:hbeat 1.4s ease-in-out infinite}.oc-art .lid{transform-box:fill-box;transform-origin:20% 100%;animation:lidUp 3.6s ease-in-out infinite}.oc-art .sheet{animation:sheetUp 3.6s ease-in-out infinite}
+@keyframes hbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.1)}30%{transform:scale(1)}45%{transform:scale(1.07)}}@keyframes lidUp{0%,55%,100%{transform:none}70%{transform:translate(8px,-14px) rotate(14deg)}}@keyframes sheetUp{0%,50%,100%{transform:none}70%{transform:translateY(-10px)}}
+.oc-num{position:absolute!important;right:20px;top:14px;font:700 54px 'Fredoka',sans-serif;opacity:.16}
+.oc-card h3{margin-top:8px;font:700 28px 'Fredoka',sans-serif;line-height:1.1}.oc-card p{margin:0;font-size:15px;opacity:.92}
+.oc-card ul{list-style:none;margin:10px 0 4px;padding:0;display:flex;flex-wrap:wrap;gap:6px}.oc-card li{padding:5px 11px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(255,255,255,.2);backdrop-filter:blur(6px)}
+.oc-who{font-size:12px;opacity:.8}
+.oc-go{margin-top:auto;display:flex;align-items:center;justify-content:space-between;align-self:stretch;padding:12px 8px 12px 18px;border-radius:99px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);font-weight:800;font-size:15px;transition:background .25s}
+.oc-go b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#fff;color:#3a1646;transition:transform .25s}.oc-card:hover .oc-go{background:rgba(255,255,255,.3)}.oc-card:hover .oc-go b{transform:translateX(4px) rotate(-8deg)}
+@media(prefers-reduced-motion:reduce){.oc-card,.oc-art,.oc-art *{animation:none!important}.oc-card{transform:none}}

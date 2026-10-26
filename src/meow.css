@@ -278,3 +278,5 @@ body{font-family:'DM Sans',sans-serif}
 @keyframes biRise{0%{transform:translate(0,0)}50%{transform:translate(14px,-55vh)}100%{transform:translate(-8px,-115vh)}}
 .timeline-hint{position:sticky;bottom:0;text-align:center;margin:6px 0 0;padding:8px;font-size:12px;font-weight:700;letter-spacing:.06em;color:#ffd36e;background:linear-gradient(transparent,var(--bg) 60%)}
 .timeline{cursor:pointer}
+
+.theme-strawberry-milk{--th-h:345}.theme-honey-butter{--th-h:44}.theme-matcha-latte{--th-h:98}.theme-lilac-marshmallow{--th-h:268}.theme-berry-boba{--th-h:325}.theme-apricot-sunrise{--th-h:24}.theme-baby-blue-cloud{--th-h:208}.theme-cinnamon-rose{--th-h:12}

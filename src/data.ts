@@ -7,6 +7,14 @@ export const occasions: { name: Occasion; icon: string; desc: string }[] = [
   { name: 'Special surprise', icon: '✨', desc: 'Just because they matter' },
 ]
 export const themes: { name: ThemeName; colors: string; description: string }[] = [
+  { name: 'Strawberry Milk', colors: 'linear-gradient(135deg,#ffe3ec,#ff8fb1)', description: 'Creamy pink, sweet and soft' },
+  { name: 'Honey Butter', colors: 'linear-gradient(135deg,#fff0b8,#f2a93b)', description: 'Warm honey glow' },
+  { name: 'Matcha Latte', colors: 'linear-gradient(135deg,#e6f3cf,#8fc07a)', description: 'Calm, creamy green' },
+  { name: 'Lilac Marshmallow', colors: 'linear-gradient(135deg,#f1e6ff,#b89bf2)', description: 'Fluffy lilac clouds' },
+  { name: 'Berry Boba', colors: 'linear-gradient(135deg,#ffb3d1,#7a2a5e)', description: 'Berry pink with a deep swirl' },
+  { name: 'Apricot Sunrise', colors: 'linear-gradient(135deg,#ffd9b0,#ff8e6e)', description: 'A cosy apricot morning' },
+  { name: 'Baby Blue Cloud', colors: 'linear-gradient(135deg,#e0f1ff,#8cc4ff)', description: 'Soft sky, gentle and kind' },
+  { name: 'Cinnamon Rose', colors: 'linear-gradient(135deg,#f6c9b8,#a8503e)', description: 'Warm spice and rosy tones' },
   { name: 'Rose Romance', colors: 'linear-gradient(135deg,#ff9db7,#5e285e)', description: 'Blush, roses & tender glow' },
   { name: 'Midnight Galaxy', colors: 'linear-gradient(135deg,#131b51,#a35cff)', description: 'Cosmic and dreamy' },
   { name: 'Peach Dream', colors: 'linear-gradient(135deg,#ffd0b5,#f37f9c)', description: 'Warm peach softness' },
@@ -100,6 +108,14 @@ export const textAnims = [
 /** Theme palettes drive every balloon, the tree and the video-card balloons so they always match the selected theme. */
 export interface ThemePalette { balloons: string[]; branch: string; trunk: string; glow: string }
 export const themePalettes: Record<ThemeName, ThemePalette> = {
+  'Strawberry Milk': { balloons: ['#ff9fbd', '#ffc9da', '#ff7aa5', '#ffe0ea', '#f2688f'], branch: '#d6a0b2', trunk: '#8f5a6c', glow: '#ff9fbd' },
+  'Honey Butter': { balloons: ['#ffc247', '#ffe08a', '#f29a2e', '#fff1c4', '#e5812a'], branch: '#d8b46a', trunk: '#8a6330', glow: '#ffc247' },
+  'Matcha Latte': { balloons: ['#9ccf86', '#cfe8b3', '#7fb36a', '#e9f5d5', '#b5dba0'], branch: '#a9c89a', trunk: '#5f7d52', glow: '#9ccf86' },
+  'Lilac Marshmallow': { balloons: ['#c4a8f5', '#e4d4ff', '#a98af0', '#f3eaff', '#ffb6dd'], branch: '#bba8dc', trunk: '#7d669c', glow: '#c4a8f5' },
+  'Berry Boba': { balloons: ['#ff7aa8', '#c9407f', '#ffb3d1', '#7a2a5e', '#ff9ec2'], branch: '#c78aa8', trunk: '#6e3358', glow: '#ff5f9a' },
+  'Apricot Sunrise': { balloons: ['#ffae7a', '#ffd0a8', '#ff8e6e', '#ffe4c8', '#f2774f'], branch: '#dba88a', trunk: '#8f5a40', glow: '#ff9e72' },
+  'Baby Blue Cloud': { balloons: ['#8cc4ff', '#c4e2ff', '#6aa9f0', '#e6f3ff', '#a8d2ff'], branch: '#9ec0dc', trunk: '#56789a', glow: '#8cc4ff' },
+  'Cinnamon Rose': { balloons: ['#d98066', '#f0b09a', '#b8503e', '#f8d0c2', '#e5937a'], branch: '#c99a88', trunk: '#7a4034', glow: '#e0806a' },
   'Rose Romance': { balloons: ['#ff7aa8', '#e23d78', '#ffb3cc', '#c42a63', '#ff9fbf'], branch: '#c58aa5', trunk: '#8a5470', glow: '#ff6ea4' },
   'Midnight Galaxy': { balloons: ['#7a6bff', '#a35cff', '#5ac8ff', '#c9a8ff', '#4a55d6'], branch: '#8a86c8', trunk: '#4d4b8c', glow: '#8c7bff' },
   'Peach Dream': { balloons: ['#ffb08a', '#f37f9c', '#ffd0b5', '#ff9a8d', '#e86f8c'], branch: '#d39a86', trunk: '#9a6256', glow: '#ff9b7e' },

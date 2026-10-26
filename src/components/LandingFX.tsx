@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { ArrowRight, Heart } from 'lucide-react'
 import { bouquetStyles, cakeStyles, introStyles } from '../data'
+import Floaties from './Floaties'
 
 const WORDS = ['birthday', 'anniversary', 'love letter', 'best friend', 'mom', 'dad', 'little brother', 'big sister']
 /** Cycles through who the surprise could be for, letter by letter. */
@@ -61,7 +62,7 @@ export function IntroShowcase() {
 }
 
 export function FinalCTA({ onCreate }: { onCreate: () => void }) {
-  return <section className="lf-cta"><div className="lf-cta-rain" aria-hidden="true">{Array.from({ length: 14 }, (_, k) => <span key={k} style={{ left: `${k * 7.3}%`, animationDelay: `${-k * .7}s` }}>{['💖', '✨', '🎈', '🌸'][k % 4]}</span>)}</div>
+  return <section className="lf-cta"><div className="lf-cta-rain" aria-hidden="true"><Floaties kinds={['heart', 'star', 'balloon', 'flower', 'sparkle']} colors={['#ff8fc2', '#ffd36e', '#7fd6ff', '#b79bff']} count={14} /></div>
     <p className="eyebrow">SOMEONE CAME TO MIND, DIDN’T THEY?</p><h2>Give them a moment <em>they’ll replay.</em></h2><p>One link. A whole little world. Ready in a minute.</p>
     <button className="primary-btn big-btn" onClick={onCreate}>Create a surprise <ArrowRight size={18} /></button><small><Heart size={12} fill="currentColor" /> Free to preview, always</small></section>
 }

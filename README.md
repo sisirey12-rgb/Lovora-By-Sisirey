@@ -163,3 +163,6 @@ Sign in / sign up is built in and uses the Supabase project from `.env.local`. S
 
 ## Switch the home page season (one click)
 Run `supabase/migrations/0006_site_settings.sql` once. Then sign in with an `OWNER_EMAILS` account > account panel > Settings > "Home page season" and tap a festival (or Normal). Visitors see it within about a minute, no redeploy. `ACTIVE_SEASON` in Vercel is only a fallback.
+
+## Start flow
+Landing > tap an occasion card > type their name, pick who they are to you (the template and look are chosen automatically) > fill up to 5 optional key details (reveal date, age, dates, place, nickname...) > Create and preview > then the share link with the launch price. Floating decorations are drawn shapes (`components/Floaties.tsx`), not emojis.
