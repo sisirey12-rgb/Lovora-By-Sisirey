@@ -17,6 +17,7 @@ import './newscenes.css'
 import './creating.css'
 import './fresh.css'
 import './landing2.css'
+import './theme-global.css'
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode><AuthProvider><App /></AuthProvider></React.StrictMode>

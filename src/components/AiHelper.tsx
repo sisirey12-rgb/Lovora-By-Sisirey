@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sparkles, X, Wand2, RefreshCw } from 'lucide-react'
 import { supabase } from '../services/supabase/client'
 import AiGuide from './AiGuide'
@@ -8,9 +8,10 @@ export type AiDraft = { greeting: string; message: string; closing: string; ball
 const LANGS = ['English', 'Hinglish', 'Hindi'] as const, TONES = ['Sweet', 'Funny', 'Emotional'] as const
 
 /** "Write it with AI": the creator types a few facts, the server drafts the letter, wishes, vows, mystery boxes and open-when notes. */
-export default function AiHelper({ item, onApply }: { item: Experience; onApply: (p: Partial<Experience>) => void }) {
-  const [open, setOpen] = useState(false), [facts, setFacts] = useState(''), [lang, setLang] = useState<(typeof LANGS)[number]>(item.language === 'Hinglish' ? 'Hinglish' : 'English'), [tone, setTone] = useState<(typeof TONES)[number]>('Sweet')
+export default function AiHelper({ item, onApply, initialFacts = '' }: { item: Experience; onApply: (p: Partial<Experience>) => void; initialFacts?: string }) {
+  const [open, setOpen] = useState(false), [facts, setFacts] = useState(initialFacts), [lang, setLang] = useState<(typeof LANGS)[number]>(item.language === 'Hinglish' ? 'Hinglish' : 'English'), [tone, setTone] = useState<(typeof TONES)[number]>('Sweet')
   const [busy, setBusy] = useState(false), [err, setErr] = useState(''), [draft, setDraft] = useState<AiDraft | null>(null)
+  useEffect(() => { if (open && initialFacts.trim()) setFacts(initialFacts) }, [open, initialFacts])
   const run = async () => {
     setErr(''); setBusy(true)
     try {

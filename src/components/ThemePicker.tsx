@@ -16,7 +16,7 @@ export const SKINS = [
   { id: 'boba', name: 'Berry Boba', light: false, sw: ['#2a1020', '#ff7aa8', '#ffcf8a'] },
   { id: 'honey', name: 'Honey Butter', light: false, sw: ['#2a2010', '#ffc247', '#ff9a6b'] },
 ] as const
-export const applySkin = (id: string) => { document.documentElement.dataset.skin = id; try { localStorage.setItem('lovora-skin', id) } catch { /* private mode */ } }
+export const applySkin = (id: string) => { const skin = SKINS.find(s => s.id === id) || SKINS[0]; document.documentElement.dataset.skin = skin.id; document.documentElement.dataset.theme = skin.light ? 'light' : 'dark'; try { localStorage.setItem('lovora-skin', skin.id); localStorage.setItem('lovora-theme', skin.light ? 'light' : 'dark') } catch { /* private mode */ } }
 export const savedSkin = () => { try { return localStorage.getItem('lovora-skin') || 'classic' } catch { return 'classic' } }
 
 const dot = (sw: readonly string[]) => `linear-gradient(90deg,${sw[0]} 0 33.33%,${sw[1]} 33.33% 66.66%,${sw[2]} 66.66% 100%)`

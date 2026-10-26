@@ -11,6 +11,7 @@ import { storage } from '../services/storage'
 import { supabase } from '../services/supabase/client'
 import { useAuth } from '../services/auth'
 import AiGuide from './AiGuide'
+import AiHelper from './AiHelper'
 import type { Experience, Extras, Occasion, Relation } from '../types'
 
 type Field = { key: string; label: string; type: 'text' | 'date' | 'number'; ph?: string; hint?: string; apply: (e: Experience, v: string) => Experience }
@@ -32,7 +33,7 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
   const [step, setStep] = useState<1 | 2>(1), [to, setTo] = useState(''), [from, setFrom] = useState(myName), [rel, setRel] = useState<Relation | ''>(relation || (occasion === 'Love letter' ? 'Partner' : ''))
   const [vals, setVals] = useState<Record<string, string>>({}), [facts, setFacts] = useState(''), [photo, setPhoto] = useState('')
   const [busy, setBusy] = useState(''), [err, setErr] = useState(''), [saving, setSaving] = useState<Experience | null>(null), [last, setLast] = useState<Experience | null>(null), [previewed, setPreviewed] = useState(false)
-  const [pay, setPay] = useState(false), [done, setDone] = useState<Experience | null>(null), [copied, setCopied] = useState(false), [amount, setAmount] = useState(PRICING.amount)
+  const [pay, setPay] = useState(false), [done, setDone] = useState<Experience | null>(null), [copied, setCopied] = useState(false), [amount, setAmount] = useState(PRICING.amount), [aiContent, setAiContent] = useState<Partial<Experience>>({})
   const id = useRef(crypto.randomUUID()), file = useRef<HTMLInputElement>(null)
   useEffect(() => { void getPrice().then(p => setAmount(p.amount)) }, [])
   useEffect(() => { if (!from && myName) setFrom(myName) }, [myName, from])
@@ -63,7 +64,7 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
   }
   const create = async () => {
     setErr(''); setBusy(facts.trim().length >= 8 ? 'Writing it in your voice…' : 'Setting it up…')
-    try { let e = build(); e = await personalise(e); try { storage.saveDraft(e); onDone() } catch { /* preview still opens */ } setLast(e); setSaving(e) }
+    try { let e = build(); e = Object.keys(aiContent).length ? { ...e, ...aiContent } : await personalise(e); try { storage.saveDraft(e); onDone() } catch { /* preview still opens */ } setLast(e); setSaving(e) }
     catch (x) { setErr(x instanceof Error ? x.message : 'Something went wrong.') } finally { setBusy('') }
   }
   const pick = async (f?: File) => { if (!f) return; if (!f.type.startsWith('image/')) { setErr('Choose a photo.'); return } try { setPhoto(await compressImage(f)); setErr('') } catch (x) { setErr(x instanceof Error ? x.message : 'That photo could not be read.') } }
@@ -90,6 +91,7 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
           <p className="muted">A few real details and we do the writing. Skip it and the template text is used.</p>
           {fields.map(f => <label key={f.key} className="ss-field">{f.label}<input type={f.type} inputMode={f.type === 'number' ? 'numeric' : undefined} max={f.type === 'date' ? new Date().toISOString().slice(0, 10) : undefined} value={vals[f.key] || ''} placeholder={f.ph} onChange={e => setVals({ ...vals, [f.key]: e.target.value })} maxLength={f.type === 'text' ? 80 : undefined} />{f.hint && <small>{f.hint}</small>}</label>)}
           <AiGuide value={facts} onChange={setFacts} relation={rel}><label className="ss-field">Things about them, so it sounds like you<textarea rows={4} value={facts} maxLength={600} onChange={e => setFacts(e.target.value)} placeholder={'Calls me at 2am to gossip\nWe got lost in Goa and ate maggi on the beach'} style={{ minHeight: 110 }} /><small>Optional. We write the letter and wishes around this (needs sign-in).</small></label></AiGuide>
+          {(() => { try { return <AiHelper item={build()} initialFacts={facts} onApply={p => { setAiContent(p); setFacts(facts || 'AI draft added') }} /> } catch { return null } })()}
           <input ref={file} type="file" accept="image/*" hidden onChange={e => { void pick(e.target.files?.[0]); e.target.value = '' }} />
           <button type="button" className="quick-photo" onClick={() => file.current?.click()}>{photo ? <img src={photo} alt="Your photo" /> : <ImagePlus size={20} />}<span>{photo ? 'Change photo' : 'Add one photo (optional)'}</span></button>
           {err && <p className="error-text" role="alert">{err}</p>}
