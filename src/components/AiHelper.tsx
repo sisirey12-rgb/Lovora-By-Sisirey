@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Sparkles, X, Wand2, RefreshCw } from 'lucide-react'
 import { supabase } from '../services/supabase/client'
+import AiGuide from './AiGuide'
 import type { Experience } from '../types'
 
 export type AiDraft = { greeting: string; message: string; closing: string; balloonWishes: string[]; vows: string; mystery: string[]; moments: string[]; openWhen: { label: string; note: string }[] }
@@ -37,7 +38,7 @@ export default function AiHelper({ item, onApply }: { item: Experience; onApply:
       <button className="icon-btn quick-x" onClick={() => setOpen(false)} aria-label="Close"><X size={18} /></button>
       <p className="eyebrow">AI WRITING HELPER</p><h2>{draft ? 'Here is your draft' : `Tell us about ${item.recipient || 'them'}`}</h2>
       {!draft ? <>
-        <label>Three or four things about them<textarea value={facts} onChange={e => setFacts(e.target.value)} rows={5} maxLength={700} placeholder={'Loves chai and bad puns\nWe met in college hostel\nAlways picks up my calls at 2am'} style={{ minHeight: 130 }} /></label>
+        <AiGuide value={facts} onChange={setFacts} relation={item.relation}><label>Three or four things about them<textarea value={facts} onChange={e => setFacts(e.target.value)} rows={5} maxLength={700} placeholder={'Calls me at 2am to gossip\nWe got lost in Goa and ate maggi on the beach\nCried at my graduation more than I did'} style={{ minHeight: 130 }} /></label></AiGuide>
         <div className="ai-row"><span>Language</span>{LANGS.map(l => <button key={l} className={`ai-chip ${lang === l ? 'on' : ''}`} onClick={() => setLang(l)}>{l}</button>)}</div>
         <div className="ai-row"><span>Tone</span>{TONES.map(t => <button key={t} className={`ai-chip ${tone === t ? 'on' : ''}`} onClick={() => setTone(t)}>{t}</button>)}</div>
         {err && <p className="error-text" role="alert">{err}</p>}

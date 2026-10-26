@@ -10,25 +10,18 @@ import { compressImage } from '../lib/media'
 import { storage } from '../services/storage'
 import { supabase } from '../services/supabase/client'
 import { useAuth } from '../services/auth'
-import type { Experience, Extras, Occasion, Relation, SceneId } from '../types'
+import AiGuide from './AiGuide'
+import type { Experience, Extras, Occasion, Relation } from '../types'
 
 type Field = { key: string; label: string; type: 'text' | 'date' | 'number'; ph?: string; hint?: string; apply: (e: Experience, v: string) => Experience }
-const withScene = (e: Experience, id: SceneId): Experience => (e.extraScenes || []).includes(id) ? e : { ...e, extraScenes: [...(e.extraScenes || []), id] }
 const ex = (e: Experience, p: Partial<Extras>): Experience => ({ ...e, extras: { ...(e.extras || {}), ...p } })
-const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 
-const reveal = (label = 'Reveal date'): Field => ({ key: 'reveal', label, type: 'date', hint: 'Their link opens at midnight on this day. Leave it empty to open right away.', apply: (e, v) => ({ ...e, targetDate: v }) })
-const when = (label: string, ph: string): Field => ({ key: 'when', label, type: 'text', ph, apply: (e, v) => withScene(ex(e, { eventWhen: v }), 'invite') })
-const where = (label: string): Field => ({ key: 'where', label, type: 'text', ph: 'A cafe, our home, a secret place', apply: (e, v) => withScene(ex(e, { eventWhere: v }), 'invite') })
-const dateScene = (key: string, label: string, line: string): Field => ({ key, label, type: 'date', hint: 'Becomes a "turn back time" calendar scene.', apply: (e, v) => withScene(ex(e, { calendarDate: v, calendarLine: line }), 'calendar') })
-const nick: Field = { key: 'nick', label: 'What you call them', type: 'text', ph: 'Chotu, Babu, Boss', apply: (e, v) => ex(e, { nickname: v }) }
-
-/** The 5 key details for each occasion. Everything is optional: leave blank and the template's defaults stay. */
+/** Only the details that change the surprise itself. Dates, venues and event plans live in the full editor, one tap away. */
 const FIELDS: Record<string, Field[]> = {
-  Birthday: [{ key: 'age', label: 'Turning age', type: 'number', ph: 'e.g. 21', hint: 'Sets the number of candles they blow out.', apply: (e, v) => ({ ...e, age: Math.min(120, Math.max(1, Number(v) || 0)) || undefined }) }, reveal('Birthday (reveal date)'), when('Party date and time', 'Saturday, 7 pm'), where('Party place'), dateScene('memdate', 'A date you remember together', 'A day I keep in my heart.')],
-  Anniversary: [{ key: 'since', label: 'Together since', type: 'date', hint: 'Counts the days you have had together.', apply: (e, v) => ({ ...e, togetherSince: v }) }, reveal('Anniversary date (reveal)'), dateScene('met', 'The day you first met', 'The day everything began.'), when('Celebration date and time', 'Friday, 8 pm'), where('Celebration place')],
-  'Love letter': [reveal(), dateScene('met', 'The day you met', 'The day everything changed, softly.'), nick, { key: 'lyric', label: 'A song line that is yours', type: 'text', ph: 'You are my favourite place to be', apply: (e, v) => withScene(ex(e, { lyric: v }), 'lyric') }, { key: 'lyricBy', label: 'Song and artist', type: 'text', ph: 'Song name, Artist', apply: (e, v) => ex(e, { lyricBy: v }) }],
-  'Special surprise': [reveal(), { key: 'why', label: 'What are we celebrating?', type: 'text', ph: 'New job, a good grade, just because', apply: (e, v) => ({ ...e, title: v }) }, when('Event date and time', 'Sunday, 6 pm'), where('Event place'), nick],
+  Birthday: [{ key: 'age', label: 'Turning age', type: 'number', ph: 'e.g. 21', hint: 'Sets how many candles they blow out.', apply: (e, v) => ({ ...e, age: Math.min(120, Math.max(1, Number(v) || 0)) || undefined }) }],
+  Anniversary: [{ key: 'since', label: 'Together since', type: 'date', hint: 'Counts the days you have had together.', apply: (e, v) => ({ ...e, togetherSince: v }) }],
+  'Love letter': [{ key: 'nick', label: 'What you call them', type: 'text', ph: 'Chotu, Babu, Boss', apply: (e, v) => ex(e, { nickname: v }) }],
+  'Special surprise': [{ key: 'why', label: 'What are we celebrating?', type: 'text', ph: 'New job, a good grade, just because', apply: (e, v) => ({ ...e, title: v }) }],
 }
 
 export default function StartSheet({ occasion, relation, onClose, onFull, onPreview, onDone }: { occasion: Occasion; relation?: Relation; onClose: () => void; onFull: (e: Experience) => void; onPreview: (e: Experience) => void; onDone: () => void }) {
@@ -61,6 +54,8 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
       return { ...e, greeting: d.greeting || e.greeting, message: d.message || e.message, closing: d.closing || e.closing, balloonWishes: d.balloonWishes?.length ? d.balloonWishes : e.balloonWishes, vows: d.vows || e.vows, mystery: d.mystery?.length ? d.mystery : e.mystery, moments: d.moments?.length ? d.moments : e.moments, openWhen: d.openWhen?.length ? d.openWhen : e.openWhen }
     } catch { return e }
   }
+  /** The way into the full editor: every word, photo, look and scene, starting from this template. */
+  const customise = () => { if (!rel) { setErr('Choose who they are to you first.'); return } try { onFull(build()) } catch (x) { setErr(x instanceof Error ? x.message : 'Something went wrong.') } }
   const next = () => {
     if (!to.trim()) { setErr('Add the name of the person it is for.'); return }
     if (!rel) { setErr('Choose who they are to you.'); return }
@@ -89,24 +84,27 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
           <label className="ss-field">Your name<input value={from} onChange={e => setFrom(e.target.value)} placeholder="Who is sending it?" maxLength={30} /></label>
           {err && <p className="error-text" role="alert">{err}</p>}
           <button className="primary-btn" onClick={next}>Continue <ArrowRight size={16} /></button>
+          <button type="button" className="text-btn ss-skip" onClick={customise} disabled={!!busy}><Palette size={14} /> I would rather customise everything first</button>
         </> : <>
-          <h2>A few details <small>(all optional)</small></h2>
-          <p className="muted">Add what you know. Everything else is set up for you.</p>
-          {fields.map(f => <label key={f.key} className="ss-field">{f.label}<input type={f.type} inputMode={f.type === 'number' ? 'numeric' : undefined} min={f.key === 'reveal' ? today() : undefined} value={vals[f.key] || ''} placeholder={f.ph} onChange={e => setVals({ ...vals, [f.key]: e.target.value })} maxLength={f.type === 'text' ? 80 : undefined} />{f.hint && <small>{f.hint}</small>}</label>)}
-          <label className="ss-field">Things about them, so it sounds like you<textarea rows={3} value={facts} maxLength={600} onChange={e => setFacts(e.target.value)} placeholder={'Loves chai and bad puns\nWe met in college'} style={{ minHeight: 96 }} /><small>Optional. We will write the letter and wishes for you (needs sign-in).</small></label>
+          <h2>Make it sound like you <small>(optional)</small></h2>
+          <p className="muted">A few real details and we do the writing. Skip it and the template text is used.</p>
+          {fields.map(f => <label key={f.key} className="ss-field">{f.label}<input type={f.type} inputMode={f.type === 'number' ? 'numeric' : undefined} max={f.type === 'date' ? new Date().toISOString().slice(0, 10) : undefined} value={vals[f.key] || ''} placeholder={f.ph} onChange={e => setVals({ ...vals, [f.key]: e.target.value })} maxLength={f.type === 'text' ? 80 : undefined} />{f.hint && <small>{f.hint}</small>}</label>)}
+          <AiGuide value={facts} onChange={setFacts} relation={rel}><label className="ss-field">Things about them, so it sounds like you<textarea rows={4} value={facts} maxLength={600} onChange={e => setFacts(e.target.value)} placeholder={'Calls me at 2am to gossip\nWe got lost in Goa and ate maggi on the beach'} style={{ minHeight: 110 }} /><small>Optional. We write the letter and wishes around this (needs sign-in).</small></label></AiGuide>
           <input ref={file} type="file" accept="image/*" hidden onChange={e => { void pick(e.target.files?.[0]); e.target.value = '' }} />
           <button type="button" className="quick-photo" onClick={() => file.current?.click()}>{photo ? <img src={photo} alt="Your photo" /> : <ImagePlus size={20} />}<span>{photo ? 'Change photo' : 'Add one photo (optional)'}</span></button>
           {err && <p className="error-text" role="alert">{err}</p>}
+          <button type="button" className="text-btn ss-skip" onClick={customise} disabled={!!busy}><Palette size={14} /> I would rather customise everything first</button>
           <div className="quick-row"><button className="secondary-btn" onClick={() => setStep(1)} disabled={!!busy}>Back</button><button className="primary-btn" onClick={() => void create()} disabled={!!busy}>{busy || <>Create and preview <Eye size={16} /></>}</button></div>
         </>}
       </>}
       {!done && previewed && last && <>
         <p className="eyebrow">READY TO SEND</p><h2>{last.recipient}’s surprise is ready</h2>
-        <p className="muted">Happy with how it looked? Get the share link and send it. Or change anything first.</p>
+        <p className="muted">Now that you have seen it, change anything you like, or send it as it is.</p>
+        <button type="button" className="customise-btn" onClick={() => onFull(last)}><span className="customise-ico"><Palette size={20} /></span><span><strong>Customise it</strong><small>Words, photos, look, scenes and balloon wishes</small></span><span className="customise-go">→</span></button>
         <div className="ss-price"><b>₹{amount}</b><s>₹{PRICING.regular}</s><span>launch price, one time</span></div>
         {err && <p className="error-text" role="alert">{err}</p>}
         <button className="primary-btn big-btn" onClick={() => setPay(true)} disabled={!!busy}>{busy || 'Get the share link'}</button>
-        <div className="quick-row"><button className="secondary-btn" onClick={() => onPreview(last)}><Eye size={15} /> Watch again</button><button className="secondary-btn" onClick={() => onFull(last)}><Palette size={15} /> Edit everything</button></div>
+        <div className="quick-row"><button className="secondary-btn" onClick={() => onPreview(last)}><Eye size={15} /> Watch again</button></div>
         <button className="text-btn" onClick={() => { setPreviewed(false); setStep(2) }}><Pencil size={13} /> Change these details</button>
       </>}
       {done && <>

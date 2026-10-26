@@ -54,3 +54,23 @@
 - Story order fixed (balloons, cake, photos, moments, video, letter, finale); balloon pop in every occasion and person; coupon book removed.
 - Balloon wishes, greetings and message lines are written per person and occasion, with tap-to-use suggestions.
 - Reveal title now measures the screen and fits it, so it is no longer cropped on Android. The developer credit no longer floats over the finale buttons.
+
+## Round 3
+- **Home-page season switch**: the API now reports the real reason instead of always saying "run SQL 006" (missing `SUPABASE_SERVICE_ROLE_KEY`, anon key used by mistake, stale schema cache, wrong URL). It also upserts with `on_conflict=key`. `0006_site_settings.sql` now grants `service_role` and runs `notify pgrst, 'reload schema'`; if the table already exists, just run those last two lines in the Supabase SQL editor.
+- **Landing page**: new calmer layout (hero with the phone demo, at-a-glance strip, occasion cards, three steps, feature grid with icons, pricing beside the FAQ). Styles are in `src/round3.css`; no new dependencies.
+- **Auto creator** (`StartSheet.tsx`): venue, party date/time, reveal date, memory date and song-line inputs removed. Only one detail per occasion is left (age, together since, nickname, what we are celebrating). A "Customise it myself" button on both steps opens the full editor with the chosen template.
+- **AI writing guide** (`AiGuide.tsx`, used in the auto creator and the Write-with-AI sheet): tap-to-start prompts per person, a progress hint, a short how-to with a weak vs strong example. The server prompt now asks for plain, first-person wording without greeting-card phrases.
+- **Theme pickers**: the site picker is a small popover of colour dots (Dark / Light). The editor's theme step is a row of swatches with the chosen name below.
+- **Read it to me**: sentence-by-sentence speech with natural pauses, the best-ranked voice on the device (neural/natural first, robotic ones last), softer pitch and rate, emoji and ellipses cleaned up. Optional studio voice: set `OPENAI_API_KEY` in Vercel and `/api/tts` is used automatically; without it nothing changes for visitors.
+
+## Round 3b
+- **Preview flow**: the end of every preview now shows "Customise it" and "Get the share link". In the editor, Finish and "Get the share link" jump straight to the last (share) step instead of dropping back where you were; "Customise it" goes to the words step. The auto-creator leads with "Customise it" after the preview, and offers a quiet "customise everything first" link before it.
+- **Backgrounds**: there used to be two stacked layers with different colours per occasion and per person. Now there is one soft wash tinted from the chosen theme, and one set of drifting shapes (3 kinds, 7 pieces). Landing occasion cards use one colour family.
+- **Finale bouquet**: the fixed full-screen conic "rays" with a hard mask are replaced by one soft glow in the theme colour, contained behind the bouquet.
+
+## Round 3c
+- **First interaction** (everyone except partners): rebuilt. Three taps charge a glowing ring in the theme colours, with orbiting shapes that speed up, a shockwave and a burst of drawn shapes on each tap, a screen flash and a stamp word (BOOM, FLY, BLOOM, CHAMPION, POP) on the last one. Sound and haptics on every tap.
+- **Hold to reveal**: long-press no longer selects the button or opens the browser menu. Text selection, the touch callout and image dragging are off inside a surprise, the wax seal captures the pointer so sliding a finger does not cancel the hold, and it shakes and glows as it charges.
+
+## Round 3d
+- **Second moment (the big-words intro)**: new `IntroStage.tsx` replaces the letter-drop. A curtain of light parts, the title rises word by word out of a mask with a shine sweeping across it, an underline draws itself, shapes in the theme colours orbit, and the "Open your surprise" button only appears after about 3 seconds. The full-screen effect for the chosen entrance (fireworks, galaxy, petals…) still plays behind it.

@@ -97,8 +97,8 @@ export function WaxSeal({ exp, onDone, buzz }: P) {
   const [p, setP] = useState(0), [broken, setBroken] = useState(false)
   const timer = useRef<number>(0), t0 = useRef(0)
   const stop = () => { cancelAnimationFrame(timer.current); if (!broken) setP(0) }
-  const start = () => {
-    if (broken) return; sfx.unlock(); t0.current = performance.now(); buzz(12)
+  const start = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (broken) return; try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* older browsers */ } cancelAnimationFrame(timer.current); sfx.unlock(); t0.current = performance.now(); buzz(12)
     const tick = (t: number) => { const v = Math.min(1, (t - t0.current) / 1500); setP(v); if (v >= 1) { setBroken(true); sfx.release(); sfx.lid(); sfx.chime(); buzz([40, 30, 90]); window.setTimeout(onDone, 1700) } else timer.current = requestAnimationFrame(tick) }
     timer.current = requestAnimationFrame(tick)
   }
@@ -107,7 +107,7 @@ export function WaxSeal({ exp, onDone, buzz }: P) {
     <p className="eyebrow">SEALED WITH LOVE</p><h1>A letter for <em>{exp.recipient || 'you'}.</em></h1>
     <div className={`seal-env ${broken ? 'open' : ''}`}>
       <div className="seal-back" /><div className="seal-letter"><span>For {exp.recipient || 'you'}</span></div><div className="seal-flap" />
-      <button className={`seal-wax ${broken ? 'broke' : ''}`} onPointerDown={start} onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop} aria-label="Press and hold to break the seal" style={{ ['--p' as string]: p } as CSSProperties}>
+      <button className={`seal-wax ${broken ? 'broke' : p > .05 ? 'charging' : ''}`} onPointerDown={start} onPointerUp={stop} onPointerCancel={stop} onContextMenu={e => e.preventDefault()} aria-label="Press and hold to break the seal" style={{ ['--p' as string]: p } as CSSProperties}>
         <svg viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="27" fill="none" stroke="rgba(255,255,255,.35)" strokeWidth="3" /><circle cx="30" cy="30" r="27" fill="none" stroke="#ffd36e" strokeWidth="3" strokeLinecap="round" strokeDasharray={170} strokeDashoffset={170 - 170 * p} transform="rotate(-90 30 30)" /></svg><b>♥</b></button>
     </div>
     <p className="scene-copy">{broken ? 'It is open…' : 'Press and hold the seal'}</p>

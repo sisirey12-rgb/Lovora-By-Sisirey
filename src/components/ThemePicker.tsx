@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Palette, Check, X } from 'lucide-react'
 
 export const SKINS = [
@@ -19,16 +19,24 @@ export const SKINS = [
 export const applySkin = (id: string) => { document.documentElement.dataset.skin = id; try { localStorage.setItem('lovora-skin', id) } catch { /* private mode */ } }
 export const savedSkin = () => { try { return localStorage.getItem('lovora-skin') || 'classic' } catch { return 'classic' } }
 
-/** Lets visitors pick a look for the whole site. Light skins also switch the page to light mode. */
+const dot = (sw: readonly string[]) => `linear-gradient(135deg,${sw[0]} 0 42%,${sw[1]} 42% 72%,${sw[2]} 72%)`
+/** Lets visitors pick a look for the whole site. A small popover of colour dots; light skins also switch the page to light mode. */
 export default function ThemePicker({ setDark, inline }: { setDark: (d: boolean) => void; inline?: boolean }) {
-  const [open, setOpen] = useState(false), [skin, setSkin] = useState(savedSkin)
+  const [open, setOpen] = useState(false), [skin, setSkin] = useState(savedSkin), box = useRef<HTMLDivElement>(null)
   useEffect(() => { applySkin(skin) }, [skin])
+  useEffect(() => {
+    if (!open) return
+    const away = (e: PointerEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false) }, esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('pointerdown', away); document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('pointerdown', away); document.removeEventListener('keydown', esc) }
+  }, [open])
   const pick = (id: string) => { const s = SKINS.find(x => x.id === id)!; setSkin(id); setDark(!s.light) }
-  const list = <div className="skin-grid">{SKINS.map(s => <button key={s.id} className={`skin-card ${skin === s.id ? 'on' : ''}`} onClick={() => pick(s.id)} aria-pressed={skin === s.id}>
-    <span className="skin-sw" style={{ background: `linear-gradient(135deg,${s.sw[0]} 0 45%,${s.sw[1]} 45% 75%,${s.sw[2]} 75%)` }} /><strong>{s.name}</strong>{skin === s.id && <Check size={14} />}</button>)}</div>
-  if (inline) return list
-  return <>
-    <button className="icon-btn skin-btn" onClick={() => setOpen(true)} aria-label="Choose a site theme" title="Site theme"><Palette size={17} /></button>
-    {open && <div className="skin-backdrop" onClick={() => setOpen(false)}><div className="skin-sheet" onClick={e => e.stopPropagation()} role="dialog" aria-label="Site theme"><button className="icon-btn quick-x" onClick={() => setOpen(false)} aria-label="Close"><X size={16} /></button><p className="eyebrow">MAKE IT YOURS</p><h3>Pick a look</h3>{list}</div></div>}
-  </>
+  const current = SKINS.find(x => x.id === skin) || SKINS[0]
+  const group = (title: string, light: boolean) => <div className="tp-group"><span>{title}</span><div className="tp-dots" role="radiogroup" aria-label={`${title} looks`}>{SKINS.filter(s => s.light === light).map(s => <button key={s.id} type="button" role="radio" aria-checked={skin === s.id} aria-label={s.name} title={s.name} className={skin === s.id ? 'on' : ''} onClick={() => pick(s.id)} style={{ background: dot(s.sw) }}>{skin === s.id && <Check size={13} strokeWidth={3} />}</button>)}</div></div>
+  const body = <>{group('Dark', false)}{group('Light', true)}<p className="tp-name"><i style={{ background: dot(current.sw) }} />{current.name}</p></>
+  if (inline) return <div className="tp-inline">{body}</div>
+  return <div className="tp" ref={box}>
+    <button className="icon-btn skin-btn" onClick={() => setOpen(v => !v)} aria-label="Choose a site theme" aria-expanded={open} title="Site theme"><Palette size={17} /></button>
+    {open && <div className="tp-pop" role="dialog" aria-label="Site theme"><div className="tp-head"><strong>Colours</strong><button type="button" className="tp-x" onClick={() => setOpen(false)} aria-label="Close"><X size={14} /></button></div>{body}</div>}
+  </div>
 }
