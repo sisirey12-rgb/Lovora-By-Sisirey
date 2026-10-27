@@ -1,6 +1,6 @@
 import { userFromReq, sb, isOwner } from './_shared.js'
 
-const SLUGS = ['rakhi', 'diwali', 'eid', 'valentines-day', 'mothers-day', 'fathers-day', 'friendship-day', 'new-year']
+const SLUGS = ['rakhi', 'diwali', 'eid', 'valentines-day', 'mothers-day', 'fathers-day', 'friendship-day', 'new-year', 'holi', 'dashain', 'tihar', 'christmas']
 
 /** GET: which season the home page should show ('' = normal). POST (owner only): change it with one click. */
 export default async function handler(req, res) {

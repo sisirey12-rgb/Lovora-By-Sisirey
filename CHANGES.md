@@ -1,3 +1,11 @@
+# Round 10
+
+- **Create sheet no longer covers the share step.** Opening a preview left the create sheet marked as open, so it came back on top (at "Who is it for?") over the share page. It is now closed when a preview starts, and never shown over a share or wish page.
+- **Gift code on the last share step** (`RedeemBox.tsx`): "I have a gift code" is now on the final share-link step of the editor and on the "ready to send" screen. A valid code unlocks the link and creates it straight away. A code from `/?gift=CODE` is prefilled.
+- **AI writer (Groq)**: reads the key and model with spaces and quotes stripped, uses `max_completion_tokens` 6000 and `reasoning_effort: low` for gpt-oss models (reasoning used to eat the token limit and cut the JSON off), retries without JSON mode if the model rejects it, and shows the real reason to the owner. New **Test the AI connection** button in Account > Website settings (owner only).
+- **Seasons, fully themed** (`seasonTheme.ts`, `SeasonFX.tsx`, `seasons.css`): 12 seasons (new: Holi, Dashain, Tihar, Christmas). Each one recolours the whole landing page and nav, has its own effect (rising lanterns and fireworks, falling petals or snow, twinkling stars, drifting kites, colour splashes, hearts), its own banner with suggested scenes, ribbon words, phone stickers, and pre-selects a fitting occasion and person. Switch the season in Account > Website settings (owner only).
+- **Landing**: price card and Gift a surprise card side by side (stacked on phones), with the FAQ underneath. FAQ now covers gift codes, payments and languages.
+
 # Round 9
 
 **Countdown teaser** (`Teaser.tsx`): opening the link before the reveal date now shows a shaking gift, a live ticking countdown, the date, a hint from the sender (new field "Countdown teaser" in the editor, step 4), tappable "guess what is inside" emoji and a "Remind me" button.

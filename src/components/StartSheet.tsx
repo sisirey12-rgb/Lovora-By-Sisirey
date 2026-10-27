@@ -3,6 +3,7 @@ import { ArrowRight, CalendarDays, Check, Copy, Eye, ImagePlus, Palette, Pencil,
 import CreatingOverlay from './CreatingOverlay'
 import PayWall from './PayWall'
 import QrStudio from './QrStudio'
+import RedeemBox from './RedeemBox'
 import { getPrice, publishShare } from '../services/payments'
 import { PRICING } from '../config'
 import { fromTemplate, templates } from '../lib/templates'
@@ -115,6 +116,7 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
         <div className="ss-price"><b>₹{amount}</b><s>₹{PRICING.regular}</s><span>launch price, one time</span></div>
         {err && <p className="error-text" role="alert">{err}</p>}
         <button className="primary-btn big-btn" onClick={() => last && void finish(last)} disabled={!!busy}>{busy || 'Get the share link'}</button>
+        <RedeemBox item={last} disabled={!!busy} onRedeemed={paid => void finish(paid)} />
         <div className="quick-row"><button className="secondary-btn" onClick={() => onPreview(last)}><Eye size={15} /> Watch again</button></div>
         <button className="text-btn" onClick={() => { setPreviewed(false); setStep(2) }}><Pencil size={13} /> Change these details</button>
       </>}

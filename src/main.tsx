@@ -18,6 +18,7 @@ import './creating.css'
 import './scenefx.css'
 import './fresh.css'
 import './landing2.css'
+import './seasons.css'
 import './theme-global.css'
 
 createRoot(document.getElementById('root')!).render(

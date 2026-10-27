@@ -3,7 +3,7 @@ import { Gift, KeyRound, LogOut, Mail, Save, X, Heart, Link2, CalendarDays, Shie
 import { useAuth } from '../services/auth'
 import { supabase } from '../services/supabase/client'
 import { PRICING } from '../config'
-import { fetchAccount, type AccountInfo } from '../services/account'
+import { fetchAccount, checkAi, type AccountInfo, type AiCheck } from '../services/account'
 import { SEASONS } from '../lib/seasons'
 import { emojiFor } from '../lib/templates'
 import ThemePicker from './ThemePicker'
@@ -31,6 +31,7 @@ export default function AccountModal({ items, setDark, onClose, onSignedOut, onG
   const [busy, setBusy] = useState(''), [msg, setMsg] = useState(''), [err, setErr] = useState('')
   const [liveSeason, setLiveSeason] = useState('')
   const [acct, setAcct] = useState<AccountInfo | null>(null)
+  const [aiRes, setAiRes] = useState<AiCheck | { error: string } | null>(null), [aiBusy, setAiBusy] = useState(false)
   useEffect(() => {
     let dead = false
     void (async () => { const a = await fetchAccount(); if (a && !dead) { setAcct(a); if (a.owner) { const sj = await fetch('/api/season').then(x => x.json()).catch(() => null); if (sj && !dead) setLiveSeason(sj.season || '') } } })()
@@ -91,7 +92,10 @@ export default function AccountModal({ items, setDark, onClose, onSignedOut, onG
         <p className="acc-line"><Link2 size={15} /> Add a "Make a surprise" button to your own website</p>
         <code className="acc-code">{`<script src="${window.location.origin}/embed.js" async></script>`}</code>
         <button className="secondary-btn" onClick={() => copy(`<script src="${window.location.origin}/embed.js" async></script>`, 'Embed code copied.')}><Copy size={15} /> Copy embed code</button>
-        <><p className="acc-line"><Crown size={15} /> Home page season (owner only)</p>
+        <>        <p className="acc-line"><Crown size={15} /> AI writer status</p>
+        <button type="button" className="secondary-btn" disabled={aiBusy} onClick={() => { setAiBusy(true); setAiRes(null); void checkAi().then(r => { setAiRes(r); setAiBusy(false) }) }}>{aiBusy ? 'Testing Groq…' : 'Test the AI connection'}</button>
+        {aiRes && ('error' in aiRes ? <p className="pw-error" role="alert">{aiRes.error}</p> : <div className={`ai-check ${aiRes.ok ? 'ok' : 'bad'}`} role="status"><b>{aiRes.ok ? 'Working ✓' : 'Not working'}</b><p>{aiRes.message}</p><small>Key: {aiRes.keySet ? `set (${aiRes.keyLength} characters${aiRes.keyLooksRight ? '' : ', does not start with gsk_'})` : 'missing'} · Model: {aiRes.model}{aiRes.ms ? ` · ${aiRes.ms} ms` : ''}</small></div>)}
+<p className="acc-line"><Crown size={15} /> Home page season (owner only)</p>
           <div className="season-chips">{[{ slug: '', label: 'Normal', emoji: '🏠' }, ...SEASONS].map(x => <button key={x.slug} className={liveSeason === x.slug ? 'on' : ''} disabled={!!busy} onClick={() => void run('season', async () => { const { data } = await supabase!.auth.getSession(); const r = await fetch('/api/season', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token}` }, body: JSON.stringify({ season: x.slug }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Could not change the season.'); setLiveSeason(j.season || ''); try { sessionStorage.setItem('lovora-season', j.season || '') } catch { /* ignore */ } }, x.slug ? `${x.label} is now on the home page. Visitors see it within a minute.` : 'Home page is back to normal.')}>{x.emoji} {x.label}</button>)}</div></>
         <p className="acc-line"><Palette size={15} /> Site theme</p><ThemePicker setDark={setDark} inline />
         <button className="secondary-btn danger" onClick={() => { if (window.confirm('Remove surprises saved on this device? Surprises saved to your account stay safe.')) { Object.keys(localStorage).filter(k => k.startsWith('lovora') && k !== 'lovora-theme' && k !== 'lovora-skin').forEach(k => localStorage.removeItem(k)); setMsg('Local copies cleared. Reload to refresh.') } }}><Trash2 size={15} /> Clear data stored on this device</button>

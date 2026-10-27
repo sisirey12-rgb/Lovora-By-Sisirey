@@ -3,6 +3,8 @@ import { ArrowRight, CalendarClock, Check, Gift, Images, Link2, Play, QrCode, Sh
 import { PRICING } from '../config'
 import { Rotator } from './LandingFX'
 import { seasonFromPath, useLiveSeason } from '../lib/seasons'
+import { SEASON_THEME } from '../lib/seasonTheme'
+import SeasonFX from './SeasonFX'
 import type { Occasion, Relation, SceneId } from '../types'
 import { flowFor } from '../lib/occasionContent'
 import { sceneLabels } from '../data'
@@ -41,12 +43,12 @@ function ReelScene({ id }: { id: (typeof REEL)[number]['id'] }) {
   return <div className="rs rs-bot"><span className="sun" /><svg className="bottle" viewBox="0 0 80 150" aria-hidden="true"><rect x="30" y="2" width="20" height="16" rx="3" fill="#c98f5a" /><path d="M32 18h16v22c0 6 16 12 16 34v54c0 10-8 18-18 18H34c-10 0-18-8-18-18V74c0-22 16-28 16-34Z" fill="rgba(200,240,250,.55)" stroke="rgba(255,255,255,.8)" strokeWidth="2.5" /><rect x="30" y="68" width="20" height="62" rx="4" fill="#fff3d6" /></svg><svg className="waves" viewBox="0 0 400 80" preserveAspectRatio="none" aria-hidden="true"><path className="w1" d="M0 30 Q50 6 100 30 T200 30 T300 30 T400 30 V80 H0Z" /><path className="w2" d="M0 44 Q50 22 100 44 T200 44 T300 44 T400 44 V80 H0Z" /></svg></div>
 }
 
-function ReelPhone() {
+function ReelPhone({ stickers }: { stickers?: [string, string, string] }) {
   const [i, setI] = useState(0)
   useEffect(() => { const t = window.setInterval(() => setI(v => (v + 1) % REEL.length), 3800); return () => window.clearInterval(t) }, [])
   const s = REEL[i]
   return <div className="nl-stage">
-    <span className="nl-sticker st1">💌 Letter sealed</span><span className="nl-sticker st2">🎂 Candles lit</span><span className="nl-sticker st3">🔗 One link</span>
+    <span className="nl-sticker st1">{stickers?.[0] ?? '💌 Letter sealed'}</span><span className="nl-sticker st2">{stickers?.[1] ?? '🎂 Candles lit'}</span><span className="nl-sticker st3">{stickers?.[2] ?? '🔗 One link'}</span>
     <div className="nl-phone" aria-label="A surprise playing on a phone">
       <div className="nl-notch" />
       <div className="nl-dots">{REEL.map((r, k) => <i key={r.id} className={k < i ? 'done' : k === i ? 'now' : ''} />)}</div>
@@ -73,8 +75,9 @@ const OCC_INFO: Record<Occasion, { e: string; d: string; c: string }> = {
 const PERSON_E: Record<Relation, string> = { Partner: '💞', Mom: '🌸', Dad: '🧢', Brother: '🎮', Sister: '🎀', Friend: '🤝' }
 
 /** The ONE place to start: pick the occasion, pick the person, see their story, begin. */
-function Creator({ onStart }: { onStart: (o: Occasion, r?: Relation) => void }) {
-  const [occ, setOcc] = useState<Occasion>('Birthday'), [rel, setRel] = useState<Relation>('Friend')
+function Creator({ onStart, startOcc = 'Birthday', startRel = 'Friend' }: { onStart: (o: Occasion, r?: Relation) => void; startOcc?: Occasion; startRel?: Relation }) {
+  const [occ, setOcc] = useState<Occasion>(startOcc), [rel, setRel] = useState<Relation>(startRel)
+  useEffect(() => { setOcc(startOcc); setRel(startRel) }, [startOcc, startRel])
   const people = occ === 'Love letter' ? (['Partner'] as Relation[]) : PEOPLE
   const r: Relation = occ === 'Love letter' ? 'Partner' : rel
   const flow = flowFor(occ, r).filter(x => x !== 'heart')
@@ -136,19 +139,27 @@ const FAQ: [string, string][] = [
   ['Is previewing really free?', 'Yes. Build it and watch it as often as you like. You only pay when you want the share link.'],
   ['Who can see my surprise?', 'Only people who have your link.'],
   ['Can I add my own photos, voice and video?', 'Yes: photos for the gallery, a voice note and your own video.'],
-  ['Can the reveal wait for the right day?', 'Yes. Pick a date and the link unlocks at midnight on that day.'],
+  ['Can the reveal wait for the right day?', 'Yes. Pick a date and the link unlocks at midnight on that day. Before it, they see a countdown and a hint from you.'],
+  ['How does a gift code work?', 'Buy a gift code and send it to someone. When they are ready to share their surprise, they enter the code on the last step and the link is free.'],
+  ['Which payments do you accept?', 'UPI, cards and netbanking (INR), plus eSewa and Khalti (NPR) for Nepal.'],
+  ['Can it be written in Nepali or Hinglish?', 'Yes. The AI writer takes one to three prompts and writes in English, Hinglish, Hindi, Nepali, Roman Nepali or a mix.'],
 ]
 
 export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion, r?: Relation) => void; onGift?: () => void }) {
   const live = useLiveSeason()
   const season = seasonFromPath() ?? live
   const root = useReveal()
+  const theme = season ? SEASON_THEME[season.slug] : undefined
+  // the whole page (and the nav) recolours through <html data-season>; it is removed again when the landing page closes
+  useEffect(() => { const el = document.documentElement; if (season) el.dataset.season = season.slug; else delete el.dataset.season; return () => { delete el.dataset.season } }, [season])
   useEffect(() => {
     const old = document.title, meta = document.querySelector<HTMLMetaElement>('meta[name="description"]'), oldMeta = meta?.content
     if (season) { document.title = `${season.label} surprise: make an interactive gift | Lovora Meow`; if (meta) meta.content = season.meta }
     return () => { document.title = old; if (meta && oldMeta !== undefined) meta.content = oldMeta }
   }, [season])
   return <div className="nl" ref={root}>
+    {theme && <SeasonFX fx={theme.fx} bits={theme.bits} />}
+    {season && theme && <div className="sx-banner" role="note"><span aria-hidden="true">{season.emoji}</span><b>{theme.banner}</b><span className="sx-chips" aria-label="Scenes that suit this season">{theme.scenes.map(id => <span key={id}>{SCENE_EMOJI[id] || '✦'} {sceneLabels[id]}</span>)}</span><button type="button" onClick={toStart}>Start now</button></div>}
     <section className="nl-hero">
       <div className="nl-blob b1" aria-hidden="true" /><div className="nl-blob b2" aria-hidden="true" /><div className="nl-confetti" aria-hidden="true">{Array.from({ length: 18 }, (_, k) => <i key={k} style={{ ['--k' as string]: k, left: `${(k * 53) % 100}%` } as CSSProperties} />)}</div>
       <div className="nl-copy">
@@ -159,12 +170,12 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
         <div className="nl-cta"><button className="nl-btn" onClick={toStart}>Create a surprise <ArrowRight size={18} /></button><button className="nl-btn ghost" onClick={() => document.getElementById('nl-library')?.scrollIntoView({ behavior: 'smooth' })}><Play size={15} /> See the scenes</button></div>
         <ul className="nl-trust"><li><Smartphone size={15} /> No app needed</li><li><ShieldCheck size={15} /> Private link</li><li><Zap size={15} /> Free to preview</li></ul>
       </div>
-      <ReelPhone />
+      <ReelPhone stickers={theme?.stickers} />
     </section>
 
-    <div className="nl-ribbon" aria-hidden="true"><div>{[0, 1].map(k => <span key={k}>{['BIRTHDAYS', 'ANNIVERSARIES', 'LOVE LETTERS', 'JUST BECAUSE', 'BALLOONS', 'ROSE PETALS', 'SHOOTING STARS', 'MESSAGES IN BOTTLES'].map(t => <b key={t}>{t}<i>✦</i></b>)}</span>)}</div></div>
+    <div className="nl-ribbon" aria-hidden="true"><div>{[0, 1].map(k => <span key={k}>{(theme?.ribbon ?? ['BIRTHDAYS', 'ANNIVERSARIES', 'LOVE LETTERS', 'JUST BECAUSE', 'BALLOONS', 'ROSE PETALS', 'SHOOTING STARS', 'MESSAGES IN BOTTLES']).map(t => <b key={t}>{t}<i>✦</i></b>)}</span>)}</div></div>
 
-    <Creator onStart={onStart} />
+    <Creator onStart={onStart} startOcc={theme?.occasion} startRel={theme?.relation} />
 
     <section id="nl-library" className="nl-sec">
       <header className="nl-head nl-rv"><p>THE SCENE LIBRARY</p><h2>Every surprise is a little <em>story.</em></h2><span>Each person and occasion gets its own mix of scenes, with its own animation.</span></header>
@@ -179,23 +190,18 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
       <ul className="nl-bits nl-rv">{BITS.map(b => <li key={b.t}>{b.i}{b.t}</li>)}</ul>
     </section>
 
-    <section className="nl-sec nl-split">
-      <div className="nl-rv">
-        <header className="nl-head left"><p>SIMPLE PRICING</p><h2>Preview free. <em>Pay only to share.</em></h2></header>
-        <div className="nl-ticket"><div className="nl-amt"><b>₹{PRICING.amount}</b><s>₹{PRICING.regular}</s></div><span>per surprise, one time</span>
-          <ul><li><Check size={16} /> Your own private share link</li><li><Check size={16} /> Every scene, entrance, cake and bouquet</li><li><Check size={16} /> Photos, voice note and video</li><li><Check size={16} /> Story card and printable QR card</li><li><Check size={16} /> Unlimited free previews</li></ul>
-          <button className="nl-btn" onClick={toStart}>Start for free <ArrowRight size={18} /></button><small><Link2 size={12} /> Launch price, for a limited time</small></div>
+    <section id="pricing" className="nl-sec nl-offers">
+      <header className="nl-head nl-rv"><p>SIMPLE PRICING</p><h2>Preview free. <em>Pay only to share.</em></h2><span>One price for one share link. Or gift that link to someone else.</span></header>
+      <div className="nl-twocards nl-rv">
+        <div className="nl-ticket"><p className="nl-k">SHARE YOUR SURPRISE</p><div className="nl-amt"><b>₹{PRICING.amount}</b><s>₹{PRICING.regular}</s></div><span>per surprise, one time</span>
+          <ul><li><Check size={16} /> Your own private share link</li><li><Check size={16} /> Every scene, entrance, cake and bouquet</li><li><Check size={16} /> Photos, voice note and video</li><li><Check size={16} /> Reveal date and countdown teaser</li><li><Check size={16} /> Printable QR card</li></ul>
+          <button className="nl-btn" onClick={toStart}>Start for free <ArrowRight size={18} /></button><small><Link2 size={12} /> Launch price, for a limited time. UPI, cards, eSewa and Khalti.</small></div>
+        <div className="nl-ticket gift"><p className="nl-k">GIFT A SURPRISE</p><div className="nl-amt"><b>₹{PRICING.amount}</b><span className="nl-giftemoji" aria-hidden="true">🎁</span></div><span>one gift code, one free share link</span>
+          <ul><li><Check size={16} /> Send the code on WhatsApp</li><li><Check size={16} /> They enter it when they share, and pay nothing</li><li><Check size={16} /> Works for any occasion and any person</li><li><Check size={16} /> Pay with UPI, cards, eSewa or Khalti</li></ul>
+          <button className="nl-btn" onClick={onGift}>Gift a surprise <ArrowRight size={18} /></button><small><Gift size={12} /> Already have a code? Enter it on the last step of your surprise.</small></div>
       </div>
-      <div className="nl-rv">
-        <header className="nl-head left"><p>GOOD TO KNOW</p><h2>Questions, <em>answered.</em></h2></header>
-        <div className="nl-faq">{FAQ.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div>
-      </div>
-    </section>
-
-    <section className="nl-sec nl-giftband">
-      <div className="nl-giftcard nl-rv"><div className="nl-giftart" aria-hidden="true"><span>🎁</span><i /><i /><i /></div>
-        <div><p className="nl-k">GIFT A SURPRISE</p><h2>Make someone’s surprise <em>free to share.</em></h2><p className="nl-lead">Buy a gift code for a friend. They enter it when they share their own surprise and pay nothing. Pay with UPI, cards, eSewa or Khalti.</p>
-          <button className="nl-btn" onClick={onGift}>Gift a surprise <ArrowRight size={18} /></button></div></div>
+      <header className="nl-head nl-rv nl-faqhead"><p>GOOD TO KNOW</p><h2>Questions, <em>answered.</em></h2></header>
+      <div className="nl-faq nl-faq-wide nl-rv">{FAQ.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div>
     </section>
 
     <section className="nl-final nl-rv"><h2>Someone came to mind, <em>didn’t they?</em></h2><p>One link. A whole little world. Ready in a minute.</p><button className="nl-btn light" onClick={toStart}>Create a surprise <ArrowRight size={18} /></button></section>

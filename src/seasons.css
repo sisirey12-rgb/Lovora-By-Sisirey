@@ -1,0 +1,40 @@
+/* Seasonal landing pages: one colour block per festival (set by LandingNew through <html data-season>), plus the effects. */
+:root[data-season="rakhi"][data-theme]{--accent:#e63946;--accent2:#ffb703;--teal:#2a9d8f;--season-tint:#ffe3d6}
+:root[data-season="diwali"][data-theme]{--accent:#ff7b00;--accent2:#ffd23f;--teal:#b5179e;--season-tint:#ffe8bd}
+:root[data-season="eid"][data-theme]{--accent:#0e9f6e;--accent2:#f5c542;--teal:#3b5bdb;--season-tint:#d9f5e8}
+:root[data-season="valentines-day"][data-theme]{--accent:#e5446d;--accent2:#ff9eb5;--teal:#7b5cff;--season-tint:#ffd9e3}
+:root[data-season="mothers-day"][data-theme]{--accent:#ec6aa0;--accent2:#ffd08a;--teal:#5bb98c;--season-tint:#ffe0ee}
+:root[data-season="fathers-day"][data-theme]{--accent:#2563eb;--accent2:#f59e0b;--teal:#0f766e;--season-tint:#dbe8ff}
+:root[data-season="friendship-day"][data-theme]{--accent:#8b5cf6;--accent2:#fbbf24;--teal:#ec4899;--season-tint:#ece3ff}
+:root[data-season="new-year"][data-theme]{--accent:#f59e0b;--accent2:#ec4899;--teal:#3b82f6;--season-tint:#ffeacb}
+:root[data-season="holi"][data-theme]{--accent:#d946ef;--accent2:#22c55e;--teal:#f97316;--season-tint:#f7dcff}
+:root[data-season="dashain"][data-theme]{--accent:#dc2626;--accent2:#f59e0b;--teal:#16a34a;--season-tint:#ffe0d6}
+:root[data-season="tihar"][data-theme]{--accent:#f97316;--accent2:#fde047;--teal:#db2777;--season-tint:#ffe9c2}
+:root[data-season="christmas"][data-theme]{--accent:#dc2626;--accent2:#16a34a;--teal:#0ea5e9;--season-tint:#e0f2e9}
+html[data-season] .nl{background:radial-gradient(900px 520px at 85% -6%,color-mix(in srgb,var(--season-tint) 80%,transparent),transparent 70%),radial-gradient(700px 480px at 0% 30%,color-mix(in srgb,var(--accent2) 16%,transparent),transparent 70%)}
+html[data-season] .nl-ribbon{background:var(--accent);color:#fff}html[data-season] .nl-ribbon i{color:var(--accent2)}
+html[data-season] .nl-final{background:linear-gradient(120deg,var(--accent),var(--accent2),var(--teal))}
+html[data-season] .nl-btn:not(.ghost):not(.light){background:var(--accent);color:#fff}
+html[data-season] .nl-hero .nl-blob.b1{background:var(--accent2)}html[data-season] .nl-hero .nl-blob.b2{background:var(--teal)}
+/* season banner */
+.sx-banner{position:relative;z-index:2;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 16px;padding:12px 18px;background:var(--accent);color:#fff;font-weight:800;font-size:14px;text-align:center}
+.sx-banner b{font-size:15px}.sx-banner .sx-chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.sx-banner .sx-chips span{padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.22);font-size:12px}
+.sx-banner button{padding:7px 14px;border-radius:99px;border:2px solid #fff;background:#fff;color:var(--accent);font-weight:900;font-size:13px;cursor:pointer}
+/* effects */
+.sx-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.sx{position:absolute;line-height:1;opacity:0;will-change:transform,opacity;animation-delay:var(--d);animation-duration:var(--t);animation-iteration-count:infinite}
+.sx-rise{bottom:-48px;animation-name:sxRise;animation-timing-function:linear;filter:drop-shadow(0 0 10px var(--accent2))}
+@keyframes sxRise{0%{transform:translate(0,0) rotate(-6deg);opacity:0}10%{opacity:.9}50%{transform:translate(var(--sw),-55vh) rotate(6deg)}90%{opacity:.8}100%{transform:translate(calc(var(--sw)*-.6),-115vh) rotate(-4deg);opacity:0}}
+.sx-fall{top:-48px;animation-name:sxFall;animation-timing-function:linear}
+@keyframes sxFall{0%{transform:translate(0,0) rotate(0);opacity:0}8%{opacity:.9}50%{transform:translate(var(--sw),55vh) rotate(180deg)}92%{opacity:.8}100%{transform:translate(calc(var(--sw)*-.5),112vh) rotate(380deg);opacity:0}}
+.sx-twinkle{animation-name:sxTw;animation-timing-function:ease-in-out;animation-duration:calc(var(--t)/3.2)}
+@keyframes sxTw{0%,100%{opacity:.08;transform:scale(.6)}50%{opacity:.95;transform:scale(1.25)}}
+.sx-drift{left:-70px;animation-name:sxDrift;animation-timing-function:ease-in-out;animation-duration:calc(var(--t)*2.2)}
+@keyframes sxDrift{0%{transform:translate(0,0) rotate(-8deg);opacity:0}8%{opacity:.9}25%{transform:translate(28vw,-30px) rotate(6deg)}50%{transform:translate(56vw,20px) rotate(-6deg)}75%{transform:translate(84vw,-24px) rotate(8deg)}95%{opacity:.85}100%{transform:translate(118vw,10px) rotate(-4deg);opacity:0}}
+.sx-burst{position:absolute;width:0;height:0;animation:sxBurstWrap 7s var(--d) infinite}
+@keyframes sxBurstWrap{0%,100%{opacity:0}4%{opacity:1}30%{opacity:1}40%{opacity:0}}
+.sx-burst u{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 12px var(--c);animation:sxSpark 7s var(--d) infinite;opacity:0}
+@keyframes sxSpark{0%,3%{transform:rotate(var(--a)) translateY(0) scale(1);opacity:0}5%{opacity:1}34%{transform:rotate(var(--a)) translateY(-110px) scale(.4);opacity:0}100%{opacity:0}}
+.sx-splash{position:absolute;width:240px;height:240px;margin:-120px;border-radius:50%;background:radial-gradient(circle,var(--c) 0%,color-mix(in srgb,var(--c) 40%,transparent) 45%,transparent 70%);opacity:0;animation:sxSplash 8s var(--d) infinite;mix-blend-mode:multiply}
+@keyframes sxSplash{0%{transform:scale(.1);opacity:0}8%{opacity:.55}30%{transform:scale(1.1);opacity:.35}60%,100%{transform:scale(1.35);opacity:0}}
+@media(prefers-reduced-motion:reduce){.sx,.sx-burst,.sx-burst u,.sx-splash{animation:none!important;opacity:0}}

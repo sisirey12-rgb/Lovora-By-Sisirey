@@ -184,3 +184,12 @@
 .nl-giftart{position:relative;display:grid;place-items:center;height:170px}.nl-giftart span{font-size:110px;animation:nlBob 3.4s ease-in-out infinite;filter:drop-shadow(0 14px 18px rgba(0,0,0,.25))}
 .nl-giftart i{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--accent2);animation:nlTw 2.4s ease-in-out infinite}.nl-giftart i:nth-child(2){left:18%;top:20%}.nl-giftart i:nth-child(3){right:14%;top:34%;animation-delay:.6s;background:var(--teal)}.nl-giftart i:nth-child(4){left:30%;bottom:12%;animation-delay:1.2s;background:var(--accent)}
 @keyframes nlTw{50%{transform:scale(1.8);opacity:.4}}
+
+/* offers: price + gift side by side, FAQ underneath */
+.nl-twocards{display:grid;gap:22px;max-width:980px;margin:0 auto}@media(min-width:820px){.nl-twocards{grid-template-columns:1fr 1fr;align-items:stretch}}
+.nl-twocards .nl-ticket{align-content:start}.nl-twocards .nl-ticket .nl-btn{margin-top:auto}
+.nl-ticket .nl-k{margin:0}
+.nl-ticket.gift{box-shadow:8px 8px 0 var(--accent2);background:linear-gradient(160deg,color-mix(in srgb,var(--accent2) 18%,var(--panel)),var(--panel) 60%)}
+.nl-giftemoji{font-size:54px;animation:nlBob 3.2s ease-in-out infinite;display:inline-block}
+.nl-faqhead{margin-top:64px}
+.nl-faq-wide{max-width:820px;margin:0 auto}

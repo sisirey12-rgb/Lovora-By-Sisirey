@@ -113,3 +113,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .qr-designs button i{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--a) 50%,var(--b) 50%);border:1px solid rgba(0,0,0,.15)}.qr-designs button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--panel2))}
 .qr-toggles{display:grid;gap:8px;font-size:14px;font-weight:700}.qr-toggles label{display:flex;align-items:center;gap:8px}
 .qr-foot{grid-template-columns:repeat(3,1fr)}.qr-foot button{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 8px}
+
+.ai-check{padding:14px 16px;border-radius:14px;border:2px solid var(--border);display:grid;gap:6px}.ai-check b{font-size:17px}.ai-check p{margin:0;line-height:1.5}.ai-check small{color:var(--muted)}
+.ai-check.ok{border-color:var(--teal)}.ai-check.ok b{color:var(--teal)}.ai-check.bad{border-color:#e5534b}.ai-check.bad b{color:#e5534b}
