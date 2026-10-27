@@ -1,14 +1,24 @@
 // Helpers shared by the payment functions. Files starting with "_" are not exposed as routes by Vercel.
 // Server-only environment variables (Vercel -> Settings -> Environment Variables):
 //   SUPABASE_SERVICE_ROLE_KEY, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET
-//   PRICE_INR (default 149, the launch price) and REGULAR_PRICE_INR (default 299, shown crossed out)
+//   FIRST_PURCHASE_PRICE_INR (default 149), REPEAT_PURCHASE_PRICE_INR (default 299)
 import crypto from 'node:crypto'
 
-export const price = () => ({ amount: Number(process.env.PRICE_INR || 149), regular: Number(process.env.REGULAR_PRICE_INR || 299) })
+export const price = () => { const first = Math.max(1, Number(process.env.FIRST_PURCHASE_PRICE_INR || process.env.PRICE_INR || 149)); const repeat = Math.max(first, Number(process.env.REPEAT_PURCHASE_PRICE_INR || 299)); return { amount: first, regular: repeat, giftAmount: first, repeatAmount: repeat } }
+/** First completed paid purchase is ₹149; later purchases are ₹299. Owners are handled separately by the server-side bypass. */
+export async function hasPreviousPurchase(user) {
+  if (!user?.id || !SB() || !SERVICE()) return false
+  const a = await sb(`payments?owner_id=eq.${user.id}&status=eq.paid&select=order_id&limit=1`)
+  if (a.ok && a.data?.length) return true
+  const b = await sb(`payment_intents?owner_id=eq.${user.id}&status=eq.paid&select=id&limit=1`)
+  return !!(b.ok && b.data?.length)
+}
+export async function priceForUser(user) { const p = price(); return { ...p, amount: (await hasPreviousPurchase(user)) ? p.repeatAmount : p.amount } }
 const SB = () => process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const SERVICE = () => process.env.SUPABASE_SERVICE_ROLE_KEY
 /** Nepal price in NPR. Set PRICE_NPR, or the INR price is converted with NPR_PER_INR (default 1.6). */
-export const nprAmount = () => Number(process.env.PRICE_NPR) || Math.max(1, Math.round(price().amount * Number(process.env.NPR_PER_INR || 1.6)))
+export const nprAmount = (inr = price().amount) => Number(process.env.PRICE_NPR) || Math.max(1, Math.round(inr * Number(process.env.NPR_PER_INR || 1.6)))
+export const nprGiftAmount = (inr = price().giftAmount) => Number(process.env.GIFT_PRICE_NPR) || Math.max(1, Math.round(inr * Number(process.env.NPR_PER_INR || 1.6)))
 /** Which payment methods are switched on (by which secrets exist in Vercel). */
 export const providers = () => ({
   razorpay: Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),

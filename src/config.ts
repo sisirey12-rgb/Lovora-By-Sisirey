@@ -7,6 +7,6 @@ export const LINKS = {
   whatsapp: 'https://wa.me/910000000000',          // TODO: replace with your number, country code first, digits only
 }
 
-// Fallback prices (rupees). The real price is set on the server with PRICE_INR / REGULAR_PRICE_INR and fetched from /api/pricing.
-// Launch price first (99), then raise PRICE_INR to 149 when you are ready.
-export const PRICING = { amount: 149, regular: 299, currency: 'INR' }
+// Customer prices in INR. The server is authoritative; these are UI fallbacks only.
+// One product: first completed purchase ₹149, subsequent purchases ₹299.
+export const PRICING = { amount: 149, regular: 299, giftAmount: 149, currency: 'INR' }

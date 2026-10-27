@@ -7,7 +7,7 @@ const NAMES: Record<PayProvider, string> = { razorpay: 'UPI / cards', esewa: 'eS
 
 /** "Gift a surprise": buy a prepaid share-link code for someone. They enter it instead of paying. Owner accounts create codes free. */
 export default function GiftModal({ onClose, owner = false, justPaidCode = '' }: { onClose: () => void; owner?: boolean; justPaidCode?: string }) {
-  const [price, setPrice] = useState<Price>({ amount: PRICING.amount, regular: PRICING.regular })
+  const [price, setPrice] = useState<Price>({ amount: PRICING.amount, regular: PRICING.regular, giftAmount: PRICING.giftAmount })
   const [code, setCode] = useState(justPaidCode), [busy, setBusy] = useState(''), [err, setErr] = useState(''), [copied, setCopied] = useState(false), [rows, setRows] = useState<GiftRow[]>([])
   useEffect(() => { void getPrice().then(setPrice); void listGifts().then(setRows) }, [code])
   const pv = price.providers
@@ -26,7 +26,7 @@ export default function GiftModal({ onClose, owner = false, justPaidCode = '' }:
       {!code ? <>
         <h2 className="gift-title">Give someone a free share link</h2>
         <p className="pw-big">Buy a gift code. Whoever you send it to enters it when they share their surprise, and they pay nothing.</p>
-        <div className="pw-price"><b>{owner ? 'Free' : `₹${price.amount}`}</b>{!owner && price.amount < price.regular && <s>₹{price.regular}</s>}</div>
+        <div className="pw-price"><b>{owner ? 'Free' : `₹${price.giftAmount}`}</b></div>
         <p className="pw-sub">{owner ? 'Owner account: no payment needed' : 'per gift code · eSewa and Khalti are charged in NPR'}</p>
         {err && <p className="pw-error" role="alert">{err}</p>}
         {owner ? <button className="primary-btn pw-pay" onClick={() => void buy(methods[0] || 'razorpay')} disabled={!!busy}>{busy ? <><Loader2 size={20} className="spin" /> {busy}</> : <><Gift size={20} /> Create a free gift code</>}</button>

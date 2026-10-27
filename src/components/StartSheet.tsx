@@ -114,7 +114,7 @@ export default function StartSheet({ occasion, relation, seasonSlug, onClose, on
         <p className="eyebrow">READY TO SEND</p><h2>{last.recipient}’s surprise is ready</h2>
         <p className="muted">Now that you have seen it, change anything you like, or send it as it is.</p>
         <button type="button" className="customise-btn" onClick={() => onFull(last)}><span className="customise-ico"><Palette size={20} /></span><span><strong>Customise it</strong><small>Words, photos, look, scenes and balloon wishes</small></span><span className="customise-go">→</span></button>
-        <div className="ss-price"><b>₹{amount}</b><s>₹{PRICING.regular}</s><span>launch price, one time</span></div>
+        <div className="ss-price"><b>₹{amount}</b><span>per surprise, one time</span></div>
         {err && <p className="error-text" role="alert">{err}</p>}
         <button className="primary-btn big-btn" onClick={() => last && void finish(last)} disabled={!!busy}>{busy || 'Get the share link'}</button>
         <RedeemBox item={last} disabled={!!busy} onRedeemed={paid => void finish(paid)} />

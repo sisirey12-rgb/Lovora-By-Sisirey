@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { price, sb, userFromReq, isUuid, isOwner, hmac, safeEqual, nprAmount, providers } from './_shared.js'
+import { price, priceForUser, sb, userFromReq, isUuid, isOwner, hmac, safeEqual, nprAmount, nprGiftAmount, providers } from './_shared.js'
 
 /**
  * One function for: eSewa + Khalti payments, "Gift a surprise" vouchers and redeeming them
@@ -104,7 +104,8 @@ export default async function handler(req, res) {
       const code = await newGiftCode(user.id, 'owner'); return code ? res.status(200).json({ code, owner: true }) : bad(res, 500, 'Could not create the gift code. Did you run 0007_gifts_nepal.sql?')
     }
     if (!providers()[provider]) return bad(res, 503, `${provider === 'esewa' ? 'eSewa' : 'Khalti'} is not set up yet.`)
-    const amount = nprAmount(), id = crypto.randomUUID(), site = origin(req)
+    const tier = await priceForUser(user)
+    const amount = kind === 'gift' ? nprGiftAmount(tier.amount) : nprAmount(tier.amount), id = crypto.randomUUID(), site = origin(req)
     const saved = await sb('payment_intents', { method: 'POST', body: { id, owner_id: user.id, provider, kind, experience_id: expId, amount } })
     if (!saved.ok) { console.error('intent failed', saved.status, saved.data); return bad(res, 500, 'Could not start the payment. Did you run 0007_gifts_nepal.sql in Supabase?') }
     const back = `${site}/api/pay?action=return&provider=${provider}&i=${id}`
@@ -126,7 +127,7 @@ export default async function handler(req, res) {
   if (action === 'gift-order') {
     if (owner) { const code = await newGiftCode(user.id, 'owner'); return code ? res.status(200).json({ code, owner: true }) : bad(res, 500, 'Could not create the gift code. Did you run 0007_gifts_nepal.sql?') }
     if (!providers().razorpay) return bad(res, 503, 'Card and UPI payments are not set up yet.')
-    const { amount } = price(), key = process.env.RAZORPAY_KEY_ID, secret = process.env.RAZORPAY_KEY_SECRET
+    const { amount } = await priceForUser(user), key = process.env.RAZORPAY_KEY_ID, secret = process.env.RAZORPAY_KEY_SECRET
     const rz = await fetch('https://api.razorpay.com/v1/orders', { method: 'POST', headers: { Authorization: 'Basic ' + Buffer.from(`${key}:${secret}`).toString('base64'), 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: amount * 100, currency: 'INR', receipt: `gift_${Date.now()}`, notes: { kind: 'gift', user_id: user.id } }) })
     const order = await rz.json()
     if (!rz.ok) { console.error('razorpay gift order failed', order); return bad(res, 502, 'Could not start the payment. Please try again.') }

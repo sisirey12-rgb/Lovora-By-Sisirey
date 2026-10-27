@@ -7,6 +7,7 @@ import PayWall from './PayWall'
 import CreatingOverlay from './CreatingOverlay'
 import { emojiFor } from '../lib/templates'
 import QrStudio from './QrStudio'
+import CustomLinkPanel from './CustomLinkPanel'
 import RedeemBox from './RedeemBox'
 import AiHelper from './AiHelper'
 import SceneFields from './SceneFields'
@@ -112,7 +113,7 @@ export default function Editor({ initial, initialStep = 1, onExit, onSaved }: Pr
     try {
       const r = await publishShare(src, m => setError(m))
       if (!r.ok) { setError(''); setPaywall(true); return }   // not an owner and not paid yet: the server asked for payment
-      setItem(r.item); storage.saveDraft(r.item); setShareUrl(`${window.location.origin}/s/${r.item.id}`); setError(r.owner ? 'Published successfully (owner account, free). Your shareable link is ready below.' : 'Published successfully. Your shareable link is ready below.'); onSaved()
+      setItem(r.item); storage.saveDraft(r.item); setShareUrl(`${window.location.origin}/s/${r.item.id}`); setError('Published successfully. Your shareable link is ready below.'); onSaved()
     } catch(e) { setError(e instanceof Error?e.message:'Could not publish this experience.') }
   }
   const wishId = shareUrl ? shareUrl.split('/s/').pop() : (item.published ? item.id : '')
@@ -185,9 +186,30 @@ export default function Editor({ initial, initialStep = 1, onExit, onSaved }: Pr
           <Fold title="Secret message and reply links"><label>Secret bonus message<input value={item.secretMessage||''} onChange={e=>patch({secretMessage:e.target.value})} maxLength={160} placeholder="Revealed if they tap the cat 5 times"/></label><label>Your WhatsApp number<input type="tel" inputMode="tel" value={item.replyWhatsApp||""} onChange={e=>patch({replyWhatsApp:e.target.value.replace(/[^0-9+]/g,"").slice(0,16)})} placeholder="Country code + number, e.g. 919876543210"/></label><label>Your Instagram username<input value={item.replyInstagram||""} onChange={e=>patch({replyInstagram:e.target.value.replace(/^@/,"").replace(/[^A-Za-z0-9._]/g,"").slice(0,30)})} placeholder="username, without @"/></label></Fold>
         </div></section>}
       {step===5 && <section><p className="eyebrow">STEP 5 OF {LAST} · THE BIG REVEAL</p><h1>Preview your surprise.</h1><p className="muted">Play the full interactive story. Your changes show up here straight away.</p><div className={`preview-card ${worldClass(occ, rel)}`} style={{background:themes.find(t=>t.name===item.theme)?.colors}}><span>✦ LOVORA ✦</span><h2>{item.recipient ? `For ${item.recipient}` : 'Your favourite human'}</h2><p>{item.title}</p><button onClick={startPreview}>Play full preview <ArrowRight size={16}/></button></div></section>}
-      {step===6 && <section><p className="eyebrow">STEP 6 OF {LAST} · SEND A LITTLE MAGIC</p><h1>Make it shareable.</h1><p className="muted">Previewing is always free. Pay once to get a link you can send to anyone.</p>
+      {step===6 && <section>
+        <p className="eyebrow">STEP 6 OF {LAST} · SEND A LITTLE MAGIC</p>
+        <h1>Make it shareable.</h1>
+        <p className="muted">Previewing is always free. Pay once to get a link you can send to anyone.</p>
         <div className="fold-stack"><Fold title="Add a lock question" hint="optional"><label>Question<input value={item.unlockQuestion||''} onChange={e=>patch({unlockQuestion:e.target.value})} placeholder="Where did we first meet?"/></label><label>Answer<input value={item.unlockAnswer||''} onChange={e=>patch({unlockAnswer:e.target.value})} placeholder="Only they would know"/></label><small>A light lock to keep casual openers out. It is not secure storage.</small></Fold></div>
-        <button className="primary-btn" onClick={()=>void publish()}><Sparkles size={17}/> {shareUrl?'Update my share link':'Get my share link'}</button>{!seen&&!shareUrl&&<button className="secondary-btn" onClick={()=>setPreview(true)}>Preview it first (free)</button>}{!shareUrl&&<RedeemBox item={item} onRedeemed={paid=>{setItem(paid);storage.saveDraft(paid);void publish(paid)}}/>}{shareUrl&&<div className="share-link-ready"><strong>Your surprise link is ready</strong><input readOnly value={shareUrl}/><div className="share-actions"><button type="button" className="secondary-btn" onClick={()=>setQrOpen(true)}>Printable QR card</button><a className="secondary-btn" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${item.title||'A little surprise'} 💌 ${shareUrl}`)}`}>Send on WhatsApp</a><a className="secondary-btn" href={`mailto:?subject=${encodeURIComponent(item.title||'A little surprise for you')}&body=${encodeURIComponent(`Open your surprise: ${shareUrl}`)}`}>Send by email</a><label className="remind-send">Remind me to send on<input type="date" min={localDate(new Date())} onChange={e=>{if(e.target.value)addReminder(e.target.value,`💌 Send the surprise for ${item.recipient||'someone you love'}`,shareUrl)}}/></label></div><button className="secondary-btn" onClick={()=>{void navigator.clipboard.writeText(shareUrl).then(()=>setError('Link copied to clipboard.')).catch(()=>setError(shareUrl))}}><Check size={15}/> Copy shareable link</button></div>}<button className="secondary-btn" onClick={()=>{save();setError('Draft saved on this device. It is not publicly accessible.')}}><Save size={16}/> Save private local draft</button><div className="note-card">Published surprises are public to anyone with the link. Please do not upload private content.</div></section>}
+        <button className="primary-btn" onClick={()=>void publish()}><Sparkles size={17}/> {shareUrl?'Update my share link':'Get my share link'}</button>
+        {!seen&&!shareUrl&&<button className="secondary-btn" onClick={()=>setPreview(true)}>Preview it first (free)</button>}
+        {!shareUrl&&<RedeemBox item={item} onRedeemed={paid=>{setItem(paid);storage.saveDraft(paid);void publish(paid)}}/>}
+        {shareUrl && <>
+          <CustomLinkPanel url={shareUrl} experienceId={item.id} recipient={item.recipient} sender={item.sender} occasion={item.occasion} onActivated={setShareUrl}/>
+          <div className="share-link-ready">
+            <strong>Your surprise link is ready</strong><input readOnly value={shareUrl}/>
+            <div className="share-actions">
+              <button type="button" className="secondary-btn" onClick={()=>setQrOpen(true)}>Printable QR card</button>
+              <a className="secondary-btn" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${item.title||'A little surprise'} 💌 ${shareUrl}`)}`}>Send on WhatsApp</a>
+              <a className="secondary-btn" href={`mailto:?subject=${encodeURIComponent(item.title||'A little surprise for you')}&body=${encodeURIComponent(`Open your surprise: ${shareUrl}`)}`}>Send by email</a>
+              <label className="remind-send">Remind me to send on<input type="date" min={localDate(new Date())} onChange={e=>{if(e.target.value)addReminder(e.target.value,`💌 Send the surprise for ${item.recipient||'someone you love'}`,shareUrl)}}/></label>
+            </div>
+            <button className="secondary-btn" onClick={()=>{void navigator.clipboard.writeText(shareUrl).then(()=>setError('Link copied to clipboard.')).catch(()=>setError(shareUrl))}}><Check size={15}/> Copy shareable link</button>
+          </div>
+        </>}
+        <button className="secondary-btn" onClick={()=>{save();setError('Draft saved on this device. It is not publicly accessible.')}}><Save size={16}/> Save private local draft</button>
+        <div className="note-card">Published surprises are public to anyone with the link. Please do not upload private content.</div>
+      </section>}
       {error && <p className={error.startsWith('Published')||error.startsWith('Draft saved')||error.startsWith('Link copied')?'success-text':'error-text'} role="status">{error}</p>}
       <div className="editor-nav"><button className="secondary-btn" onClick={()=>{setError('');if(step<=1)onExit();else setStep(s=>s-1)}}><ArrowLeft size={16}/> {step<=1?'Exit':'Back'}</button><span>{step} of {LAST}</span>{step<LAST&&<button className="primary-btn" onClick={next}>Continue <ArrowRight size={16}/></button>}</div><DevCredit/>
     </main>

@@ -9,7 +9,7 @@ const NAMES: Record<Method, string> = { razorpay: 'UPI, cards, netbanking', esew
 
 /** Shown when someone wants a share link for an unpaid surprise (owner accounts never see it: the server unlocks them). Previewing stays free. Payment messages are BIG on purpose. */
 export default function PayWall({ item, onClose, onPaid, onPreview }: { item: Experience; onClose: () => void; onPaid: (e: Experience) => void; onPreview?: () => void }) {
-  const [price, setPrice] = useState<Price>({ amount: PRICING.amount, regular: PRICING.regular })
+  const [price, setPrice] = useState<Price>({ amount: PRICING.amount, regular: PRICING.regular, giftAmount: PRICING.giftAmount })
   const [method, setMethod] = useState<Method>('razorpay')
   const [busy, setBusy] = useState(''), [err, setErr] = useState(''), [thanks, setThanks] = useState<{ e: Experience; how: string } | null>(null)
   const [code, setCode] = useState(savedGiftCode()), [codeOpen, setCodeOpen] = useState(!!savedGiftCode())
@@ -31,7 +31,6 @@ export default function PayWall({ item, onClose, onPaid, onPreview }: { item: Ex
     setErr(''); setBusy('Checking the code…')
     try { const paid = await redeemGift(code, item, setBusy); saveGiftCode(''); setThanks({ e: paid, how: 'Gift code' }) } catch (e) { setErr(e instanceof Error ? e.message : 'That code did not work.') } finally { setBusy('') }
   }
-  const launch = price.amount < price.regular
   if (thanks) return <div className="quick-backdrop" role="dialog" aria-modal="true" aria-label="Payment received">
     <div className="quick-sheet paywall pw-done"><span className="pw-tick"><BadgeCheck size={56} /></span><h2 className="pw-huge">{thanks.how === 'Gift code' ? 'Gift code accepted!' : 'Payment received!'}</h2><p className="pw-big">{thanks.how === 'Gift code' ? 'Your link is free. Creating it now…' : `${thanks.how} paid. Creating your share link now…`}</p><Loader2 size={26} className="spin" /></div>
   </div>
@@ -41,8 +40,8 @@ export default function PayWall({ item, onClose, onPaid, onPreview }: { item: Ex
       <div className="pw-banner" role="note"><Lock size={22} /><b>PAYMENT NEEDED</b><span>to create your share link</span></div>
       <h2 className="pw-title">Love it? Make it shareable.</h2>
       <p className="pw-big">Previewing is free, as many times as you like. Pay once and get one link you can send to anyone.</p>
-      <div className="pw-price"><b>{shown}</b>{launch && method === 'razorpay' && <s>₹{price.regular}</s>}</div>
-      <p className="pw-sub">{launch && <span className="launch-tag">Launch price</span>} per surprise, one time only</p>
+      <div className="pw-price"><b>{shown}</b></div>
+      <p className="pw-sub">{price.amount < price.regular ? `First purchase · next purchases ₹${price.regular} (or local equivalent)` : `Repeat-purchase price · ₹${price.regular} per surprise`}</p>
       {methods.length > 1 && <div className="pw-methods" role="radiogroup" aria-label="Payment method">{methods.map(m => <button key={m} type="button" role="radio" aria-checked={method === m} className={method === m ? 'on' : ''} onClick={() => setMethod(m)}>{NAMES[m]}</button>)}</div>}
       <ul className="paywall-list"><li><Check size={18} /> A public link that works on any phone</li><li><Check size={18} /> Photos, music and video kept online</li><li><Check size={18} /> Edit later, the same link keeps working</li></ul>
       {err && <p className="pw-error" role="alert">{err}</p>}

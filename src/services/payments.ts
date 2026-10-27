@@ -7,15 +7,15 @@ import { storage } from './storage'
 export const isPaid = (e: { paid?: boolean; published?: boolean }) => !!(e.paid || e.published)
 
 export type Providers = { razorpay: boolean; esewa: boolean; khalti: boolean }
-export type Price = { amount: number; regular: number; npr?: number; providers?: Providers }
-let priceCache: Price | undefined
+export type Price = { amount: number; regular: number; giftAmount: number; npr?: number; giftNpr?: number; providers?: Providers }
 export async function getPrice(): Promise<Price> {
-  if (priceCache) return priceCache
   try {
-    const r = await fetch('/api/pricing'); const j = await r.json()
-    if (r.ok && j.amount) return (priceCache = { amount: j.amount, regular: j.regular || PRICING.regular, npr: j.npr, providers: j.providers })
+    const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } }
+    const token = data.session?.access_token
+    const r = await fetch('/api/pricing', { headers: token ? { Authorization: `Bearer ${token}` } : {} }); const j = await r.json()
+    if (r.ok && j.amount) return { amount: j.amount, regular: j.regular || PRICING.regular, giftAmount: j.giftAmount || j.amount, npr: j.npr, giftNpr: j.giftNpr, providers: j.providers }
   } catch { /* use the fallback */ }
-  return { amount: PRICING.amount, regular: PRICING.regular }
+  return { amount: PRICING.amount, regular: PRICING.regular, giftAmount: PRICING.giftAmount }
 }
 
 type RzResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }

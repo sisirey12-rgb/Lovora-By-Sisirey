@@ -4,7 +4,7 @@ import { PRICING } from '../config'
 import OccasionCards from './OccasionCards'
 import type { Occasion } from '../types'
 import { FinalCTA, Rotator } from './LandingFX'
-import { seasonFromPath, useLiveSeason } from '../lib/seasons'
+import { useLiveSeason } from '../lib/seasons'
 
 const SCENES = ['gift', 'balloons', 'cake', 'letter', 'finale'] as const
 const CAPTION: Record<(typeof SCENES)[number], string> = { gift: 'Tap the gift', balloons: 'Pop a balloon', cake: 'Make a wish', letter: 'Read the letter', finale: 'The grand finale' }
@@ -60,7 +60,7 @@ const FAQ: [string, string][] = [
 export default function LandingPro({ onStart }: { onStart: (o: Occasion) => void }) {
   const onCreate = toStart
   const live = useLiveSeason()
-  const season = seasonFromPath() ?? live
+  const season = live
   useEffect(() => {
     const old = document.title, meta = document.querySelector<HTMLMetaElement>('meta[name="description"]'), oldMeta = meta?.content
     if (season) { document.title = `${season.label} surprise: make an interactive gift | Lovora Meow`; if (meta) meta.content = season.meta }
@@ -97,7 +97,7 @@ export default function LandingPro({ onStart }: { onStart: (o: Occasion) => void
     <section className="lx-sec lx-split">
       <div>
         <header className="lx-head"><p className="lp-kicker">SIMPLE PRICING</p><h2>Preview free. <em>Pay only to share.</em></h2></header>
-        <div className="lx-price"><div className="lx-amt"><b>₹{PRICING.amount}</b><s>₹{PRICING.regular}</s><span>per surprise, one time</span></div>
+        <div className="lx-price"><div className="lx-amt"><b>₹{PRICING.amount}</b><span>per surprise, one time</span></div>
           <ul><li><Check size={16} /> Your own private share link</li><li><Check size={16} /> Every scene, entrance, cake and bouquet</li><li><Check size={16} /> Photos, voice note and video</li><li><Check size={16} /> Story card and printable QR card</li><li><Check size={16} /> Preview as many times as you like, free</li></ul>
           <button className="primary-btn big-btn" onClick={onCreate}>Start for free <ArrowRight size={18} /></button><small><Link2 size={12} /> Launch price, for a limited time</small></div>
       </div>

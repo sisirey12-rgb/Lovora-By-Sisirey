@@ -77,7 +77,7 @@ export default function QuickStart({ template, form, setForm, onClose, onFull, o
         {err && <p className="error-text" role="alert">{err}</p>}
         <button type="button" className="customise-btn" onClick={() => onFull(build())} disabled={!!busy}><span className="customise-ico"><Palette size={20} /></span><span><strong>Customise it</strong><small>Your words, photos, look and balloon wishes</small></span><span className="customise-go">→</span></button>
         {!previewed ? <button className="primary-btn big-btn quick-go" onClick={() => void go()} disabled={!!busy || working}>{working ? 'Writing your surprise…' : 'Create and preview ✨'}</button>
-          : <div className="quick-send"><p className="quick-ready">🎉 Happy with it? Send it now.</p><button className="primary-btn big-btn quick-go" onClick={() => { if (valid()) void finish(build()) }} disabled={!!busy}>{busy || <>Get my share link · ₹{amount} <s>₹{PRICING.regular}</s></>}</button><button className="secondary-btn" onClick={() => void go()} disabled={working}><Eye size={16} /> Watch it again</button></div>}
+          : <div className="quick-send"><p className="quick-ready">🎉 Happy with it? Send it now.</p><button className="primary-btn big-btn quick-go" onClick={() => { if (valid()) void finish(build()) }} disabled={!!busy}>{busy || <>Get my share link · ₹{amount}</>}</button><button className="secondary-btn" onClick={() => void go()} disabled={working}><Eye size={16} /> Watch it again</button></div>}
       </> : <>
         <h2>Your surprise is live ♡</h2>
         <input readOnly value={url} onFocus={e => e.currentTarget.select()} aria-label="Share link" />

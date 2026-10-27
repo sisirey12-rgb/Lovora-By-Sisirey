@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { ArrowRight, CalendarClock, Check, Gift, Images, Link2, Play, QrCode, ShieldCheck, Smartphone, Sparkles, Volume2, Wand2, Zap } from 'lucide-react'
 import { PRICING } from '../config'
 import { Rotator } from './LandingFX'
-import { SEASONS, seasonFromPath, useLiveSeason } from '../lib/seasons'
+import { useLiveSeason } from '../lib/seasons'
 import { SEASON_THEME } from '../lib/seasonTheme'
 import SeasonFX from './SeasonFX'
 import type { Occasion, Relation, SceneId } from '../types'
@@ -151,7 +151,7 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
   const live = useLiveSeason()
   const [studio, setStudio] = useState<SceneStudioConfig>(DEFAULT_SCENE_STUDIO)
   useEffect(() => { let alive = true; void fetchSceneStudio().then(v => { if (alive) setStudio(v) }); const changed = (e: Event) => { const d = (e as CustomEvent<SceneStudioConfig>).detail; if (d) setStudio({ ...DEFAULT_SCENE_STUDIO, ...d }) }; window.addEventListener('lovora:scene-config', changed); return () => { alive = false; window.removeEventListener('lovora:scene-config', changed) } }, [])
-  const season = seasonFromPath() ?? live
+  const season = live
   const root = useReveal()
   const theme = season ? SEASON_THEME[season.slug] : undefined
   // the whole page (and the nav) recolours through <html data-season>; it is removed again when the landing page closes
@@ -179,13 +179,6 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
 
     <div className="nl-ribbon" aria-hidden="true"><div>{[0, 1].map(k => <span key={k}>{(theme?.ribbon ?? ['BIRTHDAYS', 'ANNIVERSARIES', 'LOVE LETTERS', 'JUST BECAUSE', 'BALLOONS', 'ROSE PETALS', 'SHOOTING STARS', 'MESSAGES IN BOTTLES']).map(t => <b key={t}>{t}<i>✦</i></b>)}</span>)}</div></div>
 
-    <section className="nl-sec nl-season-hub" aria-labelledby="nl-season-title">
-      <header className="nl-head nl-rv"><p>MADE FOR THE MOMENT</p><h2 id="nl-season-title">Every season has a <em>story.</em></h2><span>Choose a celebration to find the right mood, message and scenes.</span></header>
-      <div className="nl-season-grid nl-rv">{SEASONS.map((item, k) => <a className="nl-season-card" href={`/for/${item.slug}`} key={item.slug} style={{ ['--season-index' as string]: k } as CSSProperties}>
-        <span className="nl-season-emoji" aria-hidden="true">{item.emoji}</span><span className="nl-season-copy"><b>{item.label}</b><small>{item.pill}</small></span><ArrowRight size={17} aria-hidden="true" />
-      </a>)}</div>
-    </section>
-
     <Creator onStart={onStart} startOcc={theme?.occasion} startRel={theme?.relation} seasonSlug={season?.slug} />
 
     <section id="nl-library" className="nl-sec">
@@ -204,10 +197,10 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
     <section id="pricing" className="nl-sec nl-offers">
       <header className="nl-head nl-rv"><p>SIMPLE PRICING</p><h2>Preview free. <em>Pay only to share.</em></h2><span>One price for one share link. Or gift that link to someone else.</span></header>
       <div className="nl-twocards nl-rv">
-        <div className="nl-ticket"><p className="nl-k">SHARE YOUR SURPRISE</p><div className="nl-amt"><b>₹{PRICING.amount}</b><s>₹{PRICING.regular}</s></div><span>per surprise, one time</span>
+        <div className="nl-ticket"><p className="nl-k">SHARE YOUR SURPRISE</p><div className="nl-amt"><b>₹{PRICING.amount}</b></div><span>per surprise, one time</span>
           <ul><li><Check size={16} /> Your own private share link</li><li><Check size={16} /> Every scene, entrance, cake and bouquet</li><li><Check size={16} /> Photos, voice note and video</li><li><Check size={16} /> Reveal date and countdown teaser</li><li><Check size={16} /> Printable QR card</li></ul>
-          <button className="nl-btn" onClick={toStart}>Start for free <ArrowRight size={18} /></button><small><Link2 size={12} /> Launch price, for a limited time. UPI, cards, eSewa and Khalti.</small></div>
-        <div className="nl-ticket gift"><p className="nl-k">GIFT A SURPRISE</p><div className="nl-amt"><b>₹{PRICING.amount}</b><span className="nl-giftemoji" aria-hidden="true">🎁</span></div><span>one gift code, one free share link</span>
+          <button className="nl-btn" onClick={toStart}>Start for free <ArrowRight size={18} /></button><small><Link2 size={12} /> One-time payment · UPI, cards, eSewa and Khalti.</small></div>
+        <div className="nl-ticket gift"><p className="nl-k">GIFT A SURPRISE</p><div className="nl-amt"><b>₹{PRICING.giftAmount}</b><span className="nl-giftemoji" aria-hidden="true">🎁</span></div><span>one prepaid gift code · one free share link</span>
           <ul><li><Check size={16} /> Send the code on WhatsApp</li><li><Check size={16} /> They enter it when they share, and pay nothing</li><li><Check size={16} /> Works for any occasion and any person</li><li><Check size={16} /> Pay with UPI, cards, eSewa or Khalti</li></ul>
           <button className="nl-btn" onClick={onGift}>Gift a surprise <ArrowRight size={18} /></button><small><Gift size={12} /> Already have a code? Enter it on the last step of your surprise.</small></div>
       </div>

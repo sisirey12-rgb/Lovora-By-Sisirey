@@ -1,4 +1,4 @@
-import { price, sb, userFromReq, isUuid, configured, isOwner } from './_shared.js'
+import { price, priceForUser, sb, userFromReq, isUuid, configured, isOwner } from './_shared.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ alreadyPaid: true })
   }
   if (!configured()) return res.status(503).json({ error: 'Payments are not set up yet. Please try again later.' })
-  const { amount } = price()   // the server decides the price, never the browser
+  const { amount } = await priceForUser(user)   // first completed purchase ₹149, subsequent purchases ₹299; server decides
   const key = process.env.RAZORPAY_KEY_ID, secret = process.env.RAZORPAY_KEY_SECRET
   const rz = await fetch('https://api.razorpay.com/v1/orders', {
     method: 'POST',
