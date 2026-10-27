@@ -16,6 +16,7 @@ export default function SceneFields({ item, patch, has }: Props) {
   const meters = (() => { const m = [...(ex.meters || [])]; while (m.length < 3) m.push({ label: '', pct: 100 }); return m })()
   const setMeter = (i: number, p: Partial<{ label: string; pct: number }>) => { const m = [...meters]; m[i] = { ...m[i], ...p }; setEx({ meters: m }) }
   return <>
+    <Fold title="Countdown teaser" hint="what they see before the reveal date">{text('A little hint (optional)', ex.teaserHint || '', v => setEx({ teaserHint: v }), 140, 'It has something to do with that night in Goa…')}</Fold>
     {has('petalfall') && <Fold title="Rose petals" hint="the line written in petals">{text('The line', ex.petalLine || '', v => setEx({ petalLine: v }), 120, 'Every petal is a little thank you.')}</Fold>}
     {has('shootingstars') && <Fold title="Shooting stars" hint="3 wishes">{[0, 1, 2].map(i => <div key={i}>{text(`Star ${i + 1}`, ex.starWishes?.[i] || '', v => setAt('starWishes', i, v, 3), 100, ['You light up every room.', 'You deserve every good thing.', 'You are loved, always.'][i])}</div>)}</Fold>}
     {has('parcel') && <Fold title="Pass the parcel" hint="3 layers, 3 notes">{[0, 1, 2].map(i => <div key={i}>{text(`Layer ${i + 1}`, ex.parcelNotes?.[i] || '', v => setAt('parcelNotes', i, v, 3), 120, ['You are my favourite.', 'Keep going, there is more.', 'This is all for you.'][i])}</div>)}</Fold>}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { KeyRound, LogOut, Mail, Save, X, Heart, Link2, CalendarDays, ShieldCheck, Copy, Download, Crown, Trash2, Clock3, BadgeCheck, Palette } from 'lucide-react'
+import { Gift, KeyRound, LogOut, Mail, Save, X, Heart, Link2, CalendarDays, ShieldCheck, Copy, Download, Crown, Trash2, Clock3, BadgeCheck, Palette } from 'lucide-react'
 import { useAuth } from '../services/auth'
 import { supabase } from '../services/supabase/client'
 import { PRICING } from '../config'
@@ -23,7 +23,7 @@ const AVATARS = ['#ff8fc2', '#ffd36e', '#7fd6ff', '#b79bff', '#7be0b0', '#ff9a62
 const fmt = (d?: string, time = false) => d ? new Date(d).toLocaleString(undefined, time ? { dateStyle: 'medium', timeStyle: 'short' } : { year: 'numeric', month: 'short', day: 'numeric' }) : '-'
 
 /** Full account centre: profile, every surprise with its status, plan and security, and site settings. */
-export default function AccountModal({ items, setDark, onClose, onSignedOut }: { items: Experience[]; setDark: (d: boolean) => void; onClose: () => void; onSignedOut: () => void }) {
+export default function AccountModal({ items, setDark, onClose, onSignedOut, onGift }: { items: Experience[]; setDark: (d: boolean) => void; onClose: () => void; onSignedOut: () => void; onGift?: () => void }) {
   const { user, signOut, resetPassword } = useAuth()
   const meta = (user?.user_metadata || {}) as Meta
   const [tab, setTab] = useState<Tab>('profile')
@@ -78,6 +78,7 @@ export default function AccountModal({ items, setDark, onClose, onSignedOut }: {
 
       {tab === 'plan' && <div className="acc-pane">
         <div className={`acc-plan ${acct?.owner ? 'owner' : ''}`}>{acct?.owner ? <><Crown size={20} /><div><strong>Owner account</strong><small>Share links are free on this account. Owner email: {email}</small></div></> : <><Link2 size={20} /><div><strong>Pay per share link</strong><small>₹{PRICING.amount} launch price <s>₹{PRICING.regular}</s> per surprise. Previewing is always free.</small></div></>}</div>
+        {onGift && <button type="button" className="secondary-btn" onClick={onGift}><Gift size={15} /> {acct?.owner ? 'Create a free gift code' : 'Gift a surprise'}</button>}
         {acct && !acct.owner && <p className="acc-line" style={{ fontSize: 12, opacity: .8 }}>Signed in as <b>{email}</b>. {acct.ownerConfigured ? 'This email is not on the owner list.' : 'The owner list is empty on the server: add OWNER_EMAILS in Vercel and redeploy.'}</p>}
         <dl className="acc-dl"><div><dt>Paid / live links</dt><dd>{acct ? acct.paid : stats.paid} of {acct ? acct.total : stats.total}</dd></div><div><dt>Password</dt><dd>{provider === 'email' ? 'Managed by email' : `Managed by ${provider}`}</dd></div></dl>
         {provider === 'email' && <button className="secondary-btn" onClick={() => void run('pw', () => resetPassword(email), 'Password reset link sent to your email.')} disabled={!!busy}><KeyRound size={15} /> Change password by email</button>}

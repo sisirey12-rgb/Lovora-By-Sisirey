@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Check, Copy, Eye, ImagePlus, Palette, Pencil, Sparkles, X } from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, Copy, Eye, ImagePlus, Palette, Pencil, Sparkles, X } from 'lucide-react'
 import CreatingOverlay from './CreatingOverlay'
 import PayWall from './PayWall'
+import QrStudio from './QrStudio'
 import { getPrice, publishShare } from '../services/payments'
 import { PRICING } from '../config'
 import { fromTemplate, templates } from '../lib/templates'
@@ -10,7 +11,6 @@ import { compressImage } from '../lib/media'
 import { storage } from '../services/storage'
 import { supabase } from '../services/supabase/client'
 import { useAuth } from '../services/auth'
-import AiGuide from './AiGuide'
 import AiHelper from './AiHelper'
 import type { Experience, Extras, Occasion, Relation } from '../types'
 
@@ -25,13 +25,16 @@ const FIELDS: Record<string, Field[]> = {
   'Special surprise': [{ key: 'why', label: 'What are we celebrating?', type: 'text', ph: 'New job, a good grade, just because', apply: (e, v) => ({ ...e, title: v }) }],
 }
 
+const isoDay = (n: number) => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
+const niceDay = (v: string) => new Date(`${v}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+
 export default function StartSheet({ occasion, relation, onClose, onFull, onPreview, onDone }: { occasion: Occasion; relation?: Relation; onClose: () => void; onFull: (e: Experience) => void; onPreview: (e: Experience) => void; onDone: () => void }) {
   const { user } = useAuth()
   const meta = (user?.user_metadata || {}) as { full_name?: string }
   const myName = (meta.full_name || user?.email?.split('@')[0] || '').trim()
   const rels = RELATIONS.filter(r => occasion !== 'Love letter' || r.id === 'Partner')
   const [step, setStep] = useState<1 | 2>(1), [to, setTo] = useState(''), [from, setFrom] = useState(myName), [rel, setRel] = useState<Relation | ''>(relation || (occasion === 'Love letter' ? 'Partner' : ''))
-  const [vals, setVals] = useState<Record<string, string>>({}), [facts, setFacts] = useState(''), [photo, setPhoto] = useState('')
+  const [vals, setVals] = useState<Record<string, string>>({}), [facts, setFacts] = useState(''), [photo, setPhoto] = useState(''), [reveal, setReveal] = useState(''), [qrOpen, setQrOpen] = useState(false)
   const [busy, setBusy] = useState(''), [err, setErr] = useState(''), [saving, setSaving] = useState<Experience | null>(null), [last, setLast] = useState<Experience | null>(null), [previewed, setPreviewed] = useState(false)
   const [pay, setPay] = useState(false), [done, setDone] = useState<Experience | null>(null), [copied, setCopied] = useState(false), [amount, setAmount] = useState(PRICING.amount), [aiContent, setAiContent] = useState<Partial<Experience>>({})
   const id = useRef(crypto.randomUUID()), file = useRef<HTMLInputElement>(null)
@@ -41,7 +44,7 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
   const fields = FIELDS[occasion] || FIELDS['Special surprise']
   const build = (): Experience => {
     if (!tpl) throw new Error('Choose who it is for first.')
-    let e: Experience = { ...fromTemplate(tpl), id: id.current, recipient: to.trim(), sender: from.trim() || 'Someone who loves you', targetDate: undefined, memories: photo ? [{ id: crypto.randomUUID(), kind: 'image', src: photo, caption: '', name: 'photo.jpg' }] : [] }
+    let e: Experience = { ...fromTemplate(tpl), id: id.current, recipient: to.trim(), sender: from.trim() || 'Someone who loves you', targetDate: reveal || undefined, memories: photo ? [{ id: crypto.randomUUID(), kind: 'image', src: photo, caption: '', name: 'photo.jpg' }] : [] }
     for (const f of fields) { const v = (vals[f.key] || '').trim(); if (v) e = f.apply(e, v) }
     return e
   }
@@ -87,16 +90,22 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
           <button className="primary-btn" onClick={next}>Continue <ArrowRight size={16} /></button>
           <button type="button" className="text-btn ss-skip" onClick={customise} disabled={!!busy}><Palette size={14} /> I would rather customise everything first</button>
         </> : <>
-          <h2>Make it sound like you <small>(optional)</small></h2>
-          <p className="muted">A few real details and we do the writing. Skip it and the template text is used.</p>
+          <h2>Make it yours <small>(optional)</small></h2>
+          <p className="muted ss-lead">Everything here is optional. Skip it and we use the template.</p>
           {fields.map(f => <label key={f.key} className="ss-field">{f.label}<input type={f.type} inputMode={f.type === 'number' ? 'numeric' : undefined} max={f.type === 'date' ? new Date().toISOString().slice(0, 10) : undefined} value={vals[f.key] || ''} placeholder={f.ph} onChange={e => setVals({ ...vals, [f.key]: e.target.value })} maxLength={f.type === 'text' ? 80 : undefined} />{f.hint && <small>{f.hint}</small>}</label>)}
-          <AiGuide value={facts} onChange={setFacts} relation={rel}><label className="ss-field">Things about them, so it sounds like you<textarea rows={4} value={facts} maxLength={600} onChange={e => setFacts(e.target.value)} placeholder={'Calls me at 2am to gossip\nWe got lost in Goa and ate maggi on the beach'} style={{ minHeight: 110 }} /><small>Optional. We write the letter and wishes around this (needs sign-in).</small></label></AiGuide>
+          <div className="ss-field ss-reveal"><span className="ss-lbl2"><CalendarDays size={15} /> Reveal date</span>
+            <div className="ss-chips">{([['Today', 0], ['Tomorrow', 1], ['In a week', 7]] as [string, number][]).map(([t, n]) => { const v = isoDay(n); return <button key={t} type="button" className={reveal === v ? 'on' : ''} onClick={() => setReveal(reveal === v ? '' : v)}>{t}</button> })}</div>
+            <input type="date" value={reveal} min={isoDay(0)} max={isoDay(62)} onChange={e => setReveal(e.target.value)} aria-label="Reveal date" />
+            <small>{reveal ? `The link opens at midnight on ${niceDay(reveal)}. Your own previews always open now.` : 'Leave empty and it opens whenever they tap the link.'}</small></div>
+          <label className="ss-field">A few details about them<textarea rows={3} value={facts} maxLength={600} onChange={e => setFacts(e.target.value)} placeholder={'Calls me at 2am to gossip\nLoves momo, hates mornings'} /></label>
           {(() => { try { return <AiHelper item={build()} initialFacts={facts} onApply={p => { setAiContent(p); setFacts(facts || 'AI draft added') }} /> } catch { return null } })()}
           <input ref={file} type="file" accept="image/*" hidden onChange={e => { void pick(e.target.files?.[0]); e.target.value = '' }} />
-          <button type="button" className="quick-photo" onClick={() => file.current?.click()}>{photo ? <img src={photo} alt="Your photo" /> : <ImagePlus size={20} />}<span>{photo ? 'Change photo' : 'Add one photo (optional)'}</span></button>
+          <button type="button" className="quick-photo" onClick={() => file.current?.click()}>{photo ? <img src={photo} alt="Your photo" /> : <ImagePlus size={20} />}<span>{photo ? 'Change photo' : 'Add one photo'}</span></button>
           {err && <p className="error-text" role="alert">{err}</p>}
-          <button type="button" className="text-btn ss-skip" onClick={customise} disabled={!!busy}><Palette size={14} /> I would rather customise everything first</button>
-          <div className="quick-row"><button className="secondary-btn" onClick={() => setStep(1)} disabled={!!busy}>Back</button><button className="primary-btn" onClick={() => void create()} disabled={!!busy}>{busy || <>Create and preview <Eye size={16} /></>}</button></div>
+          <div className="ss-foot">
+            <div className="quick-row"><button className="secondary-btn" onClick={() => setStep(1)} disabled={!!busy}>Back</button><button className="primary-btn" onClick={() => void create()} disabled={!!busy}>{busy || <>Create and preview <Eye size={16} /></>}</button></div>
+            <button type="button" className="text-btn ss-skip" onClick={customise} disabled={!!busy}><Palette size={14} /> Customise everything first</button>
+          </div>
         </>}
       </>}
       {!done && previewed && last && <>
@@ -116,11 +125,13 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
           <button className="secondary-btn" onClick={() => { void navigator.clipboard.writeText(url).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 2000) }).catch(() => undefined) }}>{copied ? <><Check size={15} /> Copied</> : <><Copy size={15} /> Copy link</>}</button>
           <a className="secondary-btn" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${done.title || 'A little surprise'} ${url}`)}`}>Send on WhatsApp</a>
           <button className="secondary-btn" onClick={() => onPreview(done)}>Preview it</button>
+          <button className="secondary-btn" onClick={() => setQrOpen(true)}>Printable QR card</button>
           <button className="text-btn" onClick={() => onFull(done)}>Add more photos, music or scenes</button>
         </div>
       </>}
     </div>
     {saving && <CreatingOverlay occasion={saving.occasion} relation={saving.relation} name={saving.recipient} onDone={() => { const e = saving; setSaving(null); setPreviewed(true); onPreview(e) }} />}
+    {qrOpen && done && <QrStudio url={url} recipient={done.recipient} sender={done.sender} occasion={done.occasion} revealDate={done.targetDate} onClose={() => setQrOpen(false)} />}
     {pay && last && <PayWall item={last} onClose={() => setPay(false)} onPaid={e => void finish(e)} onPreview={() => { setPay(false); onPreview(last) }} />}
   </div>
 }

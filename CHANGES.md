@@ -1,3 +1,24 @@
+# Round 9
+
+**Countdown teaser** (`Teaser.tsx`): opening the link before the reveal date now shows a shaking gift, a live ticking countdown, the date, a hint from the sender (new field "Countdown teaser" in the editor, step 4), tappable "guess what is inside" emoji and a "Remind me" button.
+
+**Gift a surprise**: buy a prepaid gift code, send it on WhatsApp, and the receiver enters it in the payment window (or opens the link `/?gift=CODE`) to share for free. Buttons: landing page band and the account panel. New table `gift_codes`.
+
+**Owner bypass everywhere**: owner emails (`OWNER_EMAILS`) never pay: share links unlock free (`/api/publish`, `/api/create-order`), eSewa/Khalti start also unlocks free, and gift codes are created free.
+
+**eSewa and Khalti** (NPR): one new function `api/pay.js` (the project now uses 12 of the 12 functions Vercel's free plan allows). The payment window shows only the methods that are configured. Run `supabase/migrations/0007_gifts_nepal.sql`.
+Vercel variables: `ESEWA_SECRET_KEY` + `ESEWA_PRODUCT_CODE` (or `ESEWA_MODE=test` for the sandbox), `KHALTI_SECRET_KEY` (and `KHALTI_MODE=test` for the sandbox), `PRICE_NPR` or `NPR_PER_INR` (default 1.6), optional `SITE_URL`.
+
+**Printable QR studio** (`QrStudio.tsx`, `lib/giftCard.ts`): 5 designs, 3 sizes (A6 card, gift tag with a hole, round sticker), rounded QR with an emoji badge, your own line, optional reveal date and sender, Download, Print at real paper size, Share.
+
+**Build fix**: removed an unused variable in `ThemePicker.tsx` and an unused constant in `LandingNew.tsx` that would have stopped `npm run build` (the project uses `noUnusedLocals`).
+
+# Round 8
+
+- Quick-start step 2 now has a **Reveal date** (Today, Tomorrow, In a week, or pick a date) right under the first field, for every occasion (Turning age on birthdays). It is saved with the surprise and unlocks the share link at midnight on that day. Your own previews always open now.
+- Step 2 is calmer: one clear line of instructions, one "details" box (the hint chips and long tips are gone), one AI button, one photo button. "Create and preview" and Back now stay pinned at the bottom so they are never cropped.
+- The reveal date was removed from the AI sheet, as asked.
+
 # Round 7
 
 - Landing: ONE creator card (occasion, person, story preview, start) replaces the two separate selectors. Starting it opens the quick-start sheet with the person already chosen.

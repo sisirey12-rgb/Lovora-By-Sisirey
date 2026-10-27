@@ -24,6 +24,7 @@ import { momentsTitle } from '../lib/occasionContent'
 import Fireworks from './Fireworks'
 import FullScreenFX from './FullScreenFX'
 import ThankYou from './ThankYou'
+import Teaser from './Teaser'
 import { addReminder } from '../lib/reminder'
 import { getWishes } from '../services/wishes'
 import { trackOpen, pingView } from '../services/stats'
@@ -171,7 +172,7 @@ export default function ScenePlayer({ experience: rawExperience, onClose, previe
   const openBouquet = () => { if (bouquetPhase) return; setBouquetPhase(1); buzz([15, 25, 15]); sfx.boom('stars'); window.setTimeout(() => { setBouquetPhase(2); setBouquetOpen(true); buzz([20, 30, 20, 30, 60]); sfx.boom('love') }, 1100) }
   const bouquetTitle = bouquetStyles.find(b => b.id === experience.bouquetStyle)?.title
 
-  if (locked) return <div className={`player ${themeClass} countdown-lock`} role="dialog" aria-modal="true" aria-label="Surprise countdown"><div className="countdown-lock-card"><span className="scene-emoji">♡</span><p className="eyebrow">A LITTLE WORLD IS WAITING</p><h1>Something lovely is<br /><em>almost here.</em></h1><p>{experience.openingInstruction || 'Your surprise is waiting for the right moment.'}</p><div className="countdown-clock">{[{ label: 'DAYS', value: Math.floor(countdown / 86400000) }, { label: 'HOURS', value: Math.floor(countdown / 3600000) % 24 }, { label: 'MINUTES', value: Math.floor(countdown / 60000) % 60 }, { label: 'SECONDS', value: Math.floor(countdown / 1000) % 60 }].map(part => <div key={part.label}><strong>{String(part.value).padStart(2, '0')}</strong><small>{part.label}</small></div>)}</div><small className="countdown-note">Unlocks at midnight on {experience.targetDate} · local device time</small>{experience.targetDate && <button className="primary-btn" onClick={() => addReminder(experience.targetDate!, `🎂 Open your surprise${experience.sender ? ' from ' + experience.sender : ''}`, window.location.href)}>🔔 Remind me on the day</button>}<button className="secondary-btn" onClick={onClose}>Back</button></div></div>
+  if (locked) return <Teaser experience={experience} themeClass={themeClass} countdown={countdown} />
 
   if (!opened) return <div className={`player ${themeClass}`} style={fontVars}><GiftIntro recipient={experience.recipient} secret={experience.secretMessage} colors={palette.balloons} onOpen={() => { audio.unlock(); setOpened(true) }} /></div>
   return <div ref={rootRef} data-occ={experience.occasion} className={`player ta-host ta-${experience.textAnim || 'rise'} ${themeClass} ${heartLight ? 'hs-on' : ''} ${useBow ? '' : 'no-hearts'}`} style={fontVars} role="dialog" aria-modal="true" aria-label="Interactive surprise"><OccasionDeco occasion={experience.occasion} colors={palette.balloons} />

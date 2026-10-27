@@ -57,7 +57,6 @@ function ReelPhone() {
 }
 
 const SCENE_EMOJI: Partial<Record<SceneId, string>> = { heart: '💘', intro: '🎆', balloons: '🎈', cake: '🎂', candles: '🕯️', spinwheel: '🎡', polaroids: '📸', moments: '✨', wishjar: '🫙', counter: '⏳', starsky: '🌌', timeline: '🧭', vows: '💍', openwhen: '💌', waxseal: '✉️', lanterns: '🏮', memories: '🖼️', mystery: '🎁', scratch: '🎟️', video: '🎬', letter: '📜', finale: '🎉', petalfall: '🌹', shootingstars: '🌠', parcel: '📦', bottle: '🍾', trophy: '🏆', recipe: '🍲', meter: '📊', reasons: '💗' }
-const OCCS: { o: Occasion; e: string }[] = [{ o: 'Birthday', e: '🎂' }, { o: 'Anniversary', e: '💞' }, { o: 'Love letter', e: '💌' }, { o: 'Special surprise', e: '✨' }]
 const PEOPLE: Relation[] = ['Partner', 'Mom', 'Dad', 'Brother', 'Sister', 'Friend']
 const LANG_SAMPLES: { l: string; t: string }[] = [
   { l: 'English', t: 'You make ordinary days feel like a small celebration.' },
@@ -140,7 +139,7 @@ const FAQ: [string, string][] = [
   ['Can the reveal wait for the right day?', 'Yes. Pick a date and the link unlocks at midnight on that day.'],
 ]
 
-export default function LandingNew({ onStart }: { onStart: (o: Occasion, r?: Relation) => void }) {
+export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion, r?: Relation) => void; onGift?: () => void }) {
   const live = useLiveSeason()
   const season = seasonFromPath() ?? live
   const root = useReveal()
@@ -191,6 +190,12 @@ export default function LandingNew({ onStart }: { onStart: (o: Occasion, r?: Rel
         <header className="nl-head left"><p>GOOD TO KNOW</p><h2>Questions, <em>answered.</em></h2></header>
         <div className="nl-faq">{FAQ.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div>
       </div>
+    </section>
+
+    <section className="nl-sec nl-giftband">
+      <div className="nl-giftcard nl-rv"><div className="nl-giftart" aria-hidden="true"><span>🎁</span><i /><i /><i /></div>
+        <div><p className="nl-k">GIFT A SURPRISE</p><h2>Make someone’s surprise <em>free to share.</em></h2><p className="nl-lead">Buy a gift code for a friend. They enter it when they share their own surprise and pay nothing. Pay with UPI, cards, eSewa or Khalti.</p>
+          <button className="nl-btn" onClick={onGift}>Gift a surprise <ArrowRight size={18} /></button></div></div>
     </section>
 
     <section className="nl-final nl-rv"><h2>Someone came to mind, <em>didn’t they?</em></h2><p>One link. A whole little world. Ready in a minute.</p><button className="nl-btn light" onClick={toStart}>Create a surprise <ArrowRight size={18} /></button></section>

@@ -6,13 +6,14 @@ import { storage } from './storage'
 /** Previewing is free. A public share link needs a payment. Surprises that were already live count as paid. */
 export const isPaid = (e: { paid?: boolean; published?: boolean }) => !!(e.paid || e.published)
 
-export type Price = { amount: number; regular: number }
+export type Providers = { razorpay: boolean; esewa: boolean; khalti: boolean }
+export type Price = { amount: number; regular: number; npr?: number; providers?: Providers }
 let priceCache: Price | undefined
 export async function getPrice(): Promise<Price> {
   if (priceCache) return priceCache
   try {
     const r = await fetch('/api/pricing'); const j = await r.json()
-    if (r.ok && j.amount) return (priceCache = { amount: j.amount, regular: j.regular || PRICING.regular })
+    if (r.ok && j.amount) return (priceCache = { amount: j.amount, regular: j.regular || PRICING.regular, npr: j.npr, providers: j.providers })
   } catch { /* use the fallback */ }
   return { amount: PRICING.amount, regular: PRICING.regular }
 }
@@ -25,7 +26,7 @@ const loadCheckout = () => new Promise<void>((ok, bad) => {
   s.onload = () => ok(); s.onerror = () => bad(new Error('Could not open the payment window. Check your connection and try again.'))
   document.head.appendChild(s)
 })
-async function call(path: string, body: unknown) {
+export async function call(path: string, body: unknown) {
   const { data } = await supabase!.auth.getSession()
   const token = data.session?.access_token
   if (!token) throw new Error('Please sign in again.')
@@ -76,3 +77,66 @@ export async function publishShare(item: Experience, onStatus?: (s: string) => v
   if (!r.ok) throw new Error(j.error || 'Could not create the link. Please try again.')
   return { ok: true, owner: !!j.owner, item: { ...withMedia, published: true, paid: true, updatedAt: new Date().toISOString() } }
 }
+
+/* ===== eSewa, Khalti and gift vouchers ===== */
+export type PayProvider = 'razorpay' | 'esewa' | 'khalti'
+const PENDING = 'lovora-pay-pending'
+
+/** Hands the browser to eSewa (a signed form post) or Khalti (a redirect). The page leaves, and comes back at /?paid=<id> or /?gift_intent=<id>. */
+async function goRedirect(provider: 'esewa' | 'khalti', kind: 'share' | 'gift', experienceId?: string): Promise<{ alreadyPaid?: boolean; code?: string; owner?: boolean } | 'left'> {
+  const o = await call('/api/pay', { action: 'start', provider, kind, experienceId })
+  if (o.alreadyPaid || o.code) return { alreadyPaid: o.alreadyPaid, code: o.code, owner: o.owner }
+  if (experienceId) { try { localStorage.setItem(PENDING, experienceId) } catch { /* private mode */ } }
+  if (o.provider === 'khalti') { window.location.href = o.url; return 'left' }
+  const f = document.createElement('form'); f.method = 'POST'; f.action = o.url
+  Object.entries(o.fields as Record<string, string>).forEach(([k, v]) => { const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = v; f.appendChild(i) })
+  document.body.appendChild(f); f.submit(); return 'left'
+}
+/** Pay for a share link with eSewa or Khalti. Resolves to the unlocked surprise only if the server said it was already free (owner); otherwise the page navigates away. */
+export async function payForShareRedirect(provider: 'esewa' | 'khalti', item: Experience, onStatus?: (s: string) => void): Promise<Experience | null> {
+  onStatus?.('Saving your surprise…')
+  const withMedia = await storage.uploadMedia(item)
+  await storage.saveCloud(withMedia, false)
+  onStatus?.(`Taking you to ${provider === 'esewa' ? 'eSewa' : 'Khalti'}…`)
+  const r = await goRedirect(provider, 'share', item.id)
+  return r === 'left' ? null : { ...withMedia, paid: true }
+}
+export const pendingPaid = () => { try { return localStorage.getItem(PENDING) } catch { return null } }
+export const clearPending = () => { try { localStorage.removeItem(PENDING) } catch { /* ignore */ } }
+
+/** Buy a gift voucher. Resolves with the code (owner accounts get one instantly, free). For eSewa and Khalti the page navigates away. */
+export async function buyGift(provider: PayProvider, onStatus?: (s: string) => void): Promise<string | null> {
+  onStatus?.('Starting…')
+  if (provider !== 'razorpay') {
+    const r = await goRedirect(provider, 'gift')
+    return r === 'left' ? null : r.code || null
+  }
+  const o = await call('/api/pay', { action: 'gift-order' })
+  if (o.code) return o.code
+  await loadCheckout()
+  return new Promise((resolve, reject) => {
+    const rz = new window.Razorpay!({
+      key: o.keyId, order_id: o.orderId, amount: o.amount, currency: 'INR', name: 'Lovora Meow', description: 'Gift a surprise', prefill: { email: o.email }, theme: { color: '#ff5a3c' },
+      handler: async (resp: RzResponse) => {
+        try { onStatus?.('Creating the gift code…'); const v = await call('/api/pay', { action: 'gift-verify', orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature }); resolve(v.code as string) } catch (e) { reject(e) }
+      },
+      modal: { ondismiss: () => resolve(null) },
+    })
+    rz.on('payment.failed', () => reject(new Error('The payment did not go through. You have not been charged.')))
+    rz.open()
+  })
+}
+export const fetchGiftIntent = async (intent: string): Promise<string | null> => { try { return (await call('/api/pay', { action: 'gift-fetch', intent })).code as string } catch { return null } }
+export type GiftRow = { code: string; source: string; created_at: string; redeemed_at: string | null }
+export const listGifts = async (): Promise<GiftRow[]> => { try { return (await call('/api/pay', { action: 'gift-list' })).codes as GiftRow[] } catch { return [] } }
+/** Uses a gift code on a surprise. Returns the unlocked surprise. */
+export async function redeemGift(code: string, item: Experience, onStatus?: (s: string) => void): Promise<Experience> {
+  onStatus?.('Saving your surprise…')
+  const withMedia = await storage.uploadMedia(item)
+  await storage.saveCloud(withMedia, false)
+  onStatus?.('Checking the code…')
+  await call('/api/pay', { action: 'redeem', code, experienceId: item.id })
+  return { ...withMedia, paid: true }
+}
+export const savedGiftCode = () => { try { return localStorage.getItem('lovora-gift') || '' } catch { return '' } }
+export const saveGiftCode = (c: string) => { try { c ? localStorage.setItem('lovora-gift', c) : localStorage.removeItem('lovora-gift') } catch { /* ignore */ } }

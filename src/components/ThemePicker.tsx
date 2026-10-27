@@ -19,7 +19,6 @@ export const SKINS = [
 export const applySkin = (id: string) => { const skin = SKINS.find(s => s.id === id) || SKINS[0]; document.documentElement.dataset.skin = skin.id; document.documentElement.dataset.theme = skin.light ? 'light' : 'dark'; try { localStorage.setItem('lovora-skin', skin.id); localStorage.setItem('lovora-theme', skin.light ? 'light' : 'dark') } catch { /* private mode */ } }
 export const savedSkin = () => { try { return localStorage.getItem('lovora-skin') || 'classic' } catch { return 'classic' } }
 
-const dot = (sw: readonly string[]) => `linear-gradient(90deg,${sw[0]} 0 33.33%,${sw[1]} 33.33% 66.66%,${sw[2]} 66.66% 100%)`
 /** Lets visitors pick a look for the whole site. A small popover of colour dots; light skins also switch the page to light mode. */
 export default function ThemePicker({ setDark, inline }: { setDark: (d: boolean) => void; inline?: boolean }) {
   const [open, setOpen] = useState(false), [skin, setSkin] = useState(savedSkin), box = useRef<HTMLDivElement>(null)

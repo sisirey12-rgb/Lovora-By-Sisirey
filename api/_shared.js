@@ -7,6 +7,14 @@ import crypto from 'node:crypto'
 export const price = () => ({ amount: Number(process.env.PRICE_INR || 149), regular: Number(process.env.REGULAR_PRICE_INR || 299) })
 const SB = () => process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const SERVICE = () => process.env.SUPABASE_SERVICE_ROLE_KEY
+/** Nepal price in NPR. Set PRICE_NPR, or the INR price is converted with NPR_PER_INR (default 1.6). */
+export const nprAmount = () => Number(process.env.PRICE_NPR) || Math.max(1, Math.round(price().amount * Number(process.env.NPR_PER_INR || 1.6)))
+/** Which payment methods are switched on (by which secrets exist in Vercel). */
+export const providers = () => ({
+  razorpay: Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
+  esewa: Boolean(process.env.ESEWA_SECRET_KEY || process.env.ESEWA_MODE === 'test'),
+  khalti: Boolean(process.env.KHALTI_SECRET_KEY),
+})
 export const configured = () => Boolean(SB() && SERVICE() && process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET)
 
 export async function sb(path, { method = 'GET', body, prefer } = {}) {
