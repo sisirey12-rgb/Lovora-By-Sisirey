@@ -13,7 +13,7 @@ export default function RedeemBox({ item, onRedeemed, disabled }: { item: Experi
   }
   if (!open) return <button type="button" className="pw-gift-link" onClick={() => setOpen(true)} disabled={disabled}><Gift size={16} /> I have a gift code</button>
   return <div className="pw-code redeem-box">
-    <label>Gift code<input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="LM-ABCD-EFGH" maxLength={14} autoCapitalize="characters" autoComplete="off" /></label>
+    <label>Gift code<input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="LOVORA-ABC-123" maxLength={16} autoCapitalize="characters" autoComplete="off" /></label>
     {err && <p className="pw-error" role="alert">{err}</p>}
     <button type="button" className="secondary-btn" onClick={() => void go()} disabled={disabled || !!busy || !ready}>{busy ? <><Loader2 size={16} className="spin" /> {busy}</> : 'Redeem and get my link (free)'}</button>
   </div>

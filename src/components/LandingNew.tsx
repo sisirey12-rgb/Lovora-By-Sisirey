@@ -2,12 +2,13 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { ArrowRight, CalendarClock, Check, Gift, Images, Link2, Play, QrCode, ShieldCheck, Smartphone, Sparkles, Volume2, Wand2, Zap } from 'lucide-react'
 import { PRICING } from '../config'
 import { Rotator } from './LandingFX'
-import { seasonFromPath, useLiveSeason } from '../lib/seasons'
+import { SEASONS, seasonFromPath, useLiveSeason } from '../lib/seasons'
 import { SEASON_THEME } from '../lib/seasonTheme'
 import SeasonFX from './SeasonFX'
 import type { Occasion, Relation, SceneId } from '../types'
 import { flowFor } from '../lib/occasionContent'
 import { sceneLabels } from '../data'
+import { DEFAULT_SCENE_STUDIO, fetchSceneStudio, type SceneStudioConfig } from '../lib/sceneStudio'
 
 const toStart = () => document.getElementById('templates')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
@@ -75,11 +76,12 @@ const OCC_INFO: Record<Occasion, { e: string; d: string; c: string }> = {
 const PERSON_E: Record<Relation, string> = { Partner: '💞', Mom: '🌸', Dad: '🧢', Brother: '🎮', Sister: '🎀', Friend: '🤝' }
 
 /** The ONE place to start: pick the occasion, pick the person, see their story, begin. */
-function Creator({ onStart, startOcc = 'Birthday', startRel = 'Friend' }: { onStart: (o: Occasion, r?: Relation) => void; startOcc?: Occasion; startRel?: Relation }) {
+function Creator({ onStart, startOcc = 'Birthday', startRel = 'Friend', seasonSlug }: { onStart: (o: Occasion, r?: Relation, seasonSlug?: string) => void; startOcc?: Occasion; startRel?: Relation; seasonSlug?: string }) {
   const [occ, setOcc] = useState<Occasion>(startOcc), [rel, setRel] = useState<Relation>(startRel)
   useEffect(() => { setOcc(startOcc); setRel(startRel) }, [startOcc, startRel])
-  const people = occ === 'Love letter' ? (['Partner'] as Relation[]) : PEOPLE
-  const r: Relation = occ === 'Love letter' ? 'Partner' : rel
+  const seasonalPeople: Record<string, Relation[]> = { rakhi: ['Brother', 'Sister'], 'valentines-day': ['Partner'], 'mothers-day': ['Mom'], 'fathers-day': ['Dad'], 'friendship-day': ['Friend'], diwali: ['Mom', 'Dad', 'Brother', 'Sister', 'Partner', 'Friend'], eid: ['Mom', 'Dad', 'Brother', 'Sister', 'Partner', 'Friend'], holi: ['Friend', 'Brother', 'Sister', 'Partner'], dashain: ['Mom', 'Dad', 'Brother', 'Sister'], tihar: ['Brother', 'Sister', 'Mom', 'Dad', 'Friend'], christmas: ['Mom', 'Dad', 'Brother', 'Sister', 'Partner', 'Friend'], 'new-year': PEOPLE }
+  const people = occ === 'Love letter' ? (['Partner'] as Relation[]) : (seasonalPeople[seasonSlug || ''] || PEOPLE)
+  const r: Relation = occ === 'Love letter' ? 'Partner' : (people.includes(rel) ? rel : people[0] || 'Friend')
   const flow = flowFor(occ, r).filter(x => x !== 'heart')
   const info = OCC_INFO[occ]
   return <section id="templates" className="nl-sec nl-make" style={{ ['--oc' as string]: info.c } as CSSProperties}>
@@ -88,10 +90,10 @@ function Creator({ onStart, startOcc = 'Birthday', startRel = 'Friend' }: { onSt
       <div className="nl-step"><b>1</b><span>What are we celebrating?</span></div>
       <div className="nl-occs" role="radiogroup" aria-label="Occasion">{(Object.keys(OCC_INFO) as Occasion[]).map(o => <button key={o} type="button" role="radio" aria-checked={occ === o} className={occ === o ? 'on' : ''} style={{ ['--c' as string]: OCC_INFO[o].c } as CSSProperties} onClick={() => setOcc(o)}><span className="e">{OCC_INFO[o].e}</span><b>{o}</b><small>{OCC_INFO[o].d}</small></button>)}</div>
       <div className="nl-step"><b>2</b><span>Who is it for?</span></div>
-      <div className="nl-people" role="radiogroup" aria-label="Person">{people.map(p => <button key={p} type="button" role="radio" aria-checked={r === p} className={r === p ? 'on' : ''} onClick={() => setRel(p)}><span>{PERSON_E[p]}</span>{p}</button>)}</div>
+      <div className="nl-people" role="radiogroup" aria-label="Person">{people.map(p => <button key={p} type="button" role="radio" aria-checked={r === p} className={r === p ? 'on' : ''} onClick={() => setRel(p)}><span>{PERSON_E[p]}</span>{seasonSlug === 'rakhi' && p === 'Brother' ? 'Brother · Bhai' : seasonSlug === 'rakhi' && p === 'Sister' ? 'Sister · Behna' : p}</button>)}</div>
       <div className="nl-step"><b>3</b><span>Their story, {flow.length} scenes</span></div>
       <ol className="nl-path" key={`${occ}-${r}`}>{flow.map((id, i) => <li key={id + i} style={{ ['--i' as string]: i } as CSSProperties}><span>{SCENE_EMOJI[id] || '✦'}</span><b>{sceneLabels[id]}</b></li>)}</ol>
-      <button className="nl-btn nl-go" onClick={() => onStart(occ, r)}>Start the {occ.toLowerCase()} for your {r.toLowerCase()} <ArrowRight size={18} /></button>
+      <button className="nl-btn nl-go" onClick={() => onStart(occ, r, seasonSlug)}>Start the {occ.toLowerCase()} for your {r.toLowerCase()} <ArrowRight size={18} /></button>
       <small className="nl-fine">Free to preview. You can change every scene, word and photo.</small>
     </div>
   </section>
@@ -136,7 +138,7 @@ const BITS = [
 ]
 const FAQ: [string, string][] = [
   ['Do they need to install an app?', 'No. They open the link in any phone browser and the surprise starts.'],
-  ['Is previewing really free?', 'Yes. Build it and watch it as often as you like. You only pay when you want the share link.'],
+  ['Is previewing really free?', 'Yes. Build it and watch it as often as you like. The surprise and standard share link are covered by the main purchase; a custom keyword link is an optional ₹50 add-on.'],
   ['Who can see my surprise?', 'Only people who have your link.'],
   ['Can I add my own photos, voice and video?', 'Yes: photos for the gallery, a voice note and your own video.'],
   ['Can the reveal wait for the right day?', 'Yes. Pick a date and the link unlocks at midnight on that day. Before it, they see a countdown and a hint from you.'],
@@ -145,20 +147,22 @@ const FAQ: [string, string][] = [
   ['Can it be written in Nepali or Hinglish?', 'Yes. The AI writer takes one to three prompts and writes in English, Hinglish, Hindi, Nepali, Roman Nepali or a mix.'],
 ]
 
-export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion, r?: Relation) => void; onGift?: () => void }) {
+export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion, r?: Relation, seasonSlug?: string) => void; onGift?: () => void }) {
   const live = useLiveSeason()
+  const [studio, setStudio] = useState<SceneStudioConfig>(DEFAULT_SCENE_STUDIO)
+  useEffect(() => { let alive = true; void fetchSceneStudio().then(v => { if (alive) setStudio(v) }); const changed = (e: Event) => { const d = (e as CustomEvent<SceneStudioConfig>).detail; if (d) setStudio({ ...DEFAULT_SCENE_STUDIO, ...d }) }; window.addEventListener('lovora:scene-config', changed); return () => { alive = false; window.removeEventListener('lovora:scene-config', changed) } }, [])
   const season = seasonFromPath() ?? live
   const root = useReveal()
   const theme = season ? SEASON_THEME[season.slug] : undefined
   // the whole page (and the nav) recolours through <html data-season>; it is removed again when the landing page closes
-  useEffect(() => { const el = document.documentElement; if (season) el.dataset.season = season.slug; else delete el.dataset.season; return () => { delete el.dataset.season } }, [season])
+  useEffect(() => { const el = document.documentElement; if (season) el.dataset.season = season.slug; else delete el.dataset.season; el.dataset.lvPreset = studio.preset; el.dataset.lvFx = studio.enabled ? 'on' : 'off'; el.style.setProperty('--lv-fx-intensity', String(studio.intensity / 100)); return () => { delete el.dataset.season; delete el.dataset.lvPreset; delete el.dataset.lvFx; el.style.removeProperty('--lv-fx-intensity') } }, [season, studio])
   useEffect(() => {
     const old = document.title, meta = document.querySelector<HTMLMetaElement>('meta[name="description"]'), oldMeta = meta?.content
     if (season) { document.title = `${season.label} surprise: make an interactive gift | Lovora Meow`; if (meta) meta.content = season.meta }
     return () => { document.title = old; if (meta && oldMeta !== undefined) meta.content = oldMeta }
   }, [season])
   return <div className="nl" ref={root}>
-    {theme && <SeasonFX fx={theme.fx} bits={theme.bits} />}
+    {theme && studio.enabled && <SeasonFX fx={theme.fx} bits={theme.bits} />}
     {season && theme && <div className="sx-banner" role="note"><span aria-hidden="true">{season.emoji}</span><b>{theme.banner}</b><span className="sx-chips" aria-label="Scenes that suit this season">{theme.scenes.map(id => <span key={id}>{SCENE_EMOJI[id] || '✦'} {sceneLabels[id]}</span>)}</span><button type="button" onClick={toStart}>Start now</button></div>}
     <section className="nl-hero">
       <div className="nl-blob b1" aria-hidden="true" /><div className="nl-blob b2" aria-hidden="true" /><div className="nl-confetti" aria-hidden="true">{Array.from({ length: 18 }, (_, k) => <i key={k} style={{ ['--k' as string]: k, left: `${(k * 53) % 100}%` } as CSSProperties} />)}</div>
@@ -175,7 +179,14 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
 
     <div className="nl-ribbon" aria-hidden="true"><div>{[0, 1].map(k => <span key={k}>{(theme?.ribbon ?? ['BIRTHDAYS', 'ANNIVERSARIES', 'LOVE LETTERS', 'JUST BECAUSE', 'BALLOONS', 'ROSE PETALS', 'SHOOTING STARS', 'MESSAGES IN BOTTLES']).map(t => <b key={t}>{t}<i>✦</i></b>)}</span>)}</div></div>
 
-    <Creator onStart={onStart} startOcc={theme?.occasion} startRel={theme?.relation} />
+    <section className="nl-sec nl-season-hub" aria-labelledby="nl-season-title">
+      <header className="nl-head nl-rv"><p>MADE FOR THE MOMENT</p><h2 id="nl-season-title">Every season has a <em>story.</em></h2><span>Choose a celebration to find the right mood, message and scenes.</span></header>
+      <div className="nl-season-grid nl-rv">{SEASONS.map((item, k) => <a className="nl-season-card" href={`/for/${item.slug}`} key={item.slug} style={{ ['--season-index' as string]: k } as CSSProperties}>
+        <span className="nl-season-emoji" aria-hidden="true">{item.emoji}</span><span className="nl-season-copy"><b>{item.label}</b><small>{item.pill}</small></span><ArrowRight size={17} aria-hidden="true" />
+      </a>)}</div>
+    </section>
+
+    <Creator onStart={onStart} startOcc={theme?.occasion} startRel={theme?.relation} seasonSlug={season?.slug} />
 
     <section id="nl-library" className="nl-sec">
       <header className="nl-head nl-rv"><p>THE SCENE LIBRARY</p><h2>Every surprise is a little <em>story.</em></h2><span>Each person and occasion gets its own mix of scenes, with its own animation.</span></header>

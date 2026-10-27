@@ -83,8 +83,9 @@ VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
 
 5. Restart Vite or redeploy Vercel after adding the same variables in Project Settings → Environment Variables.
 6. Enable an authentication provider under Supabase Authentication.
-7. Add a sign-in/sign-up flow before enabling public publishing for creators. The included `storage.publish()` requires a signed-in Supabase user; the MVP intentionally does not invent a user identity or bypass ownership.
-8. Test with two browser profiles: an owner can manage owned rows; an anonymous visitor can query only the published view. Do not grant public SELECT on `experiences`.
+7. For optional personalised share keywords (₹50 each), run `supabase/migrations/0008_custom_links.sql` after migrations `0001`–`0007`. Configure the server-only `SUPABASE_SERVICE_ROLE_KEY`, `RAZORPAY_KEY_ID`, and `RAZORPAY_KEY_SECRET` in Vercel. Never put these in `VITE_*` variables or client code. Custom keyword checkout requires Razorpay and a surprise that has already been purchased/published.
+8. Add a sign-in/sign-up flow before enabling public publishing for creators. The included `storage.publish()` requires a signed-in Supabase user; the MVP intentionally does not invent a user identity or bypass ownership.
+9. Test with two browser profiles: an owner can manage owned rows; an anonymous visitor can query only the published view. Do not grant public SELECT on `experiences`.
 
 Only use the public anon key in the browser. **Never expose the Supabase service-role key in `VITE_*` variables or client code.**
 
@@ -166,3 +167,9 @@ Run `supabase/migrations/0006_site_settings.sql` once. Then sign in with an `OWN
 
 ## Start flow
 Landing > tap an occasion card > type their name, pick who they are to you (the template and look are chosen automatically) > fill up to 5 optional key details (reveal date, age, dates, place, nickname...) > Create and preview > then the share link with the launch price. Floating decorations are drawn shapes (`components/Floaties.tsx`), not emojis.
+
+## Owner Scene Studio (live seasonal effects and scene player)
+
+Sign in with an email listed in the server-side `OWNER_EMAILS` variable, open **Account → Website settings → Scene Studio**, choose an animation preset and effect intensity, select the scenes, arrange the selected order with the arrow controls, then choose **Publish live scene settings**. Visitors load the published configuration from `/api/scene-config`; only owner-authorized sessions can write it. The settings use the existing `site_settings` table created by `supabase/migrations/0006_site_settings.sql`, so ensure that migration has been run and `SUPABASE_SERVICE_ROLE_KEY` is set on the server.
+
+Season landing pages pass their season into the surprise creation flow. The player then includes that season's curated scenes and palette, while preserving creator content. The owner's optional global order changes the ordering of available scenes; it does not delete creator data. Public config reads are briefly cached, so visitors may need to refresh or wait up to roughly a minute after publishing.

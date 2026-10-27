@@ -52,7 +52,7 @@ export default function App() {
   const [unlockedId,setUnlockedId]=useState('');const [unlockTry,setUnlockTry]=useState('');const [unlockBad,setUnlockBad]=useState(false)
   useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';localStorage.setItem('lovora-theme',dark?'dark':'light')},[dark])
   useEffect(()=>{try{const r=new URLSearchParams(window.location.search).get('ref');if(r)localStorage.setItem('lovora-ref',r.slice(0,64))}catch{/* private mode */}},[])
-  useEffect(()=>{refresh();const path=window.location.pathname;const id=path.match(/^\/s\/([^/]+)/)?.[1];if(id){const local=storage.getLocal(decodeURIComponent(id));if(local?.published){setPlayer(local);return} if(supabase){storage.getPublic(decodeURIComponent(id)).then(x=>x?setPlayer(x):setRemoteMessage('This experience is unavailable or has not been published.'))}else setRemoteMessage('This is not a published public experience. Ask the creator to configure cloud sharing.')}},[])
+  useEffect(()=>{refresh();const path=window.location.pathname;const raw=path.match(/^\/s\/([^/]+)/)?.[1];if(raw){const requested=decodeURIComponent(raw);const open=async()=>{let id=requested;if(!/^[0-9a-f-]{36}$/i.test(requested)){try{const r=await fetch(`/api/custom-link?slug=${encodeURIComponent(requested)}`);const j=await r.json();if(!r.ok||!j.experienceId)throw new Error('This custom link was not found.');id=j.experienceId}catch(e){setRemoteMessage(e instanceof Error?e.message:'This custom link was not found.');return}}const local=storage.getLocal(id);if(local?.published){setPlayer(local);return}if(supabase){try{const x=await storage.getPublic(id);x?setPlayer(x):setRemoteMessage('This experience is unavailable or has not been published.')}catch{setRemoteMessage('This experience is unavailable or has not been published.')}}else setRemoteMessage('This is not a published public experience. Ask the creator to configure cloud sharing.')};void open()}},[])
   const refresh=()=>setDrafts(storage.list())
   // Email sign-in comes first: creating or editing needs an account, so drafts and links follow the person across devices.
   const gate=(go:()=>void)=>{ if(user){go();return} setPendingCreate(true);setAuthOpen(true);window.__lovoraAfterAuth=go }
@@ -61,16 +61,16 @@ export default function App() {
   const editExperience=(x:Experience)=>gate(()=>{setEditing(x);setEditorStartStep(1);setPage('editor');window.history.pushState({},'', '/create')})
   useEffect(()=>{ if(user&&pendingCreate){ setPendingCreate(false);setAuthOpen(false);const go=window.__lovoraAfterAuth;window.__lovoraAfterAuth=undefined;go?.() } },[user,pendingCreate])
   useEffect(()=>{ if(recovering) setAuthOpen(true) },[recovering])
-  const [start,setStart]=useState<{occasion:Occasion;relation?:Relation}|null>(null)
+  const [start,setStart]=useState<{occasion:Occasion;relation?:Relation;seasonSlug?:string}|null>(null)
   const [payExp,setPayExp]=useState<Experience|null>(null)
   const [giftOpen,setGiftOpen]=useState(false), [giftCode,setGiftCode]=useState('')
   const [returnPaid,setReturnPaid]=useState<string|null>(null), [returnGiftIntent,setReturnGiftIntent]=useState<string|null>(null)
   const startTemplate=(t:Template)=>gate(()=>setStart({occasion:t.occasion,relation:t.relation}))
-  const startOccasion=(o:Occasion,r?:Relation)=>gate(()=>setStart({occasion:o,relation:r}))
+  const startOccasion=(o:Occasion,r?:Relation,seasonSlug?:string)=>gate(()=>setStart({occasion:o,relation:r,seasonSlug}))
   const openFull=(e:Experience)=>{setStart(null);setEditing(e);setEditorStartStep(1);setPage('editor');window.history.pushState({},'', '/create')}
   const exitEditor=()=>{setPage('home');setEditing(undefined);window.history.pushState({},'','/')}
   const onSaved=()=>{refresh();setToast('Saved on this device');window.setTimeout(()=>setToast(''),2200)}
-  const copyLink=(x:Experience)=>gate(async()=>{setToast('Creating your share link…');try{const r=await publishShare(x,m=>setToast(m));if(!r.ok){setToast('');setPayExp(x);return}storage.saveDraft(r.item);refresh();const url=`${window.location.origin}/s/${r.item.id}`;try{await navigator.clipboard.writeText(url);setToast(r.owner?'Share link copied ♡ (owner: free)':'Share link copied ♡ anyone can open it')}catch{setToast(url)}}catch(err){setToast(err instanceof Error?err.message:'Could not create the link.')}window.setTimeout(()=>setToast(''),4500)})
+  const copyLink=(x:Experience)=>gate(async()=>{setToast('Creating your share link…');try{const r=await publishShare(x,m=>setToast(m));if(!r.ok){setToast('');setPayExp(x);return}storage.saveDraft(r.item);refresh();const url=`${window.location.origin}/s/${r.item.id}`;try{await navigator.clipboard.writeText(url);setToast('Your surprise link is ready ♡ anyone with the link can open it')}catch{setToast(url)}}catch(err){setToast(err instanceof Error?err.message:'Could not create the link.')}window.setTimeout(()=>setToast(''),4500)})
   // Coming back from eSewa / Khalti, or opening a gift link: /?paid=<id>  /?gift_intent=<id>  /?gift=<code>  /?payment=failed
   useEffect(()=>{try{const q=new URLSearchParams(window.location.search);const clean=()=>window.history.replaceState({},'',window.location.pathname)
     const paid=q.get('paid'),gi=q.get('gift_intent'),g=q.get('gift'),f=q.get('payment')
@@ -98,7 +98,7 @@ export default function App() {
     </main><footer className="site-footer"><Brand small/><p>Made for the people who make life feel like something.</p><span>© {new Date().getFullYear()} LOVORA MEOW <i>·</i> LITTLE WORLDS, BIG FEELINGS</span><DevCredit/></footer></>}
     {accountOpen&&user&&<Suspense fallback={null}><AccountModal items={drafts} onGift={()=>{setAccountOpen(false);setGiftCode('');setGiftOpen(true)}} setDark={setDark} onClose={()=>setAccountOpen(false)} onSignedOut={()=>{setAccountOpen(false);setToast('Signed out')}}/></Suspense>}
     {authOpen&&<Suspense fallback={null}><AuthModal recovery={recovering} reason={pendingCreate?'Sign in with your email to start creating — your surprises are saved to your account.':undefined} onClose={()=>{setAuthOpen(false);setPendingCreate(false);window.__lovoraAfterAuth=undefined;if(recovering)dismissRecovery()}} onDone={()=>setToast('Signed in ♡')}/></Suspense>}
-    {start&&!player&&!wishId&&<StartSheet occasion={start.occasion} relation={start.relation} onClose={()=>setStart(null)} onFull={openFull} onPreview={x=>{setStart(null);setPlayer({...x,targetDate:undefined});setPlayerIsPreview(true)}} onDone={refresh}/>}
+    {start&&!player&&!wishId&&<StartSheet occasion={start.occasion} relation={start.relation} seasonSlug={start.seasonSlug} onClose={()=>setStart(null)} onFull={openFull} onPreview={x=>{setStart(null);setPlayer({...x,targetDate:undefined});setPlayerIsPreview(true)}} onDone={refresh}/>}
     {giftOpen&&user&&<Suspense fallback={null}><GiftModal onClose={()=>{setGiftOpen(false);setGiftCode('')}} justPaidCode={giftCode}/></Suspense>}
     {payExp&&<PayWall item={payExp} onClose={()=>setPayExp(null)} onPaid={e=>{setPayExp(null);storage.saveDraft(e);refresh();copyLink(e)}} onPreview={()=>{const x=payExp;setPayExp(null);setPlayer({...x,targetDate:undefined});setPlayerIsPreview(true)}}/>}
     {toast&&<div className="toast" role="status"><Check size={16}/>{toast}</div>}

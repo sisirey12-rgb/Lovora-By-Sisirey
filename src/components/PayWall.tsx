@@ -48,7 +48,7 @@ export default function PayWall({ item, onClose, onPaid, onPreview }: { item: Ex
       {err && <p className="pw-error" role="alert">{err}</p>}
       <button className="primary-btn pw-pay" onClick={() => void pay()} disabled={!!busy}>{busy ? <><Loader2 size={20} className="spin" /> {busy}</> : <>Pay {shown} with {method === 'razorpay' ? 'UPI / card' : NAMES[method]}</>}</button>
       {!codeOpen ? <button type="button" className="pw-gift-link" onClick={() => setCodeOpen(true)} disabled={!!busy}><Gift size={16} /> I have a gift code</button>
-        : <div className="pw-code"><label>Gift code<input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="LM-ABCD-EFGH" maxLength={14} autoCapitalize="characters" autoComplete="off" /></label><button className="secondary-btn" onClick={() => void redeem()} disabled={!!busy || code.replace(/[^A-Za-z0-9]/g, '').length < 10}>Use code (free)</button></div>}
+        : <div className="pw-code"><label>Gift code<input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="LOVORA-ABC-123" maxLength={16} autoCapitalize="characters" autoComplete="off" /></label><button className="secondary-btn" onClick={() => void redeem()} disabled={!!busy || code.replace(/[^A-Za-z0-9]/g, '').length < 10}>Use code (free)</button></div>}
       {onPreview && <button className="secondary-btn" onClick={onPreview} disabled={!!busy}><Eye size={16} /> Preview it again (free)</button>}
       <small className="muted pw-secure">Secure payment. eSewa and Khalti are charged in NPR.</small>
     </div>

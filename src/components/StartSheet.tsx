@@ -14,6 +14,7 @@ import { supabase } from '../services/supabase/client'
 import { useAuth } from '../services/auth'
 import AiHelper from './AiHelper'
 import type { Experience, Extras, Occasion, Relation } from '../types'
+import { SEASON_THEME } from '../lib/seasonTheme'
 
 type Field = { key: string; label: string; type: 'text' | 'date' | 'number'; ph?: string; hint?: string; apply: (e: Experience, v: string) => Experience }
 const ex = (e: Experience, p: Partial<Extras>): Experience => ({ ...e, extras: { ...(e.extras || {}), ...p } })
@@ -29,7 +30,7 @@ const FIELDS: Record<string, Field[]> = {
 const isoDay = (n: number) => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 const niceDay = (v: string) => new Date(`${v}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 
-export default function StartSheet({ occasion, relation, onClose, onFull, onPreview, onDone }: { occasion: Occasion; relation?: Relation; onClose: () => void; onFull: (e: Experience) => void; onPreview: (e: Experience) => void; onDone: () => void }) {
+export default function StartSheet({ occasion, relation, seasonSlug, onClose, onFull, onPreview, onDone }: { occasion: Occasion; relation?: Relation; seasonSlug?: string; onClose: () => void; onFull: (e: Experience) => void; onPreview: (e: Experience) => void; onDone: () => void }) {
   const { user } = useAuth()
   const meta = (user?.user_metadata || {}) as { full_name?: string }
   const myName = (meta.full_name || user?.email?.split('@')[0] || '').trim()
@@ -45,7 +46,7 @@ export default function StartSheet({ occasion, relation, onClose, onFull, onPrev
   const fields = FIELDS[occasion] || FIELDS['Special surprise']
   const build = (): Experience => {
     if (!tpl) throw new Error('Choose who it is for first.')
-    let e: Experience = { ...fromTemplate(tpl), id: id.current, recipient: to.trim(), sender: from.trim() || 'Someone who loves you', targetDate: reveal || undefined, memories: photo ? [{ id: crypto.randomUUID(), kind: 'image', src: photo, caption: '', name: 'photo.jpg' }] : [] }
+    let e: Experience = { ...fromTemplate(tpl), ...(seasonSlug ? { seasonKey: seasonSlug } : {}), id: id.current, recipient: to.trim(), sender: from.trim() || 'Someone who loves you', targetDate: reveal || undefined, memories: photo ? [{ id: crypto.randomUUID(), kind: 'image', src: photo, caption: '', name: 'photo.jpg' }] : [] }
     for (const f of fields) { const v = (vals[f.key] || '').trim(); if (v) e = f.apply(e, v) }
     return e
   }

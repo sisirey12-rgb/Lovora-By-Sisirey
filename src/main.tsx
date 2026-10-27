@@ -20,6 +20,7 @@ import './fresh.css'
 import './landing2.css'
 import './seasons.css'
 import './theme-global.css'
+import './scene-studio.css'
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode><AuthProvider><App /></AuthProvider></React.StrictMode>

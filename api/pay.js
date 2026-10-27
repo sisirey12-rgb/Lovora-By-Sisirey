@@ -11,7 +11,7 @@ import { price, sb, userFromReq, isUuid, isOwner, hmac, safeEqual, nprAmount, pr
  *                        KHALTI_SECRET_KEY, KHALTI_MODE=test (sandbox)   PRICE_NPR or NPR_PER_INR   SITE_URL (optional)
  */
 const ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
-const makeCode = () => { const b = crypto.randomBytes(8); let s = ''; for (let i = 0; i < 8; i++) s += ALPHA[b[i] % ALPHA.length]; return `LM-${s.slice(0, 4)}-${s.slice(4)}` }
+const makeCode = () => { const b = crypto.randomBytes(8); let s = ''; for (let i = 0; i < 8; i++) s += ALPHA[b[i] % ALPHA.length]; return `LOVORA-${s.slice(0, 3)}-${s.slice(3, 6)}` }
 const origin = req => process.env.SITE_URL || `https://${req.headers['x-forwarded-host'] || req.headers.host}`
 const bad = (res, code, error) => res.status(code).json({ error })
 const esewaTest = () => process.env.ESEWA_MODE === 'test' || !process.env.ESEWA_SECRET_KEY
@@ -163,8 +163,9 @@ export default async function handler(req, res) {
   if (action === 'redeem') {
     const code = String(b.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
     const expId = String(b.experienceId || '')
-    if (code.length < 8 || !isUuid(expId)) return bad(res, 400, 'Enter the full gift code, like LM-ABCD-EFGH.')
-    const norm = `LM-${code.replace(/^LM/, '').slice(0, 4)}-${code.replace(/^LM/, '').slice(4, 8)}`
+    const rawCode = String(b.code || '').trim().toUpperCase()
+    if (!(/^(?:LOVORA-[A-Z0-9]{3}-[A-Z0-9]{3}|LM-[A-Z0-9]{4}-[A-Z0-9]{4})$/.test(rawCode)) || !isUuid(expId)) return bad(res, 400, 'Enter the full gift code, like LOVORA-ABC-123.')
+    const norm = rawCode
     const look = await sb(`experiences?id=eq.${expId}&owner_id=eq.${user.id}&select=id,paid`)
     if (!look.data?.[0]) return bad(res, 404, 'Save your surprise first (preview it once), then use the code.')
     if (look.data[0].paid) return res.status(200).json({ alreadyPaid: true })

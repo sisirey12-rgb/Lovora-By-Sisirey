@@ -6,7 +6,12 @@ const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s)
 export default async function handler(req, res) {
   const proto = req.headers['x-forwarded-proto'] || 'https'
   const origin = `${proto}://${req.headers['x-forwarded-host'] || req.headers.host}`
-  const id = String(req.query.id || '')
+  const requested = String(req.query.id || '')
+  let id = requested
+  if (!/^[0-9a-f-]{36}$/i.test(requested)) {
+    const alias = await (async () => { try { return await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/custom_links?slug=eq.${encodeURIComponent(requested.toLowerCase())}&select=experience_id`, { headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || '', Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ''}` } }).then(r => r.json()) } catch { return [] } })()
+    if (alias?.[0]?.experience_id) id = String(alias[0].experience_id)
+  }
   let html
   try { html = await (await fetch(`${origin}/`)).text() } catch { res.status(500).send('Could not load the app.'); return }
 
@@ -28,7 +33,7 @@ export default async function handler(req, res) {
     } catch { /* fall back to the generic preview */ }
   }
   const img = esc(found ? `${origin}/api/og?id=${encodeURIComponent(id)}` : `${origin}/og-image.png`)
-  const t = esc(title), d = esc(desc), u = esc(`${origin}/s/${id}`)
+  const t = esc(title), d = esc(desc), u = esc(`${origin}/s/${requested}`)
   html = html
     .replace(/(<meta property="og:title" content=")[^"]*"/, `$1${t}"`)
     .replace(/(<meta property="og:description" content=")[^"]*"/, `$1${d}"`)

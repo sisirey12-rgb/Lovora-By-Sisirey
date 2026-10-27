@@ -43,6 +43,8 @@ import BalloonTree from './scenes/BalloonTree'
 import EnvelopeLetter from './scenes/EnvelopeLetter'
 import CatVideoScene from './scenes/CatVideoScene'
 import VoiceNote from './VoiceNote'
+import { DEFAULT_SCENE_STUDIO, fetchSceneStudio, type SceneStudioConfig } from '../lib/sceneStudio'
+import { SEASON_THEME } from '../lib/seasonTheme'
 
 type Props = { experience: Experience; onClose: () => void; preview?: boolean; onFinish?: () => void; previewActions?: { onEdit: () => void; onShare: () => void } }
 const known = Object.keys(sceneLabels) as SceneId[]
@@ -59,6 +61,8 @@ const TRANS = [
 ]
 
 export default function ScenePlayer({ experience: rawExperience, onClose, preview = false, onFinish, previewActions }: Props) {
+  const [studio, setStudio] = useState<SceneStudioConfig>(DEFAULT_SCENE_STUDIO)
+  useEffect(() => { let alive = true; void fetchSceneStudio().then(v => { if (alive) setStudio(v) }); const changed = (e: Event) => { const d = (e as CustomEvent<SceneStudioConfig>).detail; if (d) setStudio({ ...DEFAULT_SCENE_STUDIO, ...d }) }; window.addEventListener('lovora:scene-config', changed); return () => { alive = false; window.removeEventListener('lovora:scene-config', changed) } }, [])
   const [senderOut, setSenderOut] = useState(false)   // "guess who sent it": the sender stays secret until the finale
   const experience = useMemo(() => {
     let e = rawExperience
@@ -70,9 +74,15 @@ export default function ScenePlayer({ experience: rawExperience, onClose, previe
   const scenes = useMemo(() => {
     // the story order is set by occasion + person (older surprises are brought into line); no coupon book any more
     const base = effectiveFlow(experience)
-    const s = base.filter(x => known.includes(x) && x !== 'coupons').filter(x => x === 'counter' ? !!experience.togetherSince : x === 'moments' ? (experience.moments || []).some(t => t.trim()) : x === 'openwhen' ? (experience.openWhen || []).some(o => o.note.trim()) : (x === 'memories' || x === 'timeline' || x === 'polaroids') ? photoCount > 0 : true)
-    return s.length ? s : (['heart'] as SceneId[])
-  }, [experience.scenes, experience.v, experience.occasion, experience.relation, experience.togetherSince, experience.moments, experience.openWhen, experience.extraScenes, experience.sceneOrder, photoCount])
+    const seasonal = experience.seasonKey && SEASON_THEME[experience.seasonKey] ? SEASON_THEME[experience.seasonKey].scenes : []
+    const story = [...new Set([...seasonal, ...base])] as SceneId[]
+    const s = story.filter(x => known.includes(x) && x !== 'coupons').filter(x => x === 'counter' ? !!experience.togetherSince : x === 'moments' ? (experience.moments || []).some(t => t.trim()) : x === 'openwhen' ? (experience.openWhen || []).some(o => o.note.trim()) : (x === 'memories' || x === 'timeline' || x === 'polaroids') ? photoCount > 0 : true)
+    const usable = s.length ? s : (['heart'] as SceneId[])
+    if (!studio.playerOrderEnabled || !studio.playerOrder.length) return usable
+    const rank = new Map<SceneId, number>()
+    studio.playerOrder.forEach((id, i) => rank.set(id, i))
+    return usable.map((id, i) => ({ id, i })).sort((a, b) => (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999) || a.i - b.i).map(x => x.id)
+  }, [experience.scenes, experience.v, experience.occasion, experience.relation, experience.togetherSince, experience.moments, experience.openWhen, experience.extraScenes, experience.sceneOrder, experience.seasonKey, photoCount, studio.playerOrderEnabled, studio.playerOrder])
   const [index, setIndex] = useState(0)
   const [opened, setOpened] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -160,22 +170,25 @@ export default function ScenePlayer({ experience: rawExperience, onClose, previe
     try { if (navigator.share) await navigator.share({ title: experience.title, text: `A little surprise for ${experience.recipient}`, url }); else await navigator.clipboard.writeText(url) } catch { /* user cancelled */ }
   }
   const replay = () => { replays.current += 1; window.clearTimeout(hitTimer.current); setIndex(0); setPopped([]); setWish(false); setHeartOpen(false); setRevealPlaying(false); setHeartCovered(false); setBouquetOpen(false); setBouquetPhase(0); setMemoryIndex(0); setThanksOpen(false) }
+  const font = fontById(experience.fontStyle)
+  const fontVars = { ['--lv-display' as string]: font.display, ['--lv-script' as string]: font.script, ['--lv-body' as string]: font.body } as React.CSSProperties
   const themeClass = `theme-${experience.theme.toLowerCase().replaceAll(' ', '-')}`
+  const seasonVisual = experience.seasonKey ? SEASON_THEME[experience.seasonKey] : undefined
+  const playerStyle = { ...fontVars, ['--lv-fx-intensity' as string]: String(studio.enabled ? studio.intensity / 100 : 0), ...(seasonVisual ? { ['--accent' as string]: seasonVisual.colors.accent, ['--accent2' as string]: seasonVisual.colors.accent2, ['--teal' as string]: seasonVisual.colors.teal, ['--lv-season-tint' as string]: seasonVisual.colors.tint } : {}) } as React.CSSProperties
+  const transitions = studio.preset === 'cinematic' ? [{ initial: { opacity: 0, scale: .82, filter: 'blur(18px)' }, exit: { opacity: 0, scale: 1.12, filter: 'blur(12px)' } }] : studio.preset === 'playful' ? [{ initial: { opacity: 0, y: 35, rotate: -4, scale: .88 }, exit: { opacity: 0, y: -24, rotate: 4, scale: .92 } }] : studio.preset === 'gentle' ? [{ initial: { opacity: 0, y: 10 }, exit: { opacity: 0 } }] : TRANS
   const confetti = useMemo(() => Array.from({ length: 36 }, (_, i) => i), [])
   const greeting = experience.greeting || `Dear ${experience.recipient || 'you'},`
-  const font = fontById(experience.fontStyle)
   const revealTitle = revealFor(experience)   // editable big words (defaults per occasion)
   const useBow = isPartnerWorld(experience.relation), glyph = glyphFor(experience.relation)
   const heartLight = useBow && scene === 'heart' && !heartCovered && !(heartOpen && !revealPlaying)   // cream bow-game look until the black halves close
-  const fontVars = { ['--lv-display' as string]: font.display, ['--lv-script' as string]: font.script, ['--lv-body' as string]: font.body } as React.CSSProperties
   const [bouquetPhase, setBouquetPhase] = useState<0 | 1 | 2>(0)
   const openBouquet = () => { if (bouquetPhase) return; setBouquetPhase(1); buzz([15, 25, 15]); sfx.boom('stars'); window.setTimeout(() => { setBouquetPhase(2); setBouquetOpen(true); buzz([20, 30, 20, 30, 60]); sfx.boom('love') }, 1100) }
   const bouquetTitle = bouquetStyles.find(b => b.id === experience.bouquetStyle)?.title
 
   if (locked) return <Teaser experience={experience} themeClass={themeClass} countdown={countdown} />
 
-  if (!opened) return <div className={`player ${themeClass}`} style={fontVars}><GiftIntro recipient={experience.recipient} secret={experience.secretMessage} colors={palette.balloons} onOpen={() => { audio.unlock(); setOpened(true) }} /></div>
-  return <div ref={rootRef} data-occ={experience.occasion} className={`player ta-host ta-${experience.textAnim || 'rise'} ${themeClass} ${heartLight ? 'hs-on' : ''} ${useBow ? '' : 'no-hearts'}`} style={fontVars} role="dialog" aria-modal="true" aria-label="Interactive surprise"><OccasionDeco occasion={experience.occasion} colors={palette.balloons} />
+  if (!opened) return <div className={`player ${themeClass} lv-fx-${studio.preset}`} style={playerStyle}><GiftIntro recipient={experience.recipient} secret={experience.secretMessage} colors={palette.balloons} onOpen={() => { audio.unlock(); setOpened(true) }} /></div>
+  return <div ref={rootRef} data-occ={experience.occasion} data-season={experience.seasonKey || ''} className={`player ta-host ta-${experience.textAnim || 'rise'} ${themeClass} lv-fx-${studio.preset} ${heartLight ? 'hs-on' : ''} ${useBow ? '' : 'no-hearts'}`} style={playerStyle} role="dialog" aria-modal="true" aria-label="Interactive surprise"><OccasionDeco occasion={experience.occasion} colors={palette.balloons} />
     <TapFX active={scene === 'finale' || scene === 'memories'} colors={palette.balloons} buzz={buzz} />
     <div className="player-top">
       <button className={`icon-btn ${heartLight ? 'hs-back' : ''}`} onClick={onClose} aria-label="Close experience">{heartLight ? <><ArrowLeft size={18} /> Back</> : <X />}</button>
@@ -186,7 +199,7 @@ export default function ScenePlayer({ experience: rawExperience, onClose, previe
     </div>
     <WorldAmbient occasion={occasionKey(experience.occasion)} relation={experience.relation} colors={palette.balloons} />
     <AnimatePresence mode="wait">
-      <motion.section key={scene} className={`scene scene-${scene}`} initial={TRANS[index % TRANS.length].initial} animate={{ opacity: 1, x: 0, y: 0, scale: 1, rotate: 0, filter: 'blur(0px)' }} exit={TRANS[index % TRANS.length].exit} transition={{ duration: .38, ease: 'easeOut' }} aria-live="polite">
+      <motion.section key={scene} className={`scene scene-${scene}`} initial={transitions[index % transitions.length].initial} animate={{ opacity: 1, x: 0, y: 0, scale: 1, rotate: 0, filter: 'blur(0px)' }} exit={transitions[index % transitions.length].exit} transition={{ duration: studio.preset === 'gentle' ? .65 : studio.preset === 'cinematic' ? .58 : .38, ease: 'easeOut' }} aria-live="polite">
         {scene === 'heart' && <div className="scene-content cupid-scene">
           {(!heartOpen || (revealPlaying && !heartCovered)) && (useBow ? <BowScene onHit={onHit} buzz={buzz} onGesture={unlockAudio} /> : <RelationOpener relation={experience.relation} occasion={occasionKey(experience.occasion)} onHit={onHit} buzz={buzz} onGesture={unlockAudio} colors={palette.balloons} />)}
           {heartOpen && !revealPlaying && <><p className="eyebrow">MADE JUST FOR YOU</p><h1>{toTitleCase(revealTitle)}</h1><h2>{experience.recipient || 'Beautiful human'} <span>{glyph}</span></h2></>}

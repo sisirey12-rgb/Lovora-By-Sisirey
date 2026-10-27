@@ -135,3 +135,17 @@ Vercel variables: `ESEWA_SECRET_KEY` + `ESEWA_PRODUCT_CODE` (or `ESEWA_MODE=test
 
 ## Round 3d
 - **Second moment (the big-words intro)**: new `IntroStage.tsx` replaces the letter-drop. A curtain of light parts, the title rises word by word out of a mask with a shine sweeping across it, an underline draws itself, shapes in the theme colours orbit, and the "Open your surprise" button only appears after about 3 seconds. The full-screen effect for the chosen entrance (fireworks, galaxy, petals…) still plays behind it.
+
+## Gift card and seasonal commerce polish (2026-10-28)
+- Fixed the printable QR-card studio layout on narrow screens: the preview stays inside its column, controls scroll independently, and the action row respects mobile safe areas.
+- Added an optional ₹50 personalised keyword link flow in the QR studio, with recipient/occasion suggestions, Razorpay checkout, a server-side alias table, and public link resolution. Apply Supabase migration `0008_custom_links.sql` before using it in production.
+- Added a seasonal discovery grid to the landing page and season-aware recipient choices; Rakhi offers distinct Brother · Bhai and Sister · Behna options.
+- New gift codes use `LOVORA-XXX-XXX`; previously issued `LM-XXXX-XXXX` codes remain redeemable.
+- Removed the owner-account aside from the share-link success toast.
+
+## Scene Studio wiring (2026-10-28)
+- Added owner-only Scene Studio controls under Account → Website settings: live effects toggle, animation preset, intensity, selected scene list, and explicit scene reordering.
+- Added `/api/scene-config`: public read, server-side owner authentication for writes, input validation, and persistence in `site_settings` under `scene_config`.
+- Wired the live configuration into landing animations and the actual surprise player transitions. Public pages fetch the saved configuration; visitor clients cannot write it.
+- Connected seasonal landing choices to new surprise creation via `seasonKey`. Seasonal surprises now merge their curated scene sequence into the actual player and apply season-specific visual palettes.
+- Added responsive styling for Scene Studio and animation presets. Full production build could not be run in this environment because dependencies were unavailable; edited TS/TSX files passed TypeScript transpile syntax checks.

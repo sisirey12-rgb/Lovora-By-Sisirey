@@ -8,6 +8,7 @@ import { SEASONS } from '../lib/seasons'
 import { emojiFor } from '../lib/templates'
 import ThemePicker from './ThemePicker'
 import type { Experience } from '../types'
+import { DEFAULT_SCENE_STUDIO, STUDIO_SCENES, fetchSceneStudio, type SceneStudioConfig, type AnimationPreset } from '../lib/sceneStudio'
 
 type Tab = 'profile' | 'surprises' | 'plan' | 'settings'
 type Meta = { full_name?: string; phone?: string; city?: string; about?: string; avatar?: string }
@@ -30,11 +31,13 @@ export default function AccountModal({ items, setDark, onClose, onSignedOut, onG
   const [f, setF] = useState<Meta>({ full_name: meta.full_name || '', phone: meta.phone || '', city: meta.city || '', about: meta.about || '', avatar: meta.avatar || AVATARS[0] })
   const [busy, setBusy] = useState(''), [msg, setMsg] = useState(''), [err, setErr] = useState('')
   const [liveSeason, setLiveSeason] = useState('')
+  const [sceneStudio, setSceneStudio] = useState<SceneStudioConfig>(DEFAULT_SCENE_STUDIO)
+  const [sceneStudioLoaded, setSceneStudioLoaded] = useState(false)
   const [acct, setAcct] = useState<AccountInfo | null>(null)
   const [aiRes, setAiRes] = useState<AiCheck | { error: string } | null>(null), [aiBusy, setAiBusy] = useState(false)
   useEffect(() => {
     let dead = false
-    void (async () => { const a = await fetchAccount(); if (a && !dead) { setAcct(a); if (a.owner) { const sj = await fetch('/api/season').then(x => x.json()).catch(() => null); if (sj && !dead) setLiveSeason(sj.season || '') } } })()
+    void (async () => { const a = await fetchAccount(); if (a && !dead) { setAcct(a); if (a.owner) { const sj = await fetch('/api/season').then(x => x.json()).catch(() => null); if (sj && !dead) setLiveSeason(sj.season || ''); const sc = await fetchSceneStudio(); if (!dead) { setSceneStudio(sc); setSceneStudioLoaded(true) } } } })()
     return () => { dead = true }
   }, [])
   const stats = useMemo(() => {
@@ -97,6 +100,19 @@ export default function AccountModal({ items, setDark, onClose, onSignedOut, onG
         {aiRes && ('error' in aiRes ? <p className="pw-error" role="alert">{aiRes.error}</p> : <div className={`ai-check ${aiRes.ok ? 'ok' : 'bad'}`} role="status"><b>{aiRes.ok ? 'Working ✓' : 'Not working'}</b><p>{aiRes.message}</p><small>Key: {aiRes.keySet ? `set (${aiRes.keyLength} characters${aiRes.keyLooksRight ? '' : ', does not start with gsk_'})` : 'missing'} · Model: {aiRes.model}{aiRes.ms ? ` · ${aiRes.ms} ms` : ''}</small></div>)}
 <p className="acc-line"><Crown size={15} /> Home page season (owner only)</p>
           <div className="season-chips">{[{ slug: '', label: 'Normal', emoji: '🏠' }, ...SEASONS].map(x => <button key={x.slug} className={liveSeason === x.slug ? 'on' : ''} disabled={!!busy} onClick={() => void run('season', async () => { const { data } = await supabase!.auth.getSession(); const r = await fetch('/api/season', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token}` }, body: JSON.stringify({ season: x.slug }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Could not change the season.'); setLiveSeason(j.season || ''); try { sessionStorage.setItem('lovora-season', j.season || '') } catch { /* ignore */ } }, x.slug ? `${x.label} is now on the home page. Visitors see it within a minute.` : 'Home page is back to normal.')}>{x.emoji} {x.label}</button>)}</div></>
+        <section className="lv-scene-studio" aria-labelledby="lv-scene-studio-title">
+          <div className="lv-studio-head"><span className="lv-studio-icon">✦</span><div><p className="eyebrow">LIVE SITE CONTROL</p><h3 id="lv-scene-studio-title">Scene Studio</h3><p>Publish animation and scene-player settings for everyone visiting Lovora.</p></div></div>
+          <label className="lv-studio-toggle"><input type="checkbox" checked={sceneStudio.enabled} onChange={e => setSceneStudio(v => ({ ...v, enabled: e.target.checked }))} /><span><b>Seasonal effects</b><small>Animated atmosphere on the landing page and scene player</small></span></label>
+          <label>Animation style<select value={sceneStudio.preset} onChange={e => setSceneStudio(v => ({ ...v, preset: e.target.value as AnimationPreset }))}><option value="dreamy">Dreamy · soft glow and float</option><option value="cinematic">Cinematic · dramatic reveal</option><option value="playful">Playful · springy and bright</option><option value="gentle">Gentle · calm transitions</option></select></label>
+          <label className="lv-studio-range">Effect intensity <b>{sceneStudio.intensity}%</b><input type="range" min="0" max="100" step="5" value={sceneStudio.intensity} onChange={e => setSceneStudio(v => ({ ...v, intensity: Number(e.target.value) }))} /></label>
+          <label className="lv-studio-toggle"><input type="checkbox" checked={sceneStudio.playerOrderEnabled} onChange={e => setSceneStudio(v => ({ ...v, playerOrderEnabled: e.target.checked }))} /><span><b>Use owner-curated scene order</b><small>Reorders scenes that exist in each surprise; creator-added content is preserved.</small></span></label>
+          <p className="acc-line">Scene order · tap to add or remove, drag order not required</p>
+          <div className="lv-studio-scenes">{STUDIO_SCENES.map((sc, i) => { const on = sceneStudio.playerOrder.includes(sc.id); return <button type="button" key={sc.id} className={on ? 'on' : ''} onClick={() => setSceneStudio(v => ({ ...v, playerOrder: on ? v.playerOrder.filter(id => id !== sc.id) : [...v.playerOrder, sc.id].slice(0, 18) }))} aria-pressed={on}><span>{sc.emoji}</span>{sc.label}{on && <i>{sceneStudio.playerOrder.indexOf(sc.id) + 1}</i>}</button> })}</div>
+          <div className="lv-studio-order" aria-label="Reorder selected scenes">{sceneStudio.playerOrder.map((id, i) => { const sc = STUDIO_SCENES.find(x => x.id === id); if (!sc) return null; return <div key={id}><span>{i + 1}. {sc.emoji} {sc.label}</span><div><button type="button" disabled={i === 0} aria-label={`Move ${sc.label} up`} onClick={() => setSceneStudio(v => { const a = [...v.playerOrder]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; return { ...v, playerOrder: a } })}>↑</button><button type="button" disabled={i === sceneStudio.playerOrder.length - 1} aria-label={`Move ${sc.label} down`} onClick={() => setSceneStudio(v => { const a = [...v.playerOrder]; [a[i], a[i + 1]] = [a[i + 1], a[i]]; return { ...v, playerOrder: a } })}>↓</button></div></div> })}</div>
+          <p className="lv-studio-note">The selected order is published to the live scene player when you save.</p>
+          <button type="button" className="primary-btn" disabled={!!busy || !sceneStudioLoaded} onClick={() => void run('scene-studio', async () => { if (!supabase) throw new Error('Cloud accounts are not configured.'); const { data } = await supabase.auth.getSession(); const r = await fetch('/api/scene-config', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token}` }, body: JSON.stringify(sceneStudio) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Could not publish the scene settings.'); setSceneStudio({ ...DEFAULT_SCENE_STUDIO, ...j.config }); window.dispatchEvent(new CustomEvent('lovora:scene-config', { detail: j.config })); }, 'Scene Studio published. Visitors will see the new effects and player settings shortly.')}><Save size={15} /> {busy === 'scene-studio' ? 'Publishing…' : 'Publish live scene settings'}</button>
+          <small className="lv-studio-foot">Owner-only controls · settings are stored server-side and shared with visitors. Existing custom scenes are not deleted.</small>
+        </section>
         <p className="acc-line"><Palette size={15} /> Site theme</p><ThemePicker setDark={setDark} inline />
         <button className="secondary-btn danger" onClick={() => { if (window.confirm('Remove surprises saved on this device? Surprises saved to your account stay safe.')) { Object.keys(localStorage).filter(k => k.startsWith('lovora') && k !== 'lovora-theme' && k !== 'lovora-skin').forEach(k => localStorage.removeItem(k)); setMsg('Local copies cleared. Reload to refresh.') } }}><Trash2 size={15} /> Clear data stored on this device</button>
       </div>}
