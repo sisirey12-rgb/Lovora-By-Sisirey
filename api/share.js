@@ -12,6 +12,14 @@ export default async function handler(req, res) {
     const alias = await (async () => { try { return await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/custom_links?slug=eq.${encodeURIComponent(requested.toLowerCase())}&select=experience_id`, { headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || '', Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ''}` } }).then(r => r.json()) } catch { return [] } })()
     if (alias?.[0]?.experience_id) id = String(alias[0].experience_id)
   }
+  else {
+    // The custom link replaces the long default one: once a surprise has a custom keyword, its /s/<id> address stops working.
+    const replaced = await (async () => { try { return await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/custom_links?experience_id=eq.${encodeURIComponent(requested.toLowerCase())}&select=slug`, { headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || '', Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ''}` } }).then(r => r.json()) } catch { return [] } })()
+    if (Array.isArray(replaced) && replaced[0]?.slug) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store')
+      return res.status(410).send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>This link has moved</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#160e20;color:#f8effa;font-family:system-ui,sans-serif;text-align:center;padding:24px"><div><div style="font-size:44px">💌</div><h1 style="margin:10px 0">This link has been replaced</h1><p style="opacity:.8;max-width:360px;margin:0 auto 18px">The creator gave this surprise a new link. Ask them to send you the new one.</p><a href="/" style="color:#f7a7ca">Go to Lovora Meow</a></div></body>`)
+    }
+  }
   let html
   try { html = await (await fetch(`${origin}/`)).text() } catch { res.status(500).send('Could not load the app.'); return }
 

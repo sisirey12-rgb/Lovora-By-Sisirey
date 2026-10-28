@@ -7,8 +7,10 @@ import PayWall from './PayWall'
 import CreatingOverlay from './CreatingOverlay'
 import { emojiFor } from '../lib/templates'
 import QrStudio from './QrStudio'
-import CustomLinkPanel from './CustomLinkPanel'
 import RedeemBox from './RedeemBox'
+import CustomLinkBox from './CustomLinkBox'
+import { shareUrlOf } from '../lib/shareUrl'
+import { dropLayer, pushLayer, useBackLayer } from '../lib/backstack'
 import AiHelper from './AiHelper'
 import SceneFields from './SceneFields'
 import { effectiveFlow, baseFlow } from '../lib/flow'
@@ -36,6 +38,20 @@ const Fold = ({ title, hint, children, open }: { title: string; hint?: string; c
 export default function Editor({ initial, initialStep = 1, onExit, onSaved }: Props) {
   const [item, setItem] = useState<Experience>(()=>initial ? {...initial} : blank())
   const [step, setStep] = useState(() => Math.max(1, Math.min(LAST, initialStep)))
+  const stepLayers = useRef<{ id: number; from: number }[]>([])
+  /** Each forward step adds one history entry, so the phone's Back button returns to the earlier step instead of leaving the project. */
+  const pushStep = (from: number) => { const id = pushLayer(() => { stepLayers.current = stepLayers.current.filter(l => l.id !== id); setError(''); setStep(from); window.scrollTo({ top: 0 }) }); stepLayers.current.push({ id, from }) }
+  useEffect(() => {
+    const t = window.setTimeout(() => { for (let k = 2; k <= Math.max(1, Math.min(LAST, initialStep)); k++) pushStep(k - 1) }, 0)   // after the editor's own layer
+    return () => { window.clearTimeout(t); const first = stepLayers.current[0]; if (first) dropLayer(first.id); stepLayers.current = [] }
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  const goStep = (n: number) => {
+    if (n === step) return
+    if (n > step) pushStep(step)
+    else { const doomed = stepLayers.current.filter(l => l.from >= n); if (doomed.length) { dropLayer(doomed[0].id); stepLayers.current = stepLayers.current.filter(l => l.from < n) } }
+    setStep(n)
+  }
+  const goBack = () => { setError(''); if (step <= 1) onExit(); else { goStep(step - 1); window.scrollTo({ top: 0 }) } }
   const [animKey, setAnimKey] = useState(0)
   const [error, setError] = useState('')
   const [preview, setPreview] = useState(false)
@@ -63,7 +79,7 @@ export default function Editor({ initial, initialStep = 1, onExit, onSaved }: Pr
     }, 3000)
     return () => window.clearTimeout(t)
   }, [item, user, creationStage])
-  const [shareUrl, setShareUrl] = useState('')
+  const [shareUrl, setShareUrl] = useState(() => (initial?.published ? shareUrlOf(initial) : ''))
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [calendarMonth, setCalendarMonth] = useState(() => { const d = item.targetDate ? new Date(`${item.targetDate}T12:00:00`) : new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) })
   const creationSteps = ['Names and occasion saved','Words saved','Look saved','Moments saved','Private draft saved']
@@ -92,7 +108,7 @@ export default function Editor({ initial, initialStep = 1, onExit, onSaved }: Pr
   const selectedDate = item.targetDate || ''
   /** Saves the draft with the little "saving" animation. `after` runs when the animation ends (used to open the preview). */
   const save = (after?: () => void) => { if (creationStage >= 0) return; try { const draft = {...item, published:false, updatedAt:new Date().toISOString()}; storage.saveDraft(draft); onSaved(); setCreationStage(0); let stage = 0; const tick = () => { stage += 1; if (stage < creationSteps.length) { setCreationStage(stage); window.setTimeout(tick, 260) } else { setCreationStage(creationSteps.length); window.setTimeout(() => { setCreationStage(-1); after?.() }, 1100) } }; window.setTimeout(tick, 260) } catch { setError('Could not save the draft. Browser storage may be full; remove some large memories and try again.'); after?.() } }
-  const next = () => { setError(''); if (step===1 && !item.recipient.trim()) { setError('Add the recipient’s name to make this personal.'); return } if(step<LAST) { setStep(s=>s+1); window.scrollTo({top:0}) } }
+  const next = () => { setError(''); if (step===1 && !item.recipient.trim()) { setError('Add the recipient’s name to make this personal.'); return } if(step<LAST) { goStep(step+1); window.scrollTo({top:0}) } }
   const addMemory = async (file: File) => {
     const isImg = file.type.startsWith('image/'), isVid = file.type.startsWith('video/')
     if (!isImg && !isVid) { setError('Choose an image or video file.'); return }
@@ -107,22 +123,24 @@ export default function Editor({ initial, initialStep = 1, onExit, onSaved }: Pr
   const updateMemory = (id: string, p: Partial<MemoryItem>) => patch({ memories: item.memories.map(m=>m.id===id?{...m,...p}:m) })
   const [seen,setSeen]=useState(false)
   const [paywall, setPaywall] = useState(false)
+  useBackLayer(preview, () => setPreview(false))
+  useBackLayer(paywall, () => setPaywall(false))
   const publish = async (src: Experience = item) => {
     setError('')
-    if (!src.recipient.trim()) { setError('Please add the recipient’s name first.'); setStep(1); return }
+    if (!src.recipient.trim()) { setError('Please add the recipient’s name first.'); goStep(1); return }
     try {
       const r = await publishShare(src, m => setError(m))
       if (!r.ok) { setError(''); setPaywall(true); return }   // not an owner and not paid yet: the server asked for payment
-      setItem(r.item); storage.saveDraft(r.item); setShareUrl(`${window.location.origin}/s/${r.item.id}`); setError('Published successfully. Your shareable link is ready below.'); onSaved()
+      setItem(r.item); storage.saveDraft(r.item); setShareUrl(shareUrlOf(r.item)); setError(r.owner ? 'Published successfully (owner account, free). Your shareable link is ready below.' : 'Published successfully. Your shareable link is ready below.'); onSaved()
     } catch(e) { setError(e instanceof Error?e.message:'Could not publish this experience.') }
   }
-  const wishId = shareUrl ? shareUrl.split('/s/').pop() : (item.published ? item.id : '')
+  const wishId = (shareUrl || item.published) ? item.id : ''
   const setWish = (i: number, t: string) => { const w = [...(item.balloonWishes||[])]; while (w.length < (item.balloonCount||5)) w.push(''); w[i] = t; patch({ balloonWishes: w }) }
   const dateLabel = selectedDate ? new Date(`${selectedDate}T12:00:00`).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}) : 'Not set'
   return <div className="editor-shell">
-    <header className="editor-head"><button className="icon-btn" onClick={onExit} aria-label="Exit editor"><ArrowLeft/></button><div><span className="eyebrow">YOUR LITTLE UNIVERSE</span><h2>Create a surprise</h2></div><div className="editor-head-actions"><button className="secondary-btn header-preview-btn" onClick={startPreview}><Sparkles size={15}/> Preview</button><button className="save-btn" onClick={()=>save()}><Save size={16}/> Save</button></div></header>
+    <header className="editor-head"><button className="icon-btn" onClick={goBack} aria-label="Back"><ArrowLeft/></button><div><span className="eyebrow">YOUR LITTLE UNIVERSE</span><h2>Create a surprise</h2></div><div className="editor-head-actions"><button className="secondary-btn header-preview-btn" onClick={startPreview}><Sparkles size={15}/> Preview</button><button className="save-btn" onClick={()=>save()}><Save size={16}/> Save</button></div></header>
     <section className={`occ-banner occ-b-${item.occasion.toLowerCase().replace(/\s+/g,'-')}`}><div className="occ-b-top"><span className="occ-b-emoji">{emojiFor(item.occasion)}</span><div><p className="eyebrow">{item.occasion.toUpperCase()}{item.relation?` · ${item.relation.toUpperCase()}`:''}</p><h3>{occBannerLine[item.occasion]}</h3></div></div><div className="occ-b-flow" aria-label="Scenes in this surprise">{item.scenes.map((s,i)=><span key={s+i}><b>{i+1}</b>{sceneLabels[s]}</span>)}</div></section>
-    <div className="step-track">{steps.map((s,i)=>i===0?null:<button key={s} className={`${step===i?'current':''} ${step>i?'done':''}`} onClick={()=>setStep(i)}><span>{step>i?<Check size={13}/>:i}</span><small>{s}</small></button>)}</div>
+    <div className="step-track">{steps.map((s,i)=>i===0?null:<button key={s} className={`${step===i?'current':''} ${step>i?'done':''}`} onClick={()=>goStep(i)}><span>{step>i?<Check size={13}/>:i}</span><small>{s}</small></button>)}</div>
     <main className="editor-main">
       {step===1 && <section><p className="eyebrow">STEP 1 OF {LAST} · WHO IT IS FOR</p><h1>Add the names</h1><div className="form-grid">
         <div className="chosen-badge"><span aria-hidden="true">{occasionEmoji[occ]}</span><div><small>You chose</small><strong>{occ} · for your {rel.toLowerCase()}</strong></div></div>
@@ -186,36 +204,15 @@ export default function Editor({ initial, initialStep = 1, onExit, onSaved }: Pr
           <Fold title="Secret message and reply links"><label>Secret bonus message<input value={item.secretMessage||''} onChange={e=>patch({secretMessage:e.target.value})} maxLength={160} placeholder="Revealed if they tap the cat 5 times"/></label><label>Your WhatsApp number<input type="tel" inputMode="tel" value={item.replyWhatsApp||""} onChange={e=>patch({replyWhatsApp:e.target.value.replace(/[^0-9+]/g,"").slice(0,16)})} placeholder="Country code + number, e.g. 919876543210"/></label><label>Your Instagram username<input value={item.replyInstagram||""} onChange={e=>patch({replyInstagram:e.target.value.replace(/^@/,"").replace(/[^A-Za-z0-9._]/g,"").slice(0,30)})} placeholder="username, without @"/></label></Fold>
         </div></section>}
       {step===5 && <section><p className="eyebrow">STEP 5 OF {LAST} · THE BIG REVEAL</p><h1>Preview your surprise.</h1><p className="muted">Play the full interactive story. Your changes show up here straight away.</p><div className={`preview-card ${worldClass(occ, rel)}`} style={{background:themes.find(t=>t.name===item.theme)?.colors}}><span>✦ LOVORA ✦</span><h2>{item.recipient ? `For ${item.recipient}` : 'Your favourite human'}</h2><p>{item.title}</p><button onClick={startPreview}>Play full preview <ArrowRight size={16}/></button></div></section>}
-      {step===6 && <section>
-        <p className="eyebrow">STEP 6 OF {LAST} · SEND A LITTLE MAGIC</p>
-        <h1>Make it shareable.</h1>
-        <p className="muted">Previewing is always free. Pay once to get a link you can send to anyone.</p>
+      {step===6 && <section><p className="eyebrow">STEP 6 OF {LAST} · SEND A LITTLE MAGIC</p><h1>Make it shareable.</h1><p className="muted">Previewing is always free. Pay once to get a link you can send to anyone.</p>
         <div className="fold-stack"><Fold title="Add a lock question" hint="optional"><label>Question<input value={item.unlockQuestion||''} onChange={e=>patch({unlockQuestion:e.target.value})} placeholder="Where did we first meet?"/></label><label>Answer<input value={item.unlockAnswer||''} onChange={e=>patch({unlockAnswer:e.target.value})} placeholder="Only they would know"/></label><small>A light lock to keep casual openers out. It is not secure storage.</small></Fold></div>
-        <button className="primary-btn" onClick={()=>void publish()}><Sparkles size={17}/> {shareUrl?'Update my share link':'Get my share link'}</button>
-        {!seen&&!shareUrl&&<button className="secondary-btn" onClick={()=>setPreview(true)}>Preview it first (free)</button>}
-        {!shareUrl&&<RedeemBox item={item} onRedeemed={paid=>{setItem(paid);storage.saveDraft(paid);void publish(paid)}}/>}
-        {shareUrl && <>
-          <CustomLinkPanel url={shareUrl} experienceId={item.id} recipient={item.recipient} sender={item.sender} occasion={item.occasion} onActivated={setShareUrl}/>
-          <div className="share-link-ready">
-            <strong>Your surprise link is ready</strong><input readOnly value={shareUrl}/>
-            <div className="share-actions">
-              <button type="button" className="secondary-btn" onClick={()=>setQrOpen(true)}>Printable QR card</button>
-              <a className="secondary-btn" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${item.title||'A little surprise'} 💌 ${shareUrl}`)}`}>Send on WhatsApp</a>
-              <a className="secondary-btn" href={`mailto:?subject=${encodeURIComponent(item.title||'A little surprise for you')}&body=${encodeURIComponent(`Open your surprise: ${shareUrl}`)}`}>Send by email</a>
-              <label className="remind-send">Remind me to send on<input type="date" min={localDate(new Date())} onChange={e=>{if(e.target.value)addReminder(e.target.value,`💌 Send the surprise for ${item.recipient||'someone you love'}`,shareUrl)}}/></label>
-            </div>
-            <button className="secondary-btn" onClick={()=>{void navigator.clipboard.writeText(shareUrl).then(()=>setError('Link copied to clipboard.')).catch(()=>setError(shareUrl))}}><Check size={15}/> Copy shareable link</button>
-          </div>
-        </>}
-        <button className="secondary-btn" onClick={()=>{save();setError('Draft saved on this device. It is not publicly accessible.')}}><Save size={16}/> Save private local draft</button>
-        <div className="note-card">Published surprises are public to anyone with the link. Please do not upload private content.</div>
-      </section>}
+        <button className="primary-btn" onClick={()=>void publish()}><Sparkles size={17}/> {shareUrl?'Update my share link':'Get my share link'}</button>{!seen&&!shareUrl&&<button className="secondary-btn" onClick={()=>setPreview(true)}>Preview it first (free)</button>}{!shareUrl&&<RedeemBox item={item} onRedeemed={paid=>{setItem(paid);storage.saveDraft(paid);void publish(paid)}}/>}{shareUrl&&<div className="share-link-ready"><strong>Your surprise link is ready</strong><input readOnly value={shareUrl}/><CustomLinkBox experienceId={item.id} recipient={item.recipient} occasion={item.occasion} slug={item.customSlug} onActive={slug=>{const n={...item,customSlug:slug};setItem(n);storage.saveDraft(n);setShareUrl(shareUrlOf(n))}}/><div className="share-actions"><button type="button" className="secondary-btn" onClick={()=>setQrOpen(true)}>Printable QR card</button><a className="secondary-btn" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${item.title||'A little surprise'} 💌 ${shareUrl}`)}`}>Send on WhatsApp</a><a className="secondary-btn" href={`mailto:?subject=${encodeURIComponent(item.title||'A little surprise for you')}&body=${encodeURIComponent(`Open your surprise: ${shareUrl}`)}`}>Send by email</a><label className="remind-send">Remind me to send on<input type="date" min={localDate(new Date())} onChange={e=>{if(e.target.value)addReminder(e.target.value,`💌 Send the surprise for ${item.recipient||'someone you love'}`,shareUrl)}}/></label></div><button className="secondary-btn" onClick={()=>{void navigator.clipboard.writeText(shareUrl).then(()=>setError('Link copied to clipboard.')).catch(()=>setError(shareUrl))}}><Check size={15}/> Copy shareable link</button></div>}<button className="secondary-btn" onClick={()=>{save();setError('Draft saved on this device. It is not publicly accessible.')}}><Save size={16}/> Save private local draft</button><div className="note-card">Published surprises are public to anyone with the link. Please do not upload private content.</div></section>}
       {error && <p className={error.startsWith('Published')||error.startsWith('Draft saved')||error.startsWith('Link copied')?'success-text':'error-text'} role="status">{error}</p>}
-      <div className="editor-nav"><button className="secondary-btn" onClick={()=>{setError('');if(step<=1)onExit();else setStep(s=>s-1)}}><ArrowLeft size={16}/> {step<=1?'Exit':'Back'}</button><span>{step} of {LAST}</span>{step<LAST&&<button className="primary-btn" onClick={next}>Continue <ArrowRight size={16}/></button>}</div><DevCredit/>
+      <div className="editor-nav"><button className="secondary-btn" onClick={goBack}><ArrowLeft size={16}/> {step<=1?'Exit':'Back'}</button><span>{step} of {LAST}</span>{step<LAST&&<button className="primary-btn" onClick={next}>Continue <ArrowRight size={16}/></button>}</div><DevCredit/>
     </main>
     {qrOpen&&shareUrl&&<QrStudio url={shareUrl} recipient={item.recipient} sender={item.sender} occasion={item.occasion} revealDate={item.targetDate} onClose={()=>setQrOpen(false)}/>}
     {creating&&<CreatingOverlay occasion={item.occasion} relation={item.relation} name={item.recipient} onDone={()=>{setCreating(false);setPreview(true)}}/>}
-    {preview&&<ScenePlayer experience={{...item, targetDate: undefined}} preview onClose={()=>setPreview(false)} onFinish={()=>{setPreview(false);setSeen(true);setStep(LAST);window.scrollTo({top:0})}} previewActions={{onEdit:()=>{setPreview(false);setStep(2);window.scrollTo({top:0})},onShare:()=>{setPreview(false);setSeen(true);setStep(LAST);window.scrollTo({top:0})}}}/>}
+    {preview&&<ScenePlayer experience={{...item, targetDate: undefined}} preview onClose={()=>setPreview(false)} onFinish={()=>{setPreview(false);setSeen(true);goStep(LAST);window.scrollTo({top:0})}} previewActions={{onEdit:()=>{setPreview(false);goStep(2);window.scrollTo({top:0})},onShare:()=>{setPreview(false);setSeen(true);goStep(LAST);window.scrollTo({top:0})}}}/>}
     {paywall&&<PayWall item={item} onClose={()=>setPaywall(false)} onPaid={e=>{setPaywall(false);setItem(e);void publish(e)}} onPreview={()=>{setPaywall(false);setPreview(true)}}/>}
     {autoState&&<div className={`autosave-pill ${autoState}`} role="status" aria-live="polite">{autoState==='saving'?'Saving…':autoState==='cloud'?'Saved to your account ✓':autoState==='local'?'Saved on this device ✓':'Not saved to your account yet'}</div>}
     {creationStage>=0&&<div className="creation-overlay" role="status" aria-live="polite"><div className="creation-card"><div className="creation-icon"><Sparkles size={26}/></div><p className="eyebrow">LOVORA STUDIO</p><h2>{creationStage>=creationSteps.length?'Your little world is ready.':'Saving your surprise…'}</h2><div className="creation-checklist">{creationSteps.map((label,i)=><div key={label} className={creationStage>i?'complete':creationStage===i?'active':''}><span>{creationStage>i?<Check size={14}/>:creationStage===i?<span className="creation-spinner"/>:<span className="creation-empty"/>}</span><span>{label}</span>{creationStage>i&&<small>DONE</small>}</div>)}</div><div className="creation-progress"><span style={{width:`${Math.min(100,creationStage/creationSteps.length*100)}%`}}/></div>{creationStage>=creationSteps.length&&<p className="creation-ready">✓ Draft saved on this device</p>}</div></div>}

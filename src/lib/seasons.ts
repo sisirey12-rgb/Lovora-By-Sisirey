@@ -22,18 +22,8 @@ export function useLiveSeason(): Season | undefined {
   const [slug, setSlug] = useState(() => { try { return sessionStorage.getItem('lovora-season') || '' } catch { return '' } })
   useEffect(() => {
     let dead = false
-    const apply = (next: string) => {
-      const valid = SEASONS.some(s => s.slug === next) ? next : ''
-      setSlug(valid)
-      try { sessionStorage.setItem('lovora-season', valid) } catch { /* private mode */ }
-    }
-    const refresh = () => { fetch('/api/season', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (!dead && j) apply(String(j.season || '')) }).catch(() => { /* offline: keep last known setting */ }) }
-    const changed = (e: Event) => { const value = (e as CustomEvent<{ season?: string }>).detail?.season; if (typeof value === 'string') apply(value) }
-    const storageChanged = (e: StorageEvent) => { if (e.key === 'lovora-season') apply(e.newValue || '') }
-    refresh()
-    window.addEventListener('lovora:season-config', changed)
-    window.addEventListener('storage', storageChanged)
-    return () => { dead = true; window.removeEventListener('lovora:season-config', changed); window.removeEventListener('storage', storageChanged) }
+    fetch('/api/season').then(r => r.ok ? r.json() : null).then(j => { if (dead || !j) return; setSlug(j.season || ''); try { sessionStorage.setItem('lovora-season', j.season || '') } catch { /* private mode */ } }).catch(() => { /* offline: keep what we have */ })
+    return () => { dead = true }
   }, [])
   return SEASONS.find(s => s.slug === slug)
 }

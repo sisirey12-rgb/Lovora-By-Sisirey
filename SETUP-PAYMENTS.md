@@ -1,18 +1,13 @@
-# Paid sharing setup
+# Paid sharing setup (Razorpay)
 
-Previewing is free. The first completed purchase on an account costs **₹149**; each subsequent completed surprise purchase costs **₹299**. The same current tier applies to a prepaid gift code. The server determines the amount from completed payment history; do not calculate or trust prices submitted by the browser.
+Previewing is free. A public share link needs a one-time payment per surprise: Rs 149 at launch, then Rs 299.
 
-1. Supabase → SQL editor: run `supabase/migrations/0005_payments.sql` (and earlier migrations if they have not been run). Run `supabase/migrations/0008_custom_links.sql` for custom keywords.
-2. Razorpay Dashboard: copy the Key ID and Key Secret (test mode first).
-3. Vercel → Settings → Environment Variables: set `SUPABASE_SERVICE_ROLE_KEY`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `FIRST_PURCHASE_PRICE_INR=149`, and `REPEAT_PURCHASE_PRICE_INR=299`. Keep `OWNER_EMAILS` server-only.
-4. Razorpay → Webhooks: URL `https://YOUR-SITE/api/razorpay-webhook`, events `payment.captured` and `order.paid`, secret matching `RAZORPAY_WEBHOOK_SECRET`.
-5. Test checkout with Razorpay test mode before switching to live keys.
+1. Supabase -> SQL editor: run `supabase/migrations/0005_payments.sql` (also 0004 if you have not yet).
+   Existing published surprises are kept working (marked paid). From now on the database itself refuses to publish an unpaid surprise.
+2. Razorpay Dashboard: create an account, copy the **Key Id** and **Key Secret** (use Test mode first).
+3. Vercel -> Settings -> Environment Variables: add the values from `.env.example` (SUPABASE_SERVICE_ROLE_KEY, RAZORPAY_*, PRICE_INR, REGULAR_PRICE_INR). Redeploy.
+4. Razorpay -> Webhooks: URL `https://YOUR-SITE/api/razorpay-webhook`, events `payment.captured` and `order.paid`, secret = RAZORPAY_WEBHOOK_SECRET.
+   (This unlocks the surprise even if the buyer closes the app right after paying.)
+5. Test with Razorpay test mode (test UPI id `success@razorpay`, test card 4111 1111 1111 1111), then switch to Live keys.
 
-## Pricing variables
-
-- `FIRST_PURCHASE_PRICE_INR=149` — first completed purchase per customer account.
-- `REPEAT_PURCHASE_PRICE_INR=299` — every later completed purchase on that account.
-- `NPR_PER_INR` defaults to `1.6` for converting the same tier to NPR. Remove fixed `PRICE_NPR` or `GIFT_PRICE_NPR` overrides if the same tier should apply in Nepal.
-- `OWNER_EMAILS` is a comma-separated list of owner email addresses. Owner-only bypasses are enforced server-side and are not announced in the customer-facing publishing flow.
-
-Changing environment variables requires a new Vercel deployment.
+Changing the price: edit `PRICE_INR` in Vercel and redeploy. The app reads it from `/api/pricing`, so the screen and the charge always match.

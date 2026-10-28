@@ -173,3 +173,14 @@ Landing > tap an occasion card > type their name, pick who they are to you (the 
 Sign in with an email listed in the server-side `OWNER_EMAILS` variable, open **Account → Website settings → Scene Studio**, choose an animation preset and effect intensity, select the scenes, arrange the selected order with the arrow controls, then choose **Publish live scene settings**. Visitors load the published configuration from `/api/scene-config`; only owner-authorized sessions can write it. The settings use the existing `site_settings` table created by `supabase/migrations/0006_site_settings.sql`, so ensure that migration has been run and `SUPABASE_SERVICE_ROLE_KEY` is set on the server.
 
 Season landing pages pass their season into the surprise creation flow. The player then includes that season's curated scenes and palette, while preserving creator content. The owner's optional global order changes the ordering of available scenes; it does not delete creator data. Public config reads are briefly cached, so visitors may need to refresh or wait up to roughly a minute after publishing.
+
+## Prices (Vercel environment variables)
+
+| Variable | Meaning | Default |
+| --- | --- | --- |
+| `PRICE_INR` | An account's first share link or gift code | 149 |
+| `REPEAT_PRICE_INR` | Every purchase after the first | `REGULAR_PRICE_INR` or 299 |
+| `REGULAR_PRICE_INR` | The crossed-out price on the pages | 299 |
+| `PRICE_NPR` / `PRICE_NPR_REPEAT` | eSewa and Khalti prices (optional) | INR price x `NPR_PER_INR` (1.6) |
+
+Share links and gift codes count together. Redeeming a gift code and owner accounts never count. The custom link keyword is a flat ₹50 (`api/custom-link.js`). After a custom link is bought, the long `/s/<id>` link stops working (a cached copy can last up to five minutes).

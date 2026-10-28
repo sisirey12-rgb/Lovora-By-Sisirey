@@ -7,15 +7,26 @@ import { storage } from './storage'
 export const isPaid = (e: { paid?: boolean; published?: boolean }) => !!(e.paid || e.published)
 
 export type Providers = { razorpay: boolean; esewa: boolean; khalti: boolean }
-export type Price = { amount: number; regular: number; giftAmount: number; npr?: number; giftNpr?: number; providers?: Providers }
+export type Price = { amount: number; regular: number; first?: number; repeat?: number; npr?: number; nprRepeat?: number; repeatBuyer?: boolean; providers?: Providers }
+let priceCache: Price | undefined
 export async function getPrice(): Promise<Price> {
+  if (priceCache) return priceCache
   try {
-    const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } }
-    const token = data.session?.access_token
-    const r = await fetch('/api/pricing', { headers: token ? { Authorization: `Bearer ${token}` } : {} }); const j = await r.json()
-    if (r.ok && j.amount) return { amount: j.amount, regular: j.regular || PRICING.regular, giftAmount: j.giftAmount || j.amount, npr: j.npr, giftNpr: j.giftNpr, providers: j.providers }
+    const r = await fetch('/api/pricing'); const j = await r.json()
+    if (r.ok && j.amount) return (priceCache = { amount: j.amount, regular: j.regular || PRICING.regular, first: j.first ?? j.amount, repeat: j.repeat ?? PRICING.repeat, npr: j.npr, nprRepeat: j.nprRepeat, providers: j.providers })
   } catch { /* use the fallback */ }
-  return { amount: PRICING.amount, regular: PRICING.regular, giftAmount: PRICING.giftAmount }
+  return { amount: PRICING.amount, regular: PRICING.regular, first: PRICING.first, repeat: PRICING.repeat }
+}
+/** The price THIS signed-in account pays right now (first purchase: launch price, every later one: the repeat price). Never cached, so it is right after a purchase. */
+export async function getMyPrice(): Promise<Price> {
+  try {
+    const { data } = await supabase!.auth.getSession(); const token = data.session?.access_token
+    if (token) {
+      const r = await fetch('/api/pricing', { headers: { Authorization: `Bearer ${token}` } }); const j = await r.json()
+      if (r.ok && j.amount) return { amount: j.amount, regular: j.regular || PRICING.regular, first: j.first ?? j.amount, repeat: j.repeat ?? PRICING.repeat, npr: j.npr, nprRepeat: j.nprRepeat, repeatBuyer: !!j.repeatBuyer, providers: j.providers }
+    }
+  } catch { /* fall back to the public list */ }
+  return getPrice()
 }
 
 type RzResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }
@@ -75,7 +86,7 @@ export async function publishShare(item: Experience, onStatus?: (s: string) => v
   const j = await r.json().catch(() => ({}))
   if (r.status === 402 || j.needsPayment) return { ok: false, needsPayment: true }
   if (!r.ok) throw new Error(j.error || 'Could not create the link. Please try again.')
-  return { ok: true, owner: !!j.owner, item: { ...withMedia, published: true, paid: true, updatedAt: new Date().toISOString() } }
+  return { ok: true, owner: !!j.owner, item: { ...withMedia, published: true, paid: true, customSlug: j.slug || withMedia.customSlug, updatedAt: new Date().toISOString() } }
 }
 
 /* ===== eSewa, Khalti and gift vouchers ===== */

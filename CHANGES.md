@@ -1,3 +1,12 @@
+# Round 11
+
+- **Back button walks back one step at a time** (`src/lib/backstack.ts`). On a phone or in the browser, Back now closes a preview, returns a create sheet from step 2 to step 1 (and from the ready screen to step 2), closes the gift, payment and account windows, and moves the editor from step 6 down to step 1. Only from the first editor step does it leave the editor, and never the whole site. The on-screen arrow in the editor header now does the same as Back (it used to throw away the whole project).
+- **Previews open over the create sheet** instead of replacing the page, so closing a preview returns to the "ready to send" screen with the share button and gift-code option instead of the landing page.
+- **Share link and gift code prices: first ₹149, then ₹299.** The server decides (`priceFor` in `api/_shared.js`): an account's first paid purchase uses `PRICE_INR` (default 149), every paid purchase after that uses `REPEAT_PRICE_INR` (default 299). Share links and gift codes count together. eSewa/Khalti use `PRICE_NPR` and `PRICE_NPR_REPEAT` (or the INR price times `NPR_PER_INR`). Owner unlocks and redeemed gift codes do not count. `/api/pricing` returns the personal price when called with a sign-in token. The landing page, pay window, gift window and create sheet all show the right price and say what the next one costs.
+- **Custom link moved onto the share step** (`CustomLinkBox.tsx`), in the editor's last step and the create sheet's "your surprise is live" screen. It is still ₹50 through Razorpay.
+- **The custom link replaces the default link.** Once active, `/s/<long id>` answers "This link has been replaced" (HTTP 410) and only `/s/<keyword>` opens the surprise. One custom link per surprise. Every screen (share box, copy, WhatsApp, QR card, dashboard copy) now uses the custom link via `shareUrlOf`. The wish-jar link keeps using the surprise ID.
+- Removed two unused-variable leftovers that would have failed `tsc -b`.
+
 # Round 10
 
 - **Create sheet no longer covers the share step.** Opening a preview left the create sheet marked as open, so it came back on top (at "Who is it for?") over the share page. It is now closed when a preview starts, and never shown over a share or wish page.

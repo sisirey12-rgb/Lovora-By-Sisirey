@@ -32,7 +32,6 @@ export default function EnvelopeLetter({ recipient, greeting, text, closing, sen
     return () => window.clearInterval(t)
   }, [stage, text, buzz])
   const finished = stage === 'read' && typed >= text.length
-  const skip = () => { timers.current.forEach(window.clearTimeout); timers.current = []; onDone() }
   return <div className={`env-scene stage-${stage}`}>
     {stage !== 'read' && <p className="eyebrow env-eyebrow">A LETTER FOR {recipient || 'YOU'}</p>}
     <div className="env-stage">
@@ -57,6 +56,6 @@ export default function EnvelopeLetter({ recipient, greeting, text, closing, sen
       <p className="letter-message">{text.slice(0, typed)}{typed < text.length && <span className="type-caret">▍</span>}</p>
       <p className="letter-closing" style={{ opacity: finished ? 1 : 0 }}>{closing || 'With love,'}<br /><strong>{sender || 'Someone who cares'}</strong></p>
     </article>}
-    <button className="primary-btn env-next" onClick={skip}>{stage === 'read' && finished ? 'Continue to the next scene' : 'Skip this letter'} <ArrowRight size={17} /></button>
+    {stage === 'read' && <button className="primary-btn env-next" onClick={onDone} style={{ opacity: finished ? 1 : .55 }}>{finished ? 'There is one more surprise' : 'Skip typing'} <ArrowRight size={17} /></button>}
   </div>
 }

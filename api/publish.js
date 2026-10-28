@@ -21,10 +21,12 @@ export default async function handler(req, res) {
   const owner = isOwner(user)
   if (!owner && !row.paid) return res.status(402).json({ needsPayment: true, error: 'Payment is needed to create the share link.' })
   const now = new Date().toISOString()
-  const payload = { ...(row.payload || {}), published: true, paid: true, updatedAt: now }
+  const cl = await sb(`custom_links?experience_id=eq.${id}&select=slug`)
+  const slug = cl.ok && cl.data?.[0]?.slug ? String(cl.data[0].slug) : ''
+  const payload = { ...(row.payload || {}), published: true, paid: true, updatedAt: now, ...(slug ? { customSlug: slug } : {}) }
   let w = await sb(`experiences?id=eq.${id}&owner_id=eq.${user.id}`, { method: 'PATCH', body: { is_published: true, paid: true, paid_at: now, payload, updated_at: now } })
   if (!w.ok) w = await sb(`experiences?id=eq.${id}&owner_id=eq.${user.id}`, { method: 'PATCH', body: { is_published: true, paid: true, payload, updated_at: now } })
   if (!w.ok) { console.error('publish write failed', w.status, w.data); return res.status(500).json({ error: 'Could not create the link. Check the Vercel function logs for the database message.' }) }
   res.setHeader('Cache-Control', 'no-store')
-  res.status(200).json({ published: true, owner, url: `/s/${id}` })
+  res.status(200).json({ published: true, owner, slug, url: `/s/${slug || id}` })
 }

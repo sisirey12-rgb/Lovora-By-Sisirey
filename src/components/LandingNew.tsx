@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { ArrowRight, CalendarClock, Check, Gift, Images, Link2, Play, QrCode, ShieldCheck, Smartphone, Sparkles, Volume2, Wand2, Zap } from 'lucide-react'
 import { PRICING } from '../config'
+import { getPrice } from '../services/payments'
 import { Rotator } from './LandingFX'
-import { useLiveSeason } from '../lib/seasons'
+import { SEASONS, seasonFromPath, useLiveSeason } from '../lib/seasons'
 import { SEASON_THEME } from '../lib/seasonTheme'
 import SeasonFX from './SeasonFX'
 import type { Occasion, Relation, SceneId } from '../types'
@@ -136,7 +137,9 @@ const BITS = [
   { i: <Sparkles size={20} />, t: 'Cinematic entrances' }, { i: <Gift size={20} />, t: '23 cakes, 16 bouquets' }, { i: <Volume2 size={20} />, t: 'Read-aloud voice' },
   { i: <Wand2 size={20} />, t: 'AI-assisted writing' }, { i: <Images size={20} />, t: 'Polaroid gallery' }, { i: <CalendarClock size={20} />, t: 'Reveal on the day' }, { i: <QrCode size={20} />, t: 'QR gift card' },
 ]
-const FAQ: [string, string][] = [
+const FAQ = (first: number, repeat: number): [string, string][] => [
+  ['How much does it cost?', `Your first share link (or first gift code) is ₹${first}. Every one after that is ₹${repeat}. Previewing is always free.`],
+  ['What is a custom link?', 'For ₹50 you can swap the long link for one people remember, like yoursite.com/s/sita-birthday. It replaces the long link, which stops working once the custom link is active.'],
   ['Do they need to install an app?', 'No. They open the link in any phone browser and the surprise starts.'],
   ['Is previewing really free?', 'Yes. Build it and watch it as often as you like. The surprise and standard share link are covered by the main purchase; a custom keyword link is an optional ₹50 add-on.'],
   ['Who can see my surprise?', 'Only people who have your link.'],
@@ -149,9 +152,11 @@ const FAQ: [string, string][] = [
 
 export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion, r?: Relation, seasonSlug?: string) => void; onGift?: () => void }) {
   const live = useLiveSeason()
+  const [pr, setPr] = useState({ first: PRICING.first, repeat: PRICING.repeat })
+  useEffect(() => { void getPrice().then(p => setPr({ first: p.first ?? p.amount, repeat: p.repeat ?? p.regular })) }, [])
   const [studio, setStudio] = useState<SceneStudioConfig>(DEFAULT_SCENE_STUDIO)
   useEffect(() => { let alive = true; void fetchSceneStudio().then(v => { if (alive) setStudio(v) }); const changed = (e: Event) => { const d = (e as CustomEvent<SceneStudioConfig>).detail; if (d) setStudio({ ...DEFAULT_SCENE_STUDIO, ...d }) }; window.addEventListener('lovora:scene-config', changed); return () => { alive = false; window.removeEventListener('lovora:scene-config', changed) } }, [])
-  const season = live
+  const season = seasonFromPath() ?? live
   const root = useReveal()
   const theme = season ? SEASON_THEME[season.slug] : undefined
   // the whole page (and the nav) recolours through <html data-season>; it is removed again when the landing page closes
@@ -179,6 +184,13 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
 
     <div className="nl-ribbon" aria-hidden="true"><div>{[0, 1].map(k => <span key={k}>{(theme?.ribbon ?? ['BIRTHDAYS', 'ANNIVERSARIES', 'LOVE LETTERS', 'JUST BECAUSE', 'BALLOONS', 'ROSE PETALS', 'SHOOTING STARS', 'MESSAGES IN BOTTLES']).map(t => <b key={t}>{t}<i>✦</i></b>)}</span>)}</div></div>
 
+    <section className="nl-sec nl-season-hub" aria-labelledby="nl-season-title">
+      <header className="nl-head nl-rv"><p>MADE FOR THE MOMENT</p><h2 id="nl-season-title">Every season has a <em>story.</em></h2><span>Choose a celebration to find the right mood, message and scenes.</span></header>
+      <div className="nl-season-grid nl-rv">{SEASONS.map((item, k) => <a className="nl-season-card" href={`/for/${item.slug}`} key={item.slug} style={{ ['--season-index' as string]: k } as CSSProperties}>
+        <span className="nl-season-emoji" aria-hidden="true">{item.emoji}</span><span className="nl-season-copy"><b>{item.label}</b><small>{item.pill}</small></span><ArrowRight size={17} aria-hidden="true" />
+      </a>)}</div>
+    </section>
+
     <Creator onStart={onStart} startOcc={theme?.occasion} startRel={theme?.relation} seasonSlug={season?.slug} />
 
     <section id="nl-library" className="nl-sec">
@@ -195,17 +207,17 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
     </section>
 
     <section id="pricing" className="nl-sec nl-offers">
-      <header className="nl-head nl-rv"><p>SIMPLE PRICING</p><h2>Preview free. <em>Pay only to share.</em></h2><span>One price for one share link. Or gift that link to someone else.</span></header>
+      <header className="nl-head nl-rv"><p>SIMPLE PRICING</p><h2>Preview free. <em>Pay only to share.</em></h2><span>₹{pr.first} for your first, ₹{pr.repeat} after that. Gift codes work the same way.</span></header>
       <div className="nl-twocards nl-rv">
-        <div className="nl-ticket"><p className="nl-k">SHARE YOUR SURPRISE</p><div className="nl-amt"><b>₹{PRICING.amount}</b></div><span>per surprise, one time</span>
+        <div className="nl-ticket"><p className="nl-k">SHARE YOUR SURPRISE</p><div className="nl-amt"><b>₹{pr.first}</b><s>₹{pr.repeat}</s></div><span>your first share link, then ₹{pr.repeat} each</span>
           <ul><li><Check size={16} /> Your own private share link</li><li><Check size={16} /> Every scene, entrance, cake and bouquet</li><li><Check size={16} /> Photos, voice note and video</li><li><Check size={16} /> Reveal date and countdown teaser</li><li><Check size={16} /> Printable QR card</li></ul>
-          <button className="nl-btn" onClick={toStart}>Start for free <ArrowRight size={18} /></button><small><Link2 size={12} /> One-time payment · UPI, cards, eSewa and Khalti.</small></div>
-        <div className="nl-ticket gift"><p className="nl-k">GIFT A SURPRISE</p><div className="nl-amt"><b>₹{PRICING.giftAmount}</b><span className="nl-giftemoji" aria-hidden="true">🎁</span></div><span>one prepaid gift code · one free share link</span>
+          <button className="nl-btn" onClick={toStart}>Start for free <ArrowRight size={18} /></button><small><Link2 size={12} /> The first one is at the launch price. UPI, cards, eSewa and Khalti.</small></div>
+        <div className="nl-ticket gift"><p className="nl-k">GIFT A SURPRISE</p><div className="nl-amt"><b>₹{pr.first}</b><span className="nl-giftemoji" aria-hidden="true">🎁</span></div><span>your first gift code, then ₹{pr.repeat} each</span>
           <ul><li><Check size={16} /> Send the code on WhatsApp</li><li><Check size={16} /> They enter it when they share, and pay nothing</li><li><Check size={16} /> Works for any occasion and any person</li><li><Check size={16} /> Pay with UPI, cards, eSewa or Khalti</li></ul>
           <button className="nl-btn" onClick={onGift}>Gift a surprise <ArrowRight size={18} /></button><small><Gift size={12} /> Already have a code? Enter it on the last step of your surprise.</small></div>
       </div>
       <header className="nl-head nl-rv nl-faqhead"><p>GOOD TO KNOW</p><h2>Questions, <em>answered.</em></h2></header>
-      <div className="nl-faq nl-faq-wide nl-rv">{FAQ.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div>
+      <div className="nl-faq nl-faq-wide nl-rv">{FAQ(pr.first, pr.repeat).map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div>
     </section>
 
     <section className="nl-final nl-rv"><h2>Someone came to mind, <em>didn’t they?</em></h2><p>One link. A whole little world. Ready in a minute.</p><button className="nl-btn light" onClick={toStart}>Create a surprise <ArrowRight size={18} /></button></section>

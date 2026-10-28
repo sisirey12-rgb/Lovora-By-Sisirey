@@ -4,7 +4,9 @@ import CreatingOverlay from './CreatingOverlay'
 import PayWall from './PayWall'
 import QrStudio from './QrStudio'
 import RedeemBox from './RedeemBox'
-import { getPrice, publishShare } from '../services/payments'
+import CustomLinkBox from './CustomLinkBox'
+import { shareUrlOf } from '../lib/shareUrl'
+import { getMyPrice, publishShare } from '../services/payments'
 import { PRICING } from '../config'
 import { fromTemplate, templates } from '../lib/templates'
 import { RELATIONS } from '../lib/occasionContent'
@@ -12,9 +14,9 @@ import { compressImage } from '../lib/media'
 import { storage } from '../services/storage'
 import { supabase } from '../services/supabase/client'
 import { useAuth } from '../services/auth'
+import { useBackLayer } from '../lib/backstack'
 import AiHelper from './AiHelper'
 import type { Experience, Extras, Occasion, Relation } from '../types'
-import { SEASON_THEME } from '../lib/seasonTheme'
 
 type Field = { key: string; label: string; type: 'text' | 'date' | 'number'; ph?: string; hint?: string; apply: (e: Experience, v: string) => Experience }
 const ex = (e: Experience, p: Partial<Extras>): Experience => ({ ...e, extras: { ...(e.extras || {}), ...p } })
@@ -40,7 +42,13 @@ export default function StartSheet({ occasion, relation, seasonSlug, onClose, on
   const [busy, setBusy] = useState(''), [err, setErr] = useState(''), [saving, setSaving] = useState<Experience | null>(null), [last, setLast] = useState<Experience | null>(null), [previewed, setPreviewed] = useState(false)
   const [pay, setPay] = useState(false), [done, setDone] = useState<Experience | null>(null), [copied, setCopied] = useState(false), [amount, setAmount] = useState(PRICING.amount), [aiContent, setAiContent] = useState<Partial<Experience>>({})
   const id = useRef(crypto.randomUUID()), file = useRef<HTMLInputElement>(null)
-  useEffect(() => { void getPrice().then(p => setAmount(p.amount)) }, [])
+  // Back goes to the earlier step (step 2 to step 1, the ready screen to step 2) before it closes the sheet.
+  useBackLayer(step === 2 && !done && !previewed, () => setStep(1))
+  useBackLayer(previewed && !done, () => { setPreviewed(false); setStep(2) })
+  useBackLayer(pay, () => setPay(false))
+  useBackLayer(qrOpen && !!done, () => setQrOpen(false))
+  const [again, setAgain] = useState(false)
+  useEffect(() => { void getMyPrice().then(p => { setAmount(p.amount); setAgain(!!p.repeatBuyer) }) }, [])
   useEffect(() => { if (!from && myName) setFrom(myName) }, [myName, from])
   const tpl = templates.find(t => t.occasion === occasion && t.relation === rel)
   const fields = FIELDS[occasion] || FIELDS['Special surprise']
@@ -74,7 +82,7 @@ export default function StartSheet({ occasion, relation, seasonSlug, onClose, on
   }
   const pick = async (f?: File) => { if (!f) return; if (!f.type.startsWith('image/')) { setErr('Choose a photo.'); return } try { setPhoto(await compressImage(f)); setErr('') } catch (x) { setErr(x instanceof Error ? x.message : 'That photo could not be read.') } }
   const finish = async (paid: Experience) => { setPay(false); setBusy('Creating your link…'); try { const r = await publishShare(paid, m => setBusy(m)); if (!r.ok) { setPay(true); return } storage.saveDraft(r.item); onDone(); setDone(r.item) } catch (x) { setErr(x instanceof Error ? x.message : 'Could not create the link. Please try again.') } finally { setBusy('') } }
-  const url = done ? `${window.location.origin}/s/${done.id}` : ''
+  const url = done ? shareUrlOf(done) : ''
   return <div className="quick-backdrop" role="dialog" aria-modal="true" aria-label="Start a surprise" onClick={e => { if (e.target === e.currentTarget && !busy) onClose() }}>
     <div className="quick-sheet start-sheet" data-lenis-prevent>
       <button className="icon-btn quick-x" onClick={onClose} aria-label="Close" disabled={!!busy}><X size={18} /></button>
@@ -114,7 +122,7 @@ export default function StartSheet({ occasion, relation, seasonSlug, onClose, on
         <p className="eyebrow">READY TO SEND</p><h2>{last.recipient}’s surprise is ready</h2>
         <p className="muted">Now that you have seen it, change anything you like, or send it as it is.</p>
         <button type="button" className="customise-btn" onClick={() => onFull(last)}><span className="customise-ico"><Palette size={20} /></span><span><strong>Customise it</strong><small>Words, photos, look, scenes and balloon wishes</small></span><span className="customise-go">→</span></button>
-        <div className="ss-price"><b>₹{amount}</b><span>per surprise, one time</span></div>
+        <div className="ss-price"><b>₹{amount}</b>{!again && <s>₹{PRICING.regular}</s>}<span>{again ? 'per share link' : `launch price for your first one, then ₹${PRICING.repeat}`}</span></div>
         {err && <p className="error-text" role="alert">{err}</p>}
         <button className="primary-btn big-btn" onClick={() => last && void finish(last)} disabled={!!busy}>{busy || 'Get the share link'}</button>
         <RedeemBox item={last} disabled={!!busy} onRedeemed={paid => void finish(paid)} />
@@ -124,6 +132,7 @@ export default function StartSheet({ occasion, relation, seasonSlug, onClose, on
       {done && <>
         <h2>Your surprise is live ✨</h2>
         <input readOnly value={url} onFocus={e => e.currentTarget.select()} aria-label="Share link" />
+        <CustomLinkBox experienceId={done.id} recipient={done.recipient} occasion={done.occasion} slug={done.customSlug} onActive={slug => { const n = { ...done, customSlug: slug }; storage.saveDraft(n); setDone(n) }} />
         <div className="share-actions">
           <button className="secondary-btn" onClick={() => { void navigator.clipboard.writeText(url).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 2000) }).catch(() => undefined) }}>{copied ? <><Check size={15} /> Copied</> : <><Copy size={15} /> Copy link</>}</button>
           <a className="secondary-btn" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${done.title || 'A little surprise'} ${url}`)}`}>Send on WhatsApp</a>
