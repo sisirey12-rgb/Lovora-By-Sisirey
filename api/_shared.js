@@ -1,13 +1,15 @@
 // Helpers shared by the payment functions. Files starting with "_" are not exposed as routes by Vercel.
 // Server-only environment variables (Vercel -> Settings -> Environment Variables):
 //   SUPABASE_SERVICE_ROLE_KEY, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET
-//   PRICE_INR (default 149, the launch price) and REGULAR_PRICE_INR (default 299, shown crossed out)
+//   FIRST_PURCHASE_PRICE_INR (default 149) and REPEAT_PURCHASE_PRICE_INR (default 299).
+//   Legacy PRICE_INR / REPEAT_PRICE_INR / REGULAR_PRICE_INR remain supported as fallbacks.
 import crypto from 'node:crypto'
 
 /** Price list. `first` is for an account's first purchase, `repeat` for every purchase after it (share links and gift codes count together). `regular` is the crossed-out price. */
 export const price = () => {
-  const first = Number(process.env.PRICE_INR || 149), regular = Number(process.env.REGULAR_PRICE_INR || 299)
-  return { amount: first, first, repeat: Number(process.env.REPEAT_PRICE_INR || regular), regular }
+  const first = Number(process.env.FIRST_PURCHASE_PRICE_INR || process.env.PRICE_INR || 149)
+  const repeat = Number(process.env.REPEAT_PURCHASE_PRICE_INR || process.env.REPEAT_PRICE_INR || process.env.REGULAR_PRICE_INR || 299)
+  return { amount: first, first, repeat, regular: repeat }
 }
 const SB = () => process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const SERVICE = () => process.env.SUPABASE_SERVICE_ROLE_KEY

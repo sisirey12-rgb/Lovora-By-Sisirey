@@ -139,6 +139,7 @@ export default function ScenePlayer({ experience: rawExperience, onClose, previe
 
   // Stable helpers: scene components keep long-running timelines, so these must not change between renders.
   const next = useCallback(() => { sfx.next(); setIndex(i => Math.min(i + 1, lenRef.current - 1)) }, [])
+  const skipLetter = useCallback(() => { if (index >= scenes.length - 1) { (onFinish || onClose)(); return } next() }, [index, scenes.length, onFinish, onClose, next])
   const previous = useCallback(() => setIndex(i => Math.max(i - 1, 0)), [])
   const buzzScale = ({ 'Love letter': .55, Anniversary: .8, 'Special surprise': 1.1 } as Record<string, number>)[experience.occasion] ?? 1
   const buzz = useCallback((pattern: number | number[]) => { try { if (navigator.vibrate && hapticsAllowed()) navigator.vibrate(Array.isArray(pattern) ? pattern.map(n => Math.round(n * buzzScale)) : Math.round(pattern * buzzScale)) } catch { /* unsupported */ } }, [buzzScale])
@@ -221,7 +222,7 @@ export default function ScenePlayer({ experience: rawExperience, onClose, previe
           {popped.length >= balloonCount && <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="all-wishes-note"><span>♡</span><strong>Every wish, just for you.</strong><p>Keep these little reminders close, today and always.</p><button className="primary-btn" onClick={next}>Open your letter <ArrowRight size={17} /></button></motion.div>}
         </div>}
 
-        {scene === 'letter' && <div className="scene-content"><EnvelopeLetter recipient={experience.recipient} greeting={greeting} text={letterText} closing={experience.closing} sender={experience.sender} buzz={buzz} onDone={next} />{experience.voiceData && <VoiceNote src={experience.voiceData} />}</div>}
+        {scene === 'letter' && <div className="scene-content"><EnvelopeLetter recipient={experience.recipient} greeting={greeting} text={letterText} closing={experience.closing} sender={experience.sender} buzz={buzz} onDone={skipLetter} />{experience.voiceData && <VoiceNote src={experience.voiceData} />}</div>}
 
         {scene === 'video' && <div className="scene-content wide"><CatVideoScene palette={palette.balloons} onDone={next} buzz={buzz} src={videoFor(experience)} custom={!!experience.videoData} /></div>}
 

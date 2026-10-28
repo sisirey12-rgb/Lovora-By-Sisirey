@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { priceFor, sb, userFromReq, isUuid, isOwner, hmac, safeEqual, providers } from './_shared.js'
+import { priceFor, sb, userFromReq, isUuid, isOwner, hmac, safeEqual, providers } from '../../api/_shared.js'
 
 /**
  * One function for: eSewa + Khalti payments, "Gift a surprise" vouchers and redeeming them

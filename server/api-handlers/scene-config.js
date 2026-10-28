@@ -1,4 +1,4 @@
-import { userFromReq, sb, isOwner } from './_shared.js'
+import { userFromReq, sb, isOwner } from '../../api/_shared.js'
 
 const SCENES = ['heart','intro','cake','balloons','letter','video','memories','timeline','wishjar','counter','moments','wishstar','calendar','snowglobe','postcard','fortune','lyric','invite','candles','openwhen','polaroids','spinwheel','starsky','vows','lanterns','waxseal','mystery','scratch','petalfall','shootingstars','parcel','bottle','trophy','recipe','meter','reasons','finale']
 const PRESETS = ['dreamy','cinematic','playful','gentle']

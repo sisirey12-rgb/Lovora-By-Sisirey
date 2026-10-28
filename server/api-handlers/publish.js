@@ -1,4 +1,4 @@
-import { sb, userFromReq, isUuid, isOwner } from './_shared.js'
+import { sb, userFromReq, isUuid, isOwner } from '../../api/_shared.js'
 
 /**
  * Creates the public share link. The server (not the browser) decides:

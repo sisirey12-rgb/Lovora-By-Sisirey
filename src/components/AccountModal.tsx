@@ -82,7 +82,7 @@ export default function AccountModal({ items, setDark, onClose, onSignedOut, onG
 
       {tab === 'plan' && <div className="acc-pane">
         <div className={`acc-plan ${acct?.owner ? 'owner' : ''}`}>{acct?.owner ? <><Crown size={20} /><div><strong>Owner account</strong><small>Share links are free on this account. Owner email: {email}</small></div></> : <><Link2 size={20} /><div><strong>Pay per share link</strong><small>₹{PRICING.first} for your first share link, ₹{PRICING.repeat} for every one after. Gift codes work the same way. Previewing is always free.</small></div></>}</div>
-        {onGift && <button type="button" className="secondary-btn" onClick={onGift}><Gift size={15} /> {acct?.owner ? 'Create a free gift code' : 'Gift a surprise'}</button>}
+        {onGift && <button type="button" className="secondary-btn" onClick={onGift}><Gift size={15} /> {acct?.owner ? 'Create gift code' : 'Gift a surprise'}</button>}
         {acct && !acct.owner && <p className="acc-line" style={{ fontSize: 12, opacity: .8 }}>Signed in as <b>{email}</b>. {acct.ownerConfigured ? 'This email is not on the owner list.' : 'The owner list is empty on the server: add OWNER_EMAILS in Vercel and redeploy.'}</p>}
         <dl className="acc-dl"><div><dt>Paid / live links</dt><dd>{acct ? acct.paid : stats.paid} of {acct ? acct.total : stats.total}</dd></div><div><dt>Password</dt><dd>{provider === 'email' ? 'Managed by email' : `Managed by ${provider}`}</dd></div></dl>
         {provider === 'email' && <button className="secondary-btn" onClick={() => void run('pw', () => resetPassword(email), 'Password reset link sent to your email.')} disabled={!!busy}><KeyRound size={15} /> Change password by email</button>}
@@ -91,7 +91,7 @@ export default function AccountModal({ items, setDark, onClose, onSignedOut, onG
 
       {tab === 'settings' && acct?.owner && <div className="acc-pane">
         <p className="acc-line"><Crown size={15} /> Owner email: <b>{email}</b></p>
-        <dl className="acc-dl"><div><dt>Share links</dt><dd>Free for you</dd></div><div><dt>Database key</dt><dd>{acct.serviceKey ? 'Set' : 'Missing (SUPABASE_SERVICE_ROLE_KEY)'}</dd></div></dl>
+        <dl className="acc-dl"><div><dt>Share access</dt><dd>Owner enabled</dd></div><div><dt>Database key</dt><dd>{acct.serviceKey ? 'Set' : 'Missing (SUPABASE_SERVICE_ROLE_KEY)'}</dd></div></dl>
         <p className="acc-line"><Link2 size={15} /> Add a "Make a surprise" button to your own website</p>
         <code className="acc-code">{`<script src="${window.location.origin}/embed.js" async></script>`}</code>
         <button className="secondary-btn" onClick={() => copy(`<script src="${window.location.origin}/embed.js" async></script>`, 'Embed code copied.')}><Copy size={15} /> Copy embed code</button>

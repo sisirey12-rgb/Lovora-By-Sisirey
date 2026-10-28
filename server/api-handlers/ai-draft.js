@@ -1,4 +1,4 @@
-import { userFromReq, isOwner } from './_shared.js'
+import { userFromReq, isOwner } from '../../api/_shared.js'
 
 // AI writing helper, powered by Groq (https://console.groq.com). Needs GROQ_API_KEY in Vercel (optional: GROQ_MODEL, AI_HOURLY_LIMIT, OWNER_EMAILS).
 const hits = new Map()   // per-instance, best effort: userId -> [timestamps]

@@ -1,6 +1,6 @@
 // Backup path: if the buyer closes the app right after paying, Razorpay still tells us and we unlock the surprise.
 // In Razorpay Dashboard -> Webhooks: URL https://YOUR-SITE/api/razorpay-webhook, event "payment.captured" (and "order.paid"), secret = RAZORPAY_WEBHOOK_SECRET.
-import { hmac, safeEqual, markPaid } from './_shared.js'
+import { hmac, safeEqual, markPaid } from '../../api/_shared.js'
 export const config = { api: { bodyParser: false } }
 
 const raw = req => new Promise((ok, bad) => { const c = []; req.on('data', d => c.push(d)); req.on('end', () => ok(Buffer.concat(c).toString('utf8'))); req.on('error', bad) })

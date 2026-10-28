@@ -1,4 +1,4 @@
-import { userFromReq, sb, isOwner, ownerEmails } from './_shared.js'
+import { userFromReq, sb, isOwner, ownerEmails } from '../../api/_shared.js'
 
 /** Account details for the signed-in creator: is this an owner account, and how many surprises are paid. */
 export default async function handler(req, res) {

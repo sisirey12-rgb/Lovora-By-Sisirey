@@ -1,4 +1,4 @@
-import { priceFor, sb, userFromReq, isUuid, configured, isOwner } from './_shared.js'
+import { priceFor, sb, userFromReq, isUuid, configured, isOwner } from '../../api/_shared.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })

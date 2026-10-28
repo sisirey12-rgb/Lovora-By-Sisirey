@@ -178,9 +178,9 @@ Season landing pages pass their season into the surprise creation flow. The play
 
 | Variable | Meaning | Default |
 | --- | --- | --- |
-| `PRICE_INR` | An account's first share link or gift code | 149 |
-| `REPEAT_PRICE_INR` | Every purchase after the first | `REGULAR_PRICE_INR` or 299 |
-| `REGULAR_PRICE_INR` | The crossed-out price on the pages | 299 |
+| `FIRST_PURCHASE_PRICE_INR` | First paid share link or gift code per account | 149 |
+| `REPEAT_PURCHASE_PRICE_INR` | Every later paid purchase on the same account, whether a share link or gift code | 299 |
+| `PRICE_INR`, `REPEAT_PRICE_INR`, `REGULAR_PRICE_INR` | Legacy fallback variable names; prefer the two variables above | — |
 | `PRICE_NPR` / `PRICE_NPR_REPEAT` | eSewa and Khalti prices (optional) | INR price x `NPR_PER_INR` (1.6) |
 
-Share links and gift codes count together. Redeeming a gift code and owner accounts never count. The custom link keyword is a flat ₹50 (`api/custom-link.js`). After a custom link is bought, the long `/s/<id>` link stops working (a cached copy can last up to five minutes).
+Share links and gift codes count together. Redeeming a gift code and owner accounts never count. The custom link keyword is a flat ₹50 (`api/custom-link.js`). After a custom link is activated, the long `/s/<id>` link is revoked and returns a “link has been replaced” page; `/s/<keyword>` becomes the active share URL. Share routes use no-store caching so the old link is not kept by the CDN.

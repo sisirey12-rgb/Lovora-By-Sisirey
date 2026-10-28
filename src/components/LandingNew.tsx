@@ -3,7 +3,7 @@ import { ArrowRight, CalendarClock, Check, Gift, Images, Link2, Play, QrCode, Sh
 import { PRICING } from '../config'
 import { getPrice } from '../services/payments'
 import { Rotator } from './LandingFX'
-import { SEASONS, seasonFromPath, useLiveSeason } from '../lib/seasons'
+import { useLiveSeason } from '../lib/seasons'
 import { SEASON_THEME } from '../lib/seasonTheme'
 import SeasonFX from './SeasonFX'
 import type { Occasion, Relation, SceneId } from '../types'
@@ -156,7 +156,7 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
   useEffect(() => { void getPrice().then(p => setPr({ first: p.first ?? p.amount, repeat: p.repeat ?? p.regular })) }, [])
   const [studio, setStudio] = useState<SceneStudioConfig>(DEFAULT_SCENE_STUDIO)
   useEffect(() => { let alive = true; void fetchSceneStudio().then(v => { if (alive) setStudio(v) }); const changed = (e: Event) => { const d = (e as CustomEvent<SceneStudioConfig>).detail; if (d) setStudio({ ...DEFAULT_SCENE_STUDIO, ...d }) }; window.addEventListener('lovora:scene-config', changed); return () => { alive = false; window.removeEventListener('lovora:scene-config', changed) } }, [])
-  const season = seasonFromPath() ?? live
+  const season = live
   const root = useReveal()
   const theme = season ? SEASON_THEME[season.slug] : undefined
   // the whole page (and the nav) recolours through <html data-season>; it is removed again when the landing page closes
@@ -183,13 +183,6 @@ export default function LandingNew({ onStart, onGift }: { onStart: (o: Occasion,
     </section>
 
     <div className="nl-ribbon" aria-hidden="true"><div>{[0, 1].map(k => <span key={k}>{(theme?.ribbon ?? ['BIRTHDAYS', 'ANNIVERSARIES', 'LOVE LETTERS', 'JUST BECAUSE', 'BALLOONS', 'ROSE PETALS', 'SHOOTING STARS', 'MESSAGES IN BOTTLES']).map(t => <b key={t}>{t}<i>✦</i></b>)}</span>)}</div></div>
-
-    <section className="nl-sec nl-season-hub" aria-labelledby="nl-season-title">
-      <header className="nl-head nl-rv"><p>MADE FOR THE MOMENT</p><h2 id="nl-season-title">Every season has a <em>story.</em></h2><span>Choose a celebration to find the right mood, message and scenes.</span></header>
-      <div className="nl-season-grid nl-rv">{SEASONS.map((item, k) => <a className="nl-season-card" href={`/for/${item.slug}`} key={item.slug} style={{ ['--season-index' as string]: k } as CSSProperties}>
-        <span className="nl-season-emoji" aria-hidden="true">{item.emoji}</span><span className="nl-season-copy"><b>{item.label}</b><small>{item.pill}</small></span><ArrowRight size={17} aria-hidden="true" />
-      </a>)}</div>
-    </section>
 
     <Creator onStart={onStart} startOcc={theme?.occasion} startRel={theme?.relation} seasonSlug={season?.slug} />
 

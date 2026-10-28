@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { sb, userFromReq, isUuid, hmac, safeEqual } from './_shared.js'
+import { sb, userFromReq, isUuid, hmac, safeEqual, isOwner } from '../../api/_shared.js'
 const PRICE_PAISE = 5000
 const reserved = new Set(['api','create','for','wish','dashboard','account','admin','s','pricing','help','support','lovora','meow'])
 const bad = (res, status, error) => res.status(status).json({ error })
@@ -24,11 +24,19 @@ export default async function handler(req, res) {
     if (!isUuid(expId)) return bad(res, 400, 'Invalid surprise.')
     const owned = await sb(`experiences?id=eq.${expId}&owner_id=eq.${user.id}&select=id,paid,is_published`)
     if (!owned.ok || !owned.data?.[0]) return bad(res, 404, 'We could not find your saved surprise.')
-    if (!owned.data[0].paid && !owned.data[0].is_published) return bad(res, 402, 'Purchase the main surprise first; the custom keyword is an optional ₹50 add-on.')
+    const owner = isOwner(user)
+    if (!owner && !owned.data[0].paid && !owned.data[0].is_published) return bad(res, 402, 'Purchase the main surprise first; the custom keyword is an optional ₹50 add-on.')
     const already = await sb(`custom_links?experience_id=eq.${expId}&select=slug`)
     if (already.data?.length) return bad(res, 409, `This surprise already has its custom link (${already.data[0].slug}).`)
     const exists = await sb(`custom_links?slug=eq.${encodeURIComponent(slug)}&select=slug`)
     if (exists.data?.length) return bad(res, 409, 'That keyword is already taken. Try one of the suggestions.')
+    if (owner) {
+      const inserted = await sb('custom_links', { method: 'POST', body: { slug, experience_id: expId, owner_id: user.id, payment_id: `owner-${crypto.randomUUID()}` } })
+      if (!inserted.ok) return bad(res, 500, 'Could not activate the custom link. Ensure migration 0008_custom_links.sql has been run.')
+      const cur = await sb(`experiences?id=eq.${expId}&owner_id=eq.${user.id}&select=payload`)
+      if (cur.ok && cur.data?.[0]) await sb(`experiences?id=eq.${expId}&owner_id=eq.${user.id}`, { method: 'PATCH', body: { payload: { ...(cur.data[0].payload || {}), customSlug: slug } } })
+      return res.status(200).json({ ownerBypass: true, slug, url: `/s/${slug}` })
+    }
     const key = process.env.RAZORPAY_KEY_ID, secret = process.env.RAZORPAY_KEY_SECRET
     if (!key || !secret) return bad(res, 503, 'Custom keyword checkout is not configured yet.')
     const orderRes = await fetch('https://api.razorpay.com/v1/orders', { method:'POST', headers:{ Authorization:'Basic '+Buffer.from(`${key}:${secret}`).toString('base64'), 'Content-Type':'application/json' }, body:JSON.stringify({ amount:PRICE_PAISE, currency:'INR', receipt:`slug_${Date.now()}`, notes:{ kind:'custom_link', slug, experience_id:expId, user_id:user.id } }) })

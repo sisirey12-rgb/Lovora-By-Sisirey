@@ -131,7 +131,7 @@ export default function Editor({ initial, initialStep = 1, onExit, onSaved }: Pr
     try {
       const r = await publishShare(src, m => setError(m))
       if (!r.ok) { setError(''); setPaywall(true); return }   // not an owner and not paid yet: the server asked for payment
-      setItem(r.item); storage.saveDraft(r.item); setShareUrl(shareUrlOf(r.item)); setError(r.owner ? 'Published successfully (owner account, free). Your shareable link is ready below.' : 'Published successfully. Your shareable link is ready below.'); onSaved()
+      setItem(r.item); storage.saveDraft(r.item); setShareUrl(shareUrlOf(r.item)); setError('Published successfully. Your shareable link is ready below.'); onSaved()
     } catch(e) { setError(e instanceof Error?e.message:'Could not publish this experience.') }
   }
   const wishId = (shareUrl || item.published) ? item.id : ''

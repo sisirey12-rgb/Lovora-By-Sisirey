@@ -1,4 +1,4 @@
-import { sb, userFromReq, hmac, safeEqual, markPaid, configured } from './_shared.js'
+import { sb, userFromReq, hmac, safeEqual, markPaid, configured } from '../../api/_shared.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })

@@ -1,4 +1,4 @@
-import { userFromReq, sb, isOwner } from './_shared.js'
+import { userFromReq, sb, isOwner } from '../../api/_shared.js'
 
 const SLUGS = ['rakhi', 'diwali', 'eid', 'valentines-day', 'mothers-day', 'fathers-day', 'friendship-day', 'new-year', 'holi', 'dashain', 'tihar', 'christmas']
 

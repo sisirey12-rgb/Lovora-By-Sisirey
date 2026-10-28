@@ -51,6 +51,7 @@ export default async function handler(req, res) {
     .replace(/(<meta (?:property="og:image"|name="twitter:image") content=")[^"]*"/g, `$1${img}"`)
     .replace('</head>', `    <meta property="og:url" content="${u}" />\n  </head>`)
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
+  // Link ownership can change when a custom keyword is activated; never cache /s routes.
+  res.setHeader('Cache-Control', 'no-store, max-age=0')
   res.status(200).send(html)
 }

@@ -1,4 +1,4 @@
-import { price, configured, nprAmount, providers, priceFor, userFromReq, isOwner } from './_shared.js'
+import { price, configured, nprAmount, providers, priceFor, userFromReq, isOwner } from '../../api/_shared.js'
 
 /** Public list (first and repeat price). With a signed-in token it also says what THIS account pays now: the first purchase is the launch price, every later one the repeat price. */
 export default async function handler(req, res) {
