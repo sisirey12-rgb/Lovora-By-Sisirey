@@ -1,5 +1,5 @@
-// One Vercel serverless function dispatches the existing API handlers by path.
-// This keeps all API endpoints available on the Hobby plan without exceeding its function cap.
+// One Vercel serverless function dispatches existing API handlers by path.
+// Also handles Vercel rewrites where req.query.path reflects the original /s/:id URL.
 import account from '../server/api-handlers/account.js'
 import ai_draft from '../server/api-handlers/ai-draft.js'
 import create_order from '../server/api-handlers/create-order.js'
@@ -16,38 +16,56 @@ import tts from '../server/api-handlers/tts.js'
 import verify_payment from '../server/api-handlers/verify-payment.js'
 
 const handlers = {
-  'account': account,
+  account,
   'ai-draft': ai_draft,
   'create-order': create_order,
   'custom-link': custom_link,
-  'og': og,
-  'pay': pay,
-  'pricing': pricing,
-  'publish': publish,
+  og,
+  pay,
+  pricing,
+  publish,
   'razorpay-webhook': razorpay_webhook,
   'scene-config': scene_config,
-  'season': season,
-  'share': share,
-  'tts': tts,
+  season,
+  share,
+  tts,
   'verify-payment': verify_payment
 }
+const decode = value => { try { return decodeURIComponent(String(value)) } catch { return String(value) } }
 
 export default async function handler(req, res) {
-  // Vercel may expose the catch-all segment as req.query.path, while some
-  // rewrite/deployment combinations leave it unset. Fall back to the URL path.
   const raw = req.query?.path
-  let route = Array.isArray(raw) ? String(raw[0] || '') : String(raw || '')
+  const rawParts = (Array.isArray(raw) ? raw : String(raw || '').split('/'))
+    .map(x => decode(x).replace(/^\/+|\/+$/g, '')).filter(Boolean)
+  const pathname = String(req.url || '').split('?')[0]
+  const urlParts = pathname.split('/').filter(Boolean).map(decode)
+
+  // Prefer a recognised handler name, not simply the first catch-all segment.
+  // On some Vercel rewrite configurations `path` contains `s/<slug>` even though
+  // the destination is `/api/share?id=<slug>`.
+  let route = rawParts.find(part => Object.prototype.hasOwnProperty.call(handlers, part)) || ''
   if (!route) {
-    const pathname = String(req.url || '').split('?')[0]
-    route = pathname.replace(/^\/api\//, '').replace(/\/$/, '').split('/')[0] || ''
+    const apiIndex = urlParts.indexOf('api')
+    if (apiIndex >= 0) route = urlParts.slice(apiIndex + 1).find(part => Object.prototype.hasOwnProperty.call(handlers, part)) || ''
   }
-  // Handle a possible encoded segment without allowing arbitrary paths.
-  try { route = decodeURIComponent(route) } catch { /* keep original route */ }
-  const target = handlers[route]
-  if (!target) return res.status(404).json({ error: 'API endpoint not found.' })
-  // Preserve Vercel's parsed query parameters for the original handler.
+
+  // Defensive fallback for the public /s/:id rewrite if Vercel exposes the
+  // source path rather than the rewritten destination to the function.
+  if (!route && (rawParts[0] === 's' || urlParts[0] === 's')) {
+    route = 'share'
+    if (!req.query?.id) {
+      const slug = rawParts[0] === 's' ? rawParts[1] : urlParts[1]
+      if (slug) req.query = { ...(req.query || {}), id: slug }
+    }
+  }
+
+  if (!route) return res.status(404).json({ error: 'API endpoint not found.' })
   req.query = { ...(req.query || {}) }
   delete req.query.path
-  try { return await target(req, res) }
-  catch (error) { console.error(`API handler ${route} failed`, error); if (!res.headersSent) return res.status(500).json({ error: 'Something went wrong. Please try again.' }) }
+  try {
+    return await handlers[route](req, res)
+  } catch (error) {
+    console.error(`API handler ${route} failed`, error)
+    if (!res.headersSent) return res.status(500).json({ error: 'Something went wrong. Please try again.' })
+  }
 }
