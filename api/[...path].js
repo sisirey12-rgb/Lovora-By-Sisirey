@@ -33,8 +33,16 @@ const handlers = {
 }
 
 export default async function handler(req, res) {
+  // Vercel may expose the catch-all segment as req.query.path, while some
+  // rewrite/deployment combinations leave it unset. Fall back to the URL path.
   const raw = req.query?.path
-  const route = Array.isArray(raw) ? String(raw[0] || '') : String(raw || '')
+  let route = Array.isArray(raw) ? String(raw[0] || '') : String(raw || '')
+  if (!route) {
+    const pathname = String(req.url || '').split('?')[0]
+    route = pathname.replace(/^\/api\//, '').replace(/\/$/, '').split('/')[0] || ''
+  }
+  // Handle a possible encoded segment without allowing arbitrary paths.
+  try { route = decodeURIComponent(route) } catch { /* keep original route */ }
   const target = handlers[route]
   if (!target) return res.status(404).json({ error: 'API endpoint not found.' })
   // Preserve Vercel's parsed query parameters for the original handler.
